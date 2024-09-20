@@ -1,10 +1,10 @@
 {
   "name": "turistear-back",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "build": "tsc",
-    "serve": "node dist/app.js",
+    "serve": "node dist/app.js schema:sync -d src/data-source.ts",
     "start": "ts-node src/app.ts schema:sync -d src/data-source.ts",
     "test": "jest --forceExit"
   },
@@ -24,7 +24,7 @@
     "http-status": "^1.7.4",
     "mysql2": "^3.11.3",
     "ts-node": "^10.9.2",
-    "typeorm": "0.3.21-dev.e7649d2",
+    "typeorm": "^0.3.20",
     "typescript": "^5.6.2"
   },
   "devDependencies": {
