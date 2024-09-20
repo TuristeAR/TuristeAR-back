@@ -4,9 +4,8 @@
   "main": "app.js",
   "scripts": {
     "build": "tsc",
-    "prestart": "ts-node src/app.ts schema:sync -d src/data-source.ts",
-    "serve": "node dist/app.js",
-    "start": "ts-node src/app.ts",
+    "serve": "node dist/app.js schema:sync -d src/data-source.ts",
+    "start": "ts-node src/app.ts schema:sync -d src/data-source.ts",
     "test": "jest --forceExit"
   },
   "keywords": [],
