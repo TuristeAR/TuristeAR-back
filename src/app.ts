@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import express from 'express';
 import status from 'http-status';
 import { AppDataSource } from './data-source';
+import { UserService } from './services/user.service';
+import { CreateUserDto } from './dtos/create-user.dto';
 
 dotenv.config();
 
@@ -14,6 +16,8 @@ const getCorsOrigins = () => {
 };
 
 const app = express();
+
+const userService = new UserService();
 
 app.use(bodyParser.json());
 
@@ -39,6 +43,18 @@ AppDataSource.initialize()
 
 app.get('/', (_req, res) => {
   res.status(status.OK).send('TuristeAR API');
+});
+
+app.post('/user', async (req, res) => {
+  const createUserDto: CreateUserDto = req.body;
+
+  try {
+    const user = await userService.create(createUserDto);
+
+    res.status(status.CREATED).send(user);
+  } catch (error) {
+    res.status(status.INTERNAL_SERVER_ERROR).send(error);
+  }
 });
 
 export default app;
