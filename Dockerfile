@@ -4,7 +4,11 @@ WORKDIR /app
 
 COPY . .
 
+RUN ls -la /app
+
 RUN npm install
+
+RUN npm install -g ts-node typescript
 
 RUN npm run build
 
