@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import status from 'http-status';
+import { AppDataSource } from './data-source';
 
 dotenv.config();
 
@@ -26,9 +27,15 @@ app.options('*', (req, res) => {
   res.sendStatus(status.OK);
 });
 
-app.listen(process.env.HTTP_PORT, () => {
-  console.log(`Server running on port ${process.env.HTTP_PORT}`);
-});
+AppDataSource.initialize()
+  .then(() => {
+    console.log('Data Source has been initialized!');
+
+    app.listen(process.env.HTTP_PORT, () => {
+      console.log(`Server running on port ${process.env.HTTP_PORT}`);
+    });
+  })
+  .catch((error) => console.log('Data Source initialization error', error));
 
 app.get('/', (_req, res) => {
   res.status(status.OK).send('TuristeAR API');
