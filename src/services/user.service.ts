@@ -12,4 +12,8 @@ export class UserService {
   create(createUserDto: CreateUserDto): Promise<User> {
     return this.userRepository.create(createUserDto);
   }
+
+  findOneByGoogleId(googleId: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { googleId } });
+  }
 }
