@@ -34,6 +34,10 @@ app.options('*', (req, res) => {
   res.sendStatus(status.OK);
 });
 
+app.set('trust proxy', true);
+
+console.log('process.env.NODE_ENV: ', process.env.NODE_ENV);
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET as string,
@@ -43,6 +47,7 @@ app.use(
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       domain: process.env.NODE_ENV === 'production' ? '.koyeb.app' : 'localhost',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   }),
 );
