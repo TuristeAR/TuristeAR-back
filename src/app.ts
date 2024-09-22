@@ -87,14 +87,14 @@ app.get('/auth/google/callback', (req, res, next) => {
 app.get('/session', (req, res) => {
   if (req.isAuthenticated && req.isAuthenticated()) {
     return res.send({
-      statusCode: 200,
+      statusCode: status.OK,
       message: 'User is authenticated',
       user: req.user,
     });
   }
 
   return res.status(401).send({
-    statusCode: 401,
+    statusCode: status.UNAUTHORIZED,
     message: 'User is not authenticated',
   });
 });
