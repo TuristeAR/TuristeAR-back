@@ -2,7 +2,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import session from 'express-session';
+import session from 'cookie-session';
 import status from 'http-status';
 import passport from 'passport';
 import { initializePassport } from './config/passport';
@@ -36,19 +36,13 @@ app.options('*', (req, res) => {
 
 app.set('trust proxy', true);
 
-console.log('process.env.NODE_ENV: ', process.env.NODE_ENV);
-
 app.use(
   session({
     secret: process.env.SESSION_SECRET as string,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? '.koyeb.app' : 'localhost',
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    },
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    domain: process.env.NODE_ENV === 'production' ? '.koyeb.app' : 'localhost',
+    maxAge: 1000 * 60 * 60 * 24 * 7,
   }),
 );
 
