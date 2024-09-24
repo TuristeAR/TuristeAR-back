@@ -36,6 +36,10 @@ app.options('*', (req, res) => {
 
 app.set('trust proxy', true);
 
+console.log('secure', process.env.NODE_ENV === 'production');
+console.log('sameSite', process.env.NODE_ENV === 'production' ? 'none' : 'lax');
+console.log('domain', process.env.NODE_ENV === 'production' ? '.koyeb.app' : 'localhost');
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET as string,
