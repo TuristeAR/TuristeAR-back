@@ -15,7 +15,9 @@ describe('http.util', () => {
         json: jest.fn().mockResolvedValue(mockResponse),
       });
 
-      const result = await get('https://example.com');
+      const result = await get('https://example.com', {
+        'Content-Type': 'application/json',
+      });
 
       expect(result).toEqual(mockResponse);
 
@@ -33,7 +35,12 @@ describe('http.util', () => {
 
       (fetch as jest.Mock).mockRejectedValue(mockError);
 
-      const result = await get('https://example.com');
+      const result = await get('https://example.com', {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
 
       expect(result).toEqual({
         error: mockError,
@@ -50,7 +57,13 @@ describe('http.util', () => {
         json: jest.fn().mockResolvedValue(mockResponse),
       });
 
-      const result = await post('https://example.com', { key: 'value' });
+      const result = await post(
+        'https://example.com',
+        {
+          'Content-Type': 'application/json',
+        },
+        { key: 'value' },
+      );
 
       expect(result).toEqual(mockResponse);
 
@@ -69,7 +82,17 @@ describe('http.util', () => {
 
       (fetch as jest.Mock).mockRejectedValue(mockError);
 
-      const result = await post('https://example.com', { key: 'value' });
+      const result = await post(
+        'https://example.com',
+        { key: 'value' },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ key: 'value' }),
+        },
+      );
 
       expect(result).toEqual({
         error: mockError,
