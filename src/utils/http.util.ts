@@ -1,12 +1,10 @@
 import status from 'http-status';
 
-export const get = async (url: string): Promise<any> => {
+export const get = async (url: string, headers: any): Promise<any> => {
   try {
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
       credentials: 'include',
     });
 
@@ -19,13 +17,11 @@ export const get = async (url: string): Promise<any> => {
   }
 };
 
-export const post = async (url: string, body: any): Promise<any> => {
+export const post = async (url: string, headers: any, body: any): Promise<any> => {
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
       credentials: 'include',
       body: JSON.stringify(body),
     });
