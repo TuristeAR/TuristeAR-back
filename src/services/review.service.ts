@@ -65,16 +65,6 @@ export class ReviewService {
       }, []);
 
       for (const review of reviews) {
-        /*const isInSpanish = await post(
-          'http://localhost:5000/analyze',
-          {
-            'Content-Type': 'application/json',
-          },
-          { q: review.originalText.text },
-        );
-
-        if (isInSpanish.result === true) {
-          */
         const createReviewDto: CreateReviewDto = {
           googleId: googleId as string,
           publishedTime: review.relativePublishTimeDescription,
@@ -86,7 +76,6 @@ export class ReviewService {
         };
 
         await this.create(createReviewDto);
-        //}
       }
     } catch (error) {
       console.error('Error fetching reviews', error);
