@@ -7,8 +7,13 @@ import status from 'http-status';
 import passport from 'passport';
 import { initializePassport } from './config/passport';
 import { AppDataSource } from './data-source';
-import { UserService } from './services/user.service';
 import { User } from './entities/user';
+import { CreateWeatherDto } from './dtos/create-weather.dto';
+import { WeatherService } from './services/weather.service';
+import { CreateProvinceDto } from './dtos/create-province.dto';
+import { ProvinceService } from './services/province.service';
+import { PlaceService } from './services/place.service';
+import { ReviewService } from './services/review.service';
 
 dotenv.config();
 
@@ -19,8 +24,6 @@ const getCorsOrigins = () => {
 };
 
 const app = express();
-
-const userService = new UserService();
 
 app.use(bodyParser.json());
 
@@ -66,6 +69,11 @@ AppDataSource.initialize()
   })
   .catch((error) => console.log('Data Source initialization error', error));
 
+const weatherService = new WeatherService();
+const provinceService = new ProvinceService();
+const placeService = new PlaceService();
+const reviewService = new ReviewService();
+
 app.get(
   '/auth/google',
   passport.authenticate('google', {
@@ -98,10 +106,156 @@ app.get('/session', (req, res) => {
     });
   }
 
-  return res.status(401).send({
+  return res.status(status.UNAUTHORIZED).send({
     statusCode: status.UNAUTHORIZED,
     message: 'User is not authenticated',
   });
+});
+
+app.post('/weather', async (req, res) => {
+  try {
+    const createWeatherDto: CreateWeatherDto = req.body;
+
+    const weather = await weatherService.create(createWeatherDto);
+
+    return res.status(status.CREATED).json({ statusCode: status.CREATED, data: weather });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error creating weather' });
+  }
+});
+
+app.get('/weather', async (_req, res) => {
+  try {
+    const weather = await weatherService.findAll();
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: weather });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching weather' });
+  }
+});
+
+app.post('/province', async (req, res) => {
+  try {
+    const createProvinceDto: CreateProvinceDto = req.body;
+
+    const province = await provinceService.create(createProvinceDto);
+
+    return res.status(status.CREATED).json({ statusCode: status.CREATED, data: province });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error creating province' });
+  }
+});
+
+app.get('/province', async (_req, res) => {
+  try {
+    const provinces = await provinceService.findAll();
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: provinces });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching provinces' });
+  }
+});
+
+app.get('/province/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const province = await provinceService.findOneById(Number(id));
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: province });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching province' });
+  }
+});
+
+app.get('/place', async (_req, res) => {
+  try {
+    const places = await placeService.findAll();
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: places });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching places' });
+  }
+});
+
+app.get('/place/:googleId', async (req, res) => {
+  try {
+    const { googleId } = req.params;
+
+    const place = await placeService.findOneByGoogleId(googleId);
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: place });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching place' });
+  }
+});
+
+app.get('/review', async (_req, res) => {
+  try {
+    const reviews = await reviewService.findAll();
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: reviews });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching reviews' });
+  }
+});
+
+app.get('/review/:googleId', async (req, res) => {
+  try {
+    const { googleId } = req.params;
+
+    const reviews = await reviewService.findOneByGoogleId(googleId);
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: reviews });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching reviews' });
+  }
+});
+
+app.get('/fetch-places', async (req, res) => {
+  try {
+    const province = (req.query.province as string) + ' Province';
+
+    await placeService.fetchPlaces(province);
+
+    return res.status(status.OK).json({ statusCode: status.OK, message: 'Places fetched' });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching places' });
+  }
+});
+
+app.get('/fetch-reviews', async (_req, res) => {
+  try {
+    const places = await placeService.findAll();
+
+    for (const place of places) {
+      await reviewService.fetchReviews(place.googleId);
+    }
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching reviews' });
+  }
 });
 
 export default app;

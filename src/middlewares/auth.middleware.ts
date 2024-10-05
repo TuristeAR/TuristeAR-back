@@ -6,7 +6,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     return next();
   }
 
-  return res.status(401).json({
+  return res.status(status.UNAUTHORIZED).json({
     statusCode: status.UNAUTHORIZED,
     message: 'Unauthorized',
   });
