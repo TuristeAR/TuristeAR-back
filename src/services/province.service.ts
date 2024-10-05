@@ -18,6 +18,10 @@ export class ProvinceService {
     return this.provinceRepository.findMany({});
   }
 
+  findOneById(id: number): Promise<Province | null> {
+    return this.provinceRepository.findOne({ where: { id } });
+  }
+
   async getProvinceIdFromCoordinates(latitude: number, longitude: number) {
     const headers = {
       'Content-Type': 'application/json',

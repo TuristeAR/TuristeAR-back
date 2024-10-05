@@ -164,6 +164,20 @@ app.get('/province', async (_req, res) => {
   }
 });
 
+app.get('/province/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const province = await provinceService.findOneById(Number(id));
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: province });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching province' });
+  }
+});
+
 app.get('/place', async (_req, res) => {
   try {
     const places = await placeService.findAll();
@@ -187,6 +201,32 @@ app.get('/place/:googleId', async (req, res) => {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching place' });
+  }
+});
+
+app.get('/review', async (_req, res) => {
+  try {
+    const reviews = await reviewService.findAll();
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: reviews });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching reviews' });
+  }
+});
+
+app.get('/review/:googleId', async (req, res) => {
+  try {
+    const { googleId } = req.params;
+
+    const reviews = await reviewService.findOneByGoogleId(googleId);
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: reviews });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching reviews' });
   }
 });
 
