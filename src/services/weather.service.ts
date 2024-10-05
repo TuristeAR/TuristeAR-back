@@ -16,4 +16,8 @@ export class WeatherService {
   findAll(): Promise<Weather[]> {
     return this.weatherRepository.findMany({});
   }
+
+  findOneById(id: number): Promise<Weather | null> {
+    return this.weatherRepository.findOne({ where: { id } });
+  }
 }
