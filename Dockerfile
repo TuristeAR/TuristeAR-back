@@ -12,4 +12,4 @@ RUN npm run build
 
 EXPOSE 3001
 
-CMD ["node", "dist/app.js", "schema:sync", "-d", "src/infrastructure/database/data-source.ts"]
+CMD ["node", "dist/application/app.js", "schema:sync", "-d", "src/infrastructure/database/data-source.ts"]
