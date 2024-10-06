@@ -1,6 +1,6 @@
 import { PassportStatic, Profile } from 'passport';
 import { Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
-import { AppDataSource } from '../../data-source';
+import { AppDataSource } from '../database/data-source';
 import { UserService } from '../../domain/services/user.service';
 import { User } from '../../domain/entities/user';
 import { CreateUserDto } from '../../application/dtos/create-user.dto';

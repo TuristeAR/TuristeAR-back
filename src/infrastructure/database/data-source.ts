@@ -1,10 +1,10 @@
 import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { User } from './domain/entities/user';
-import { Weather } from './domain/entities/weather';
-import { Province } from './domain/entities/province';
-import { Place } from './domain/entities/place';
-import { Review } from './domain/entities/review';
+import { User } from '../../domain/entities/user';
+import { Weather } from '../../domain/entities/weather';
+import { Province } from '../../domain/entities/province';
+import { Place } from '../../domain/entities/place';
+import { Review } from '../../domain/entities/review';
 
 dotenv.config();
 

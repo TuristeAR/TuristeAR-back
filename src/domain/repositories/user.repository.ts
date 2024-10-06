@@ -1,6 +1,6 @@
 import { User } from '../entities/user';
 import { AbstractRepository } from '../../utils/abstract.repository';
-import { AppDataSource } from '../../data-source';
+import { AppDataSource } from '../../infrastructure/database/data-source';
 
 export class UserRepository extends AbstractRepository<User> {
   constructor() {

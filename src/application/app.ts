@@ -5,15 +5,15 @@ import express from 'express';
 import session from 'express-session';
 import status from 'http-status';
 import passport from 'passport';
-import { initializePassport } from './infrastructure/config/passport';
-import { AppDataSource } from './data-source';
-import { User } from './domain/entities/user';
-import { CreateWeatherDto } from './application/dtos/create-weather.dto';
-import { WeatherService } from './domain/services/weather.service';
-import { CreateProvinceDto } from './application/dtos/create-province.dto';
-import { ProvinceService } from './domain/services/province.service';
-import { PlaceService } from './domain/services/place.service';
-import { ReviewService } from './domain/services/review.service';
+import { initializePassport } from '../infrastructure/config/passport';
+import { AppDataSource } from '../infrastructure/database/data-source';
+import { User } from '../domain/entities/user';
+import { CreateWeatherDto } from './dtos/create-weather.dto';
+import { WeatherService } from '../domain/services/weather.service';
+import { CreateProvinceDto } from './dtos/create-province.dto';
+import { ProvinceService } from '../domain/services/province.service';
+import { PlaceService } from '../domain/services/place.service';
+import { ReviewService } from '../domain/services/review.service';
 
 dotenv.config();
 
