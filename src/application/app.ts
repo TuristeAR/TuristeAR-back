@@ -277,4 +277,64 @@ app.get('/fetch-reviews', async (_req, res) => {
   }
 });
 
+app.post('/itinerary/add-user',(req, res) => {
+  const { itineraryId, participantId } = req.body;
+
+  itineraryService
+    .addUserToItinerary(itineraryId, participantId)
+    .then((updatedItinerary) => {
+      return res.status(200).json({ status: 'success', data: updatedItinerary });
+    })
+    .catch((error) => {
+      console.error('Error adding user to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error adding user to itinerary' });
+    });
+});
+
+app.delete('/itinerary/remove-user', (req, res) => {
+  const { itineraryId, participantId } = req.body;
+
+  itineraryService
+    .removeUserFromItinerary(itineraryId, participantId)
+    .then(() => {
+      return res
+        .status(200)
+        .json({ status: 'success', message: `User with ID ${participantId} removed` });
+    })
+    .catch((error) => {
+      console.error('Error removing user to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error removing user to itinerary' });
+    });
+});
+
+app.get('/itinerary/paticipants',(req, res) => {
+  const { itineraryId } = req.body;
+
+  itineraryService
+    .getItineraryWithParticipants(itineraryId)
+    .then((participants) => {     
+      return res
+        .status(200)
+        .json({ status: 'success', participants });
+    })
+    .catch((error) => {
+      console.error('Error removing user to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error removing user to itinerary' });
+    });
+});
+
+
+
+/* app.get('/users/search', async (req, res) => {
+  const { name, offset = 0 } = req.query;
+
+  try {
+    const user = await userService.searchByName(name as string, offset as number );
+    return res.status(200).json({ status: 'success', data: user });
+  } catch (error) {
+    console.error('Error searching user:', error);
+    return res.status(500).json({ status: 'error', message: 'Error searching user' });
+  }
+}); */
+
 export default app;

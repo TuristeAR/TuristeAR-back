@@ -86,24 +86,25 @@ export class ItineraryService {
   }
 
   findOneByIdWithParticipants(id: number): Promise<Itinerary | null> {
-    return this.itineraryRepository.findOne({ 
-        where: { id }, 
-        relations: ['participants'] 
+    return this.itineraryRepository.findOne({
+      where: { id: id },
+      relations: ['participants', 'user'],
     });
   }
   addUserToItinerary(itineraryId: number, userId: number): Promise<Itinerary> {
-    return this.findOneById(itineraryId) 
+    return this.findOneByIdWithParticipants(itineraryId) 
       .then(itinerary => {
         if (!itinerary) {
           throw new Error("Itinerary not found");
         }
-  
+        if (itinerary.user.id === userId) {
+            throw new Error("Owner cannot be added as a participant");
+        }
         return this.userService.findOneById(userId)
           .then(user => {
             if (!user) {
               throw new Error("User not found");
             }
-  
             if (!itinerary.participants.some(u => u.id === user.id)) {
               itinerary.participants.push(user); 
               return this.itineraryRepository.save(itinerary);
@@ -114,14 +115,16 @@ export class ItineraryService {
       });
   }
   
-  removeUserFromItinerary(itineraryId: number, userId: number): Promise<Itinerary> {
-    return this.findOneById(itineraryId)
+  removeUserFromItinerary(itineraryId: number, participantId: number): Promise<Itinerary> {
+    return this.findOneByIdWithParticipants(itineraryId)
       .then(itinerary => {
         if (!itinerary) {
           throw new Error("Itinerary not found");
         }
-  
-        return this.userService.findOneById(userId)
+        if (itinerary.user.id === participantId) {
+          throw new Error("The owner cannot be removed by a participant");
+        }
+        return this.userService.findOneById(participantId)
           .then(user => {
             if (!user) {
               throw new Error("User not found");
@@ -137,5 +140,11 @@ export class ItineraryService {
             }
           });
       });
+  }
+  getItineraryWithParticipants(itineraryId: number): Promise<Itinerary | null> {
+    return this.itineraryRepository.findOne({
+      where: { id: itineraryId },
+      relations: ['participants', 'user'],
+    });
   }
 }
