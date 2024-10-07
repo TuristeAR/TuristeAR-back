@@ -9,6 +9,9 @@ export class Itinerary extends AbstractEntity {
   activities: Activity[];
 
   @Column()
+  name: string;
+
+  @Column()
   fromDate: Date;
 
   @Column()
