@@ -13,10 +13,6 @@ export class ActivityService {
     return this.activityRepository.create(createActivityDto);
   }
 
-  findAll(): Promise<Activity[]> {
-    return this.activityRepository.findMany({});
-  }
-
   findOneById(id: number): Promise<Activity | null> {
     return this.activityRepository.findOne({ where: { id } });
   }
