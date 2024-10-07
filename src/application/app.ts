@@ -17,6 +17,7 @@ import { ReviewService } from '../domain/services/review.service';
 import { CreateItineraryDto } from './dtos/create-itinerary.dto';
 import { authMiddleware } from '../infrastructure/middlewares/auth.middleware';
 import { ItineraryService } from '../domain/services/itinerary.service';
+import { UserService } from '../domain/services/user.service';
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ const provinceService = new ProvinceService();
 const placeService = new PlaceService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
+const userService = new UserService();
 
 app.get(
   '/auth/google',
@@ -325,7 +327,7 @@ app.get('/itinerary/paticipants',(req, res) => {
 
 
 
-/* app.get('/users/search', async (req, res) => {
+app.get('/users/search', async (req, res) => {
   const { name, offset = 0 } = req.query;
 
   try {
@@ -335,6 +337,6 @@ app.get('/itinerary/paticipants',(req, res) => {
     console.error('Error searching user:', error);
     return res.status(500).json({ status: 'error', message: 'Error searching user' });
   }
-}); */
+}); 
 
 export default app;

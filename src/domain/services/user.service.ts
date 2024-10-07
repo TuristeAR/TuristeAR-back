@@ -20,4 +20,7 @@ export class UserService {
   findOneByGoogleId(googleId: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { googleId } });
   }
+  searchByName(arg0: string, arg1: number) {
+    throw new Error('Method not implemented.');
+  }
 }
