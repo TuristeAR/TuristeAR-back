@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { AbstractEntity } from '../../utils/abstract.entity';
 import { Activity } from './activity';
 import { User } from './user';
@@ -20,4 +20,11 @@ export class Itinerary extends AbstractEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @ManyToMany(() => User)
+  @JoinTable({
+    joinColumn: { name: 'itineraryId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
+  })
+  participants: User[];
 }

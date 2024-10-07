@@ -1,4 +1,4 @@
-import { Entity, Column, OneToMany } from 'typeorm';
+import { Entity, Column, OneToMany, ManyToMany } from 'typeorm';
 import { AbstractEntity } from '../../utils/abstract.entity';
 import { Itinerary } from './itinerary';
 
@@ -17,5 +17,8 @@ export class User extends AbstractEntity {
   googleId: string;
 
   @OneToMany(() => Itinerary, (itinerary) => itinerary.user)
-  itineraries: Itinerary[];
+  ownedItineraries: Itinerary[];
+
+  @ManyToMany(() => Itinerary, (itinerary) => itinerary.participants)
+  joinedItineraries: Itinerary[]; 
 }
