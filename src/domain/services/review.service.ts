@@ -19,7 +19,12 @@ export class ReviewService {
   }
 
   findOneByGoogleId(googleId: string): Promise<Review | null> {
-    return this.reviewRepository.findOne({ where: { googleId } });
+    return this.reviewRepository.findOne({
+      where: {
+        place: { googleId },
+      },
+      relations: ['place'],
+    });
   }
 
   async fetchReviews(googleId: string) {
