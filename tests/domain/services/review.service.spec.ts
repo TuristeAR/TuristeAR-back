@@ -2,6 +2,7 @@ import { CreateReviewDto } from '../../../src/application/dtos/create-review.dto
 import { ReviewRepository } from '../../../src/domain/repositories/review.repository';
 import { ReviewService } from '../../../src/domain/services/review.service';
 import { Review } from '../../../src/domain/entities/review';
+import { Place } from '../../../src/domain/entities/place';
 
 jest.mock('../../../src/domain/repositories/review.repository');
 
@@ -46,7 +47,7 @@ describe('ReviewService', () => {
     const review: Review = {
       id: 1,
       createdAt: new Date(),
-      googleId: 'some-google-id',
+      place: new Place(),
       publishedTime: 'some-published-time',
       rating: 5,
       text: 'some-text',
@@ -60,7 +61,10 @@ describe('ReviewService', () => {
     const result = await reviewService.findOneByGoogleId('1');
 
     expect(result).toEqual(review);
-    expect(reviewRepository.findOne).toHaveBeenCalledWith({ where: { googleId: '1' } });
+    expect(reviewRepository.findOne).toHaveBeenCalledWith({
+      where: { place: { googleId: '1' } },
+      relations: ['place'],
+    });
   });
 
   it('returns null if review not found by googleId', async () => {
@@ -69,6 +73,9 @@ describe('ReviewService', () => {
     const result = await reviewService.findOneByGoogleId('999');
 
     expect(result).toBeNull();
-    expect(reviewRepository.findOne).toHaveBeenCalledWith({ where: { googleId: '999' } });
+    expect(reviewRepository.findOne).toHaveBeenCalledWith({
+      where: { place: { googleId: '999' } },
+      relations: ['place'],
+    });
   });
 });

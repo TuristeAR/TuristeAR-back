@@ -1,8 +1,8 @@
 import { Place } from '../entities/place';
 import { PlaceRepository } from '../repositories/place.repository';
 import { CreatePlaceDto } from '../../application/dtos/create-place.dto';
-import { post } from '../../utils/http.util';
 import { ProvinceService } from './province.service';
+import { post } from '../../utils/http.util';
 
 export class PlaceService {
   private placeRepository: PlaceRepository;
@@ -23,6 +23,60 @@ export class PlaceService {
 
   findOneByGoogleId(googleId: string): Promise<Place | null> {
     return this.placeRepository.findOne({ where: { googleId } });
+  }
+
+  async findOneByDateWithTypesAndProvinceId(
+    currentPlaces: Place[],
+    date: Date,
+    types: string[],
+    provinceId: number,
+  ): Promise<Place | null> {
+    let places: Place[];
+
+    places = await this.placeRepository.findMany({
+      where: { province: { id: provinceId } },
+      relations: ['province'],
+    });
+
+    const filteredPlaces = this.filterPlacesByTypes(places, currentPlaces, types);
+
+    do {
+      if (filteredPlaces.length === 0) {
+        return null;
+      }
+
+      const randomPlace = filteredPlaces[Math.floor(Math.random() * filteredPlaces.length)];
+
+      if (this.isOpenThisDay(randomPlace, date)) {
+        return randomPlace;
+      }
+
+      filteredPlaces.splice(filteredPlaces.indexOf(randomPlace), 1);
+    } while (filteredPlaces.length > 0);
+
+    return null;
+  }
+
+  isOpenThisDay(place: Place, date: Date): boolean {
+    if (place.openingHours === null) {
+      return true;
+    }
+
+    const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const dayName = daysOfWeek[date.getDay()];
+    const openingHoursForToday = place.openingHours.find((hours) => hours.startsWith(dayName));
+
+    return !(!openingHoursForToday || openingHoursForToday.includes('Cerrado'));
+  }
+
+  private filterPlacesByTypes(places: Place[], currentPlaces: Place[], types: string[]) {
+    const filteredPlaces = places.filter((place) =>
+      place.types.some((type) => types.includes(type)),
+    );
+
+    return filteredPlaces.filter(
+      (place) => !currentPlaces.some((existingPlace) => existingPlace.id === place.id),
+    );
   }
 
   async fetchPlaces(province: string) {

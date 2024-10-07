@@ -2,6 +2,7 @@ import { CreatePlaceDto } from '../../../src/application/dtos/create-place.dto';
 import { PlaceRepository } from '../../../src/domain/repositories/place.repository';
 import { PlaceService } from '../../../src/domain/services/place.service';
 import { Place } from '../../../src/domain/entities/place';
+import { Province } from '../../../src/domain/entities/province';
 
 jest.mock('../../../src/domain/repositories/place.repository');
 
@@ -49,7 +50,6 @@ describe('PlaceService', () => {
     const place: Place = {
       id: 1,
       createdAt: new Date(),
-      provinceId: 1,
       googleId: '1',
       name: 'Test Place',
       types: [],
@@ -59,6 +59,9 @@ describe('PlaceService', () => {
       rating: 4.5,
       openingHours: ['9:00 AM - 5:00 PM'],
       phoneNumber: '123-456-7890',
+      province: new Province(),
+      reviews: [],
+      activities: [],
     };
 
     placeRepository.findOne.mockResolvedValue(place);

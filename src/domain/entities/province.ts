@@ -1,13 +1,16 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { AbstractEntity } from '../../utils/abstract.entity';
+import { Weather } from './weather';
+import { Place } from './place';
 
 @Entity()
 export class Province extends AbstractEntity {
   @Column({ unique: true, nullable: false })
   georefId: string;
 
-  @Column({ nullable: false })
-  weatherId: number;
+  @ManyToOne(() => Weather)
+  @JoinColumn({ name: 'weatherId' })
+  weather: Weather;
 
   @Column({ nullable: false })
   name: string;
@@ -17,4 +20,7 @@ export class Province extends AbstractEntity {
 
   @Column('simple-array', { nullable: false })
   images: string[];
+
+  @OneToMany(() => Place, (place) => place.province)
+  places: Place[];
 }

@@ -1,10 +1,12 @@
-import { Entity, Column } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { AbstractEntity } from '../../utils/abstract.entity';
+import { Place } from './place';
 
 @Entity()
 export class Review extends AbstractEntity {
-  @Column()
-  googleId: string;
+  @ManyToOne(() => Place, (place) => place.reviews)
+  @JoinColumn({ name: 'googleId', referencedColumnName: 'googleId' })
+  place: Place;
 
   @Column()
   publishedTime: string;

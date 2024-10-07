@@ -1,7 +1,7 @@
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import express from 'express';
+import express, { Request, Response } from 'express';
 import session from 'express-session';
 import status from 'http-status';
 import passport from 'passport';
@@ -14,6 +14,10 @@ import { CreateProvinceDto } from './dtos/create-province.dto';
 import { ProvinceService } from '../domain/services/province.service';
 import { PlaceService } from '../domain/services/place.service';
 import { ReviewService } from '../domain/services/review.service';
+import { CreateItineraryDto } from './dtos/create-itinerary.dto';
+import { authMiddleware } from '../infrastructure/middlewares/auth.middleware';
+import { ItineraryService } from '../domain/services/itinerary.service';
+import { UserService } from '../domain/services/user.service';
 
 dotenv.config();
 
@@ -29,7 +33,7 @@ app.use(bodyParser.json());
 
 app.use(cors({ credentials: true, origin: getCorsOrigins() }));
 
-app.options('*', (req, res) => {
+app.options('*', (req: Request, res: Response) => {
   res.set('Access-Control-Allow-Origin', req.headers.origin);
   res.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -73,6 +77,8 @@ const weatherService = new WeatherService();
 const provinceService = new ProvinceService();
 const placeService = new PlaceService();
 const reviewService = new ReviewService();
+const itineraryService = new ItineraryService();
+const userService = new UserService();
 
 app.get(
   '/auth/google',
@@ -97,7 +103,7 @@ app.get('/auth/google/callback', (req, res, next) => {
   })(req, res, next);
 });
 
-app.get('/session', (req, res) => {
+app.get('/session', (req: Request, res: Response) => {
   if (req.isAuthenticated && req.isAuthenticated()) {
     return res.send({
       statusCode: status.OK,
@@ -112,7 +118,7 @@ app.get('/session', (req, res) => {
   });
 });
 
-app.post('/weather', async (req, res) => {
+app.post('/weather', async (req: Request, res: Response) => {
   try {
     const createWeatherDto: CreateWeatherDto = req.body;
 
@@ -138,7 +144,7 @@ app.get('/weather', async (_req, res) => {
   }
 });
 
-app.post('/province', async (req, res) => {
+app.post('/province', async (req: Request, res: Response) => {
   try {
     const createProvinceDto: CreateProvinceDto = req.body;
 
@@ -164,7 +170,7 @@ app.get('/province', async (_req, res) => {
   }
 });
 
-app.get('/province/:id', async (req, res) => {
+app.get('/province/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -190,7 +196,7 @@ app.get('/place', async (_req, res) => {
   }
 });
 
-app.get('/place/:googleId', async (req, res) => {
+app.get('/place/:googleId', async (req: Request, res: Response) => {
   try {
     const { googleId } = req.params;
 
@@ -216,7 +222,7 @@ app.get('/review', async (_req, res) => {
   }
 });
 
-app.get('/review/:googleId', async (req, res) => {
+app.get('/review/:googleId', async (req: Request, res: Response) => {
   try {
     const { googleId } = req.params;
 
@@ -230,7 +236,21 @@ app.get('/review/:googleId', async (req, res) => {
   }
 });
 
-app.get('/fetch-places', async (req, res) => {
+app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const createItineraryDto: CreateItineraryDto = req.body;
+
+    const itinerary = await itineraryService.create(req.user as User, createItineraryDto);
+
+    return res.status(status.CREATED).json({ statusCode: status.CREATED, data: itinerary });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error creating itinerary' });
+  }
+});
+
+app.get('/fetch-places', async (req: Request, res: Response) => {
   try {
     const province = (req.query.province as string) + ' Province';
 
@@ -255,6 +275,62 @@ app.get('/fetch-reviews', async (_req, res) => {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching reviews' });
+  }
+});
+
+app.post('/itinerary/add-user', (req, res) => {
+  const { itineraryId, participantId } = req.body;
+
+  itineraryService
+    .addUserToItinerary(itineraryId, participantId)
+    .then((updatedItinerary) => {
+      return res.status(200).json({ status: 'success', data: updatedItinerary });
+    })
+    .catch((error) => {
+      console.error('Error adding user to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error adding user to itinerary' });
+    });
+});
+
+app.delete('/itinerary/remove-user', (req, res) => {
+  const { itineraryId, participantId } = req.body;
+
+  itineraryService
+    .removeUserFromItinerary(itineraryId, participantId)
+    .then(() => {
+      return res
+        .status(200)
+        .json({ status: 'success', message: `User with ID ${participantId} removed` });
+    })
+    .catch((error) => {
+      console.error('Error removing user to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error removing user to itinerary' });
+    });
+});
+
+app.get('/itinerary/paticipants', (req, res) => {
+  const { itineraryId } = req.body;
+
+  itineraryService
+    .getItineraryWithParticipants(itineraryId)
+    .then((participants) => {
+      return res.status(200).json({ status: 'success', participants });
+    })
+    .catch((error) => {
+      console.error('Error removing user to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error removing user to itinerary' });
+    });
+});
+
+app.get('/users/search', async (req, res) => {
+  const { name, offset = 0 } = req.query;
+
+  try {
+    const user = await userService.searchByName(name as string, offset as number);
+    return res.status(200).json({ status: 'success', data: user });
+  } catch (error) {
+    console.error('Error searching user:', error);
+    return res.status(500).json({ status: 'error', message: 'Error searching user' });
   }
 });
 

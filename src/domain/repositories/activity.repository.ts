@@ -1,9 +1,9 @@
 import { AbstractRepository } from '../../utils/abstract.repository';
-import { Place } from '../entities/place';
+import { Activity } from '../entities/activity';
 import { AppDataSource } from '../../infrastructure/database/data-source';
 
-export class PlaceRepository extends AbstractRepository<Place> {
+export class ActivityRepository extends AbstractRepository<Activity> {
   constructor() {
-    super(AppDataSource.getRepository(Place));
+    super(AppDataSource.getRepository(Activity));
   }
 }

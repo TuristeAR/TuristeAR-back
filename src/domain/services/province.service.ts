@@ -22,6 +22,16 @@ export class ProvinceService {
     return this.provinceRepository.findOne({ where: { id } });
   }
 
+  async getProvinceNameFromId(id: number): Promise<string | null> {
+    const province = await this.provinceRepository.findOne({ where: { id } });
+
+    if (!province) {
+      throw new Error('Province not found');
+    }
+
+    return province.name;
+  }
+
   async getProvinceIdFromCoordinates(latitude: number, longitude: number) {
     const headers = {
       'Content-Type': 'application/json',
