@@ -38,31 +38,21 @@ export class PlaceService {
       relations: ['province'],
     });
 
-    if (places.length === 0) {
-      return null;
-    }
-
-    const filteredPlaces = places.filter((place) =>
-      place.types.some((type) => types.includes(type)),
-    );
-
-    const availablePlaces = filteredPlaces.filter(
-      (place) => !currentPlaces.some((existingPlace) => existingPlace.id === place.id),
-    );
+    const filteredPlaces = this.filterPlacesByTypes(places, currentPlaces, types);
 
     do {
-      if (availablePlaces.length === 0) {
+      if (filteredPlaces.length === 0) {
         return null;
       }
 
-      const randomPlace = availablePlaces[Math.floor(Math.random() * availablePlaces.length)];
+      const randomPlace = filteredPlaces[Math.floor(Math.random() * filteredPlaces.length)];
 
       if (this.isOpenThisDay(randomPlace, date)) {
         return randomPlace;
       }
 
-      availablePlaces.splice(availablePlaces.indexOf(randomPlace), 1);
-    } while (availablePlaces.length > 0);
+      filteredPlaces.splice(filteredPlaces.indexOf(randomPlace), 1);
+    } while (filteredPlaces.length > 0);
 
     return null;
   }
@@ -77,6 +67,16 @@ export class PlaceService {
     const openingHoursForToday = place.openingHours.find((hours) => hours.startsWith(dayName));
 
     return !(!openingHoursForToday || openingHoursForToday.includes('Cerrado'));
+  }
+
+  private filterPlacesByTypes(places: Place[], currentPlaces: Place[], types: string[]) {
+    const filteredPlaces = places.filter((place) =>
+      place.types.some((type) => types.includes(type)),
+    );
+
+    return filteredPlaces.filter(
+      (place) => !currentPlaces.some((existingPlace) => existingPlace.id === place.id),
+    );
   }
 
   async fetchPlaces(province: string) {

@@ -14,6 +14,9 @@ export class Activity extends AbstractEntity {
   place: Place;
 
   @Column()
+  name: string;
+
+  @Column()
   fromDate: Date;
 
   @Column()

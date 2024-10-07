@@ -1,4 +1,5 @@
 import { ItineraryRepository } from '../repositories/itinerary.repository';
+import { ProvinceService } from './province.service';
 import { PlaceService } from './place.service';
 import { Itinerary } from '../entities/itinerary';
 import { CreateItineraryDto } from '../../application/dtos/create-itinerary.dto';
@@ -10,12 +11,14 @@ import { UserService } from './user.service';
 
 export class ItineraryService {
   private itineraryRepository: ItineraryRepository;
+  private provinceService: ProvinceService;
   private placeService: PlaceService;
   private activityService: ActivityService;
   private userService: UserService;
 
   constructor() {
     this.itineraryRepository = new ItineraryRepository();
+    this.provinceService = new ProvinceService();
     this.placeService = new PlaceService();
     this.activityService = new ActivityService();
     this.userService = new UserService();
@@ -28,6 +31,11 @@ export class ItineraryService {
 
     const itinerary = new Itinerary();
 
+    const provinceName = await this.provinceService.getProvinceNameFromId(
+      createItineraryDto.provinceId,
+    );
+
+    itinerary.name = `Viaje a ${provinceName}`;
     itinerary.fromDate = createItineraryDto.fromDate;
     itinerary.toDate = createItineraryDto.toDate;
     itinerary.user = user;
@@ -51,6 +59,7 @@ export class ItineraryService {
         const createActivityDto: CreateActivityDto = {
           itinerary: savedItinerary,
           place,
+          name: this.activityService.formatActivityName(place.name, activityDates[0]),
           fromDate: activityDates[0],
           toDate: activityDates[1],
         };

@@ -244,7 +244,6 @@ app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) =>
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: itinerary });
   } catch (error) {
-    console.error(error);
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error creating itinerary' });
@@ -279,7 +278,7 @@ app.get('/fetch-reviews', async (_req, res) => {
   }
 });
 
-app.post('/itinerary/add-user',(req, res) => {
+app.post('/itinerary/add-user', (req, res) => {
   const { itineraryId, participantId } = req.body;
 
   itineraryService
@@ -309,15 +308,13 @@ app.delete('/itinerary/remove-user', (req, res) => {
     });
 });
 
-app.get('/itinerary/paticipants',(req, res) => {
+app.get('/itinerary/paticipants', (req, res) => {
   const { itineraryId } = req.body;
 
   itineraryService
     .getItineraryWithParticipants(itineraryId)
-    .then((participants) => {     
-      return res
-        .status(200)
-        .json({ status: 'success', participants });
+    .then((participants) => {
+      return res.status(200).json({ status: 'success', participants });
     })
     .catch((error) => {
       console.error('Error removing user to itinerary:', error);
@@ -325,18 +322,16 @@ app.get('/itinerary/paticipants',(req, res) => {
     });
 });
 
-
-
 app.get('/users/search', async (req, res) => {
   const { name, offset = 0 } = req.query;
 
   try {
-    const user = await userService.searchByName(name as string, offset as number );
+    const user = await userService.searchByName(name as string, offset as number);
     return res.status(200).json({ status: 'success', data: user });
   } catch (error) {
     console.error('Error searching user:', error);
     return res.status(500).json({ status: 'error', message: 'Error searching user' });
   }
-}); 
+});
 
 export default app;
