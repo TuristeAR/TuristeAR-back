@@ -38,6 +38,8 @@ describe('UserService', () => {
       googleId,
       profilePicture: 'https://example.com/profile.jpg',
       createdAt: new Date(),
+      ownedItineraries: [],
+      joinedItineraries: [],
     };
 
     userRepository.findOne.mockResolvedValue(user);
