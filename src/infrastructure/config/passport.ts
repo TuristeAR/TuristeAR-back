@@ -1,8 +1,6 @@
 import { PassportStatic, Profile } from 'passport';
 import { Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
-import { AppDataSource } from '../database/data-source';
 import { UserService } from '../../domain/services/user.service';
-import { User } from '../../domain/entities/user';
 import { CreateUserDto } from '../../application/dtos/create-user.dto';
 
 export const initializePassport = (passport: PassportStatic) => {
@@ -39,8 +37,7 @@ export const initializePassport = (passport: PassportStatic) => {
   });
 
   passport.deserializeUser(async (id: number, done: (err: any, user?: any) => void) => {
-    const userRepository = AppDataSource.getRepository(User);
-    const user = await userRepository.findOneBy({ id });
+    const user = await userService.findOneById(id);
     done(null, user);
   });
 };

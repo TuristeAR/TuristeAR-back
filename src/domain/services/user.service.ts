@@ -13,6 +13,10 @@ export class UserService {
     return this.userRepository.create(createUserDto);
   }
 
+  findOneById(id: number): Promise<User | null> {
+    return this.userRepository.findOne({ where: { id } });
+  }
+
   findOneByGoogleId(googleId: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { googleId } });
   }
