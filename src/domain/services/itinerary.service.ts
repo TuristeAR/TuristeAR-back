@@ -127,10 +127,10 @@ export class ItineraryService {
               throw new Error("User not found");
             }
   
-            const userIndex = itinerary.users.findIndex(u => u.id === user.id);
+            const userIndex = itinerary.participants.findIndex(u => u.id === user.id);
   
             if (userIndex !== -1) {
-              itinerary.users.splice(userIndex, 1); 
+              itinerary.participants.splice(userIndex, 1); 
               return this.itineraryRepository.save(itinerary);
             } else {
               throw new Error("User is not part of the itinerary");

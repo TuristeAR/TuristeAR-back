@@ -36,4 +36,8 @@ export abstract class AbstractRepository<T extends ObjectLiteral> {
   deleteMany(criteria: any): Promise<DeleteResult> {
     return this.repository.delete(criteria);
   }
+
+  save(entity: DeepPartial<T>): Promise<T> {
+    return this.repository.save(entity);
+  }
 }
