@@ -60,6 +60,14 @@ export class ActivityService {
     ];
   }
 
+  formatActivityName(name: string, date: Date): string {
+    const formattedDate = date.toLocaleDateString('es-ES', {
+      month: 'short',
+      day: 'numeric',
+    });
+    return `${name} - ${formattedDate}.`;
+  }
+
   private createStartTimeAndEndTimeBetween9And12(date: Date): Date[] {
     const startTime = new Date(date);
     startTime.setHours(9, 0, 0, 0);

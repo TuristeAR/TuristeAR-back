@@ -56,6 +56,7 @@ export class ItineraryService {
         const createActivityDto: CreateActivityDto = {
           itinerary: savedItinerary,
           place,
+          name: this.activityService.formatActivityName(place.name, activityDates[0]),
           fromDate: activityDates[0],
           toDate: activityDates[1],
         };
