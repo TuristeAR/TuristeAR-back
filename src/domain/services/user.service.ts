@@ -1,6 +1,7 @@
 import { UserRepository } from '../repositories/user.repository';
 import { User } from '../entities/user';
 import { CreateUserDto } from '../../application/dtos/create-user.dto';
+import { Like } from 'typeorm';
 
 export class UserService {
   private userRepository: UserRepository;
@@ -20,7 +21,14 @@ export class UserService {
   findOneByGoogleId(googleId: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { googleId } });
   }
-  searchByName(arg0: string, arg1: number) {
-    throw new Error('Method not implemented.');
+  
+  searchByName(name: string, offset: number): Promise<User[]> {
+    return this.userRepository.findMany({
+      where: {
+        name: Like(`%${name}%`),
+      },
+      take: 10,
+      skip: offset,
+    });
   }
 }
