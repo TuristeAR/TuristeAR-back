@@ -6,8 +6,9 @@ import { User } from '../../../src/domain/entities/user';
 import { Activity } from '../../../src/domain/entities/activity';
 
 
-jest.mock('../repositories/itinerary.repository');
-jest.mock('../services/user.service');
+jest.mock('../../../src/domain/repositories/itinerary.repository');
+jest.mock('../../../src/domain/services/user.service');
+
 
 describe('ItineraryService - addUserToItinerary', () => {
   let itineraryService: ItineraryService;
@@ -30,7 +31,8 @@ describe('ItineraryService - addUserToItinerary', () => {
   it('should throw an error if the user is the owner of the itinerary', async () => {
     const owner = { id: 1 } as User;
     const itinerary: Itinerary = {
-        id: 1,
+      name: '',
+      id: 1,
         user: { id: 2 } as User,
         participants: [],
         activities: [] as Activity[],
@@ -45,7 +47,8 @@ describe('ItineraryService - addUserToItinerary', () => {
 
   it('should throw an error if the user is not found', async () => {
     const itinerary: Itinerary = {
-        id: 1,
+      name: '',
+      id: 1,
         user: { id: 2 } as User,
         participants: [],
         activities: [] as Activity[],
@@ -76,7 +79,8 @@ describe('ItineraryService - addUserToItinerary', () => {
   it('should add the user to the itinerary and save it', async () => {
     const user = { id: 3 } as User;
     const itinerary: Itinerary = {
-        id: 1,
+      name: '',
+      id: 1,
         user: { id: 2 } as User,
         participants: [],
         activities: [] as Activity[],
