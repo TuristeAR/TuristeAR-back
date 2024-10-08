@@ -2,7 +2,7 @@ import { Culture } from '../entities/culture';
 import { CreateCultureDto } from '../../application/dtos/create-culture.dto';
 import { CultureRepository } from '../repositories/culture.repository';
 
-export class WeatherService {
+export class CultureService {
     private typeOfCultureRepository: CultureRepository;
 
     constructor() {
