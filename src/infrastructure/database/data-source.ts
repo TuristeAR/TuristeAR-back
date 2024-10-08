@@ -7,6 +7,7 @@ import { Place } from '../../domain/entities/place';
 import { Review } from '../../domain/entities/review';
 import { Itinerary } from '../../domain/entities/itinerary';
 import { Activity } from '../../domain/entities/activity';
+import { Publication } from '../../domain/entities/publication';
 
 dotenv.config();
 
@@ -17,7 +18,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [User, Weather, Province, Place, Review, Itinerary, Activity],
+  entities: [User, Weather, Province, Place, Review, Itinerary, Activity, Publication],
   synchronize: true,
   logging: true,
   timezone: '-03:00',

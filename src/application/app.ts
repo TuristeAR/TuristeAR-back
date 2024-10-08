@@ -19,6 +19,7 @@ import { authMiddleware } from '../infrastructure/middlewares/auth.middleware';
 import { ItineraryService } from '../domain/services/itinerary.service';
 import { ActivityService } from '../domain/services/activity.service';
 import { UserService } from '../domain/services/user.service';
+import { PublicationService } from '../domain/services/publication.service';
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ AppDataSource.initialize()
 const weatherService = new WeatherService();
 const provinceService = new ProvinceService();
 const placeService = new PlaceService();
+const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
 const activityService = new ActivityService();
@@ -396,5 +398,23 @@ app.get('/provinces/:param', async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error fetching province', error });
   }
 });
+
+app.get('/publications/:userID', async (req: Request, res: Response) => {
+  const { param } = req.params;
+
+  try {
+    let publications;
+    if(!isNaN(Number(param))){
+      publications= await publicationService.findForUser(Number(param));
+    }
+    if (!publications) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publications);
+  }catch (error) {
+    return res.status(500).json({ message: 'Error fetching publications', error });
+  }
+})
 
 export default app;

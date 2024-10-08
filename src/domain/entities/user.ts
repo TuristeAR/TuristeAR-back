@@ -13,6 +13,18 @@ export class User extends AbstractEntity {
   @Column()
   profilePicture: string;
 
+  @Column()
+  description : string;
+
+  @Column()
+  coverPicture : string;
+
+  @Column()
+  location : string;
+
+  @Column()
+  birthdate : string;
+
   @Column({ unique: true })
   googleId: string;
 
