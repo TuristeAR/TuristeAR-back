@@ -376,4 +376,25 @@ app.get('/users/search', async (req, res) => {
   }
 });
 
+app.get('/provinces/:param', async (req: Request, res: Response) => {
+  const { param } = req.params;
+
+  try {
+    let province;
+    if (!isNaN(Number(param))) {
+      province = await placeService.findManyByIdProvince(Number(param));
+    } 
+    else {
+      province = await placeService.findManyByNameProvince(param);
+    }
+    if (!province) {
+      return res.status(404).json({ message: 'Province not found' });
+    }
+
+    return res.json(province); 
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching province', error });
+  }
+});
+
 export default app;
