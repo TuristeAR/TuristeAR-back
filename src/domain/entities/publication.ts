@@ -13,7 +13,7 @@ export class Publication extends AbstractEntity {
   images: string[];
 
   @Column()
-  creationDate: string;
+  creationDate: Date;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })

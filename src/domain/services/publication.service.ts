@@ -1,5 +1,6 @@
 import { PublicationRepository } from '../repositories/publication.repository';
 import { Publication } from '../entities/publication';
+import { Place } from '../entities/place';
 
 export class PublicationService {
 
@@ -11,6 +12,10 @@ export class PublicationService {
 
   findForUser(id : number): Promise<Publication[] | null> {
     return this.publicationRepository.findForUser(id);
+  }
+
+  findAll({}): Promise<Publication[]> {
+    return this.publicationRepository.findMany({});
   }
 
 }
