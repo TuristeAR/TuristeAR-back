@@ -380,14 +380,14 @@ app.get('/users/search', async (req, res) => {
 
 app.get('/provinces/:param/:count', async (req: Request, res: Response) => {
   const { param , count = 4} = req.params;
-
+  const numericCount = Math.min(Number(count), 4);
   try {
     let province;
     if (!isNaN(Number(param))) {
-      province = await placeService.findManyByIdProvinceReviews(Number(param), Number(count));
+      province = await placeService.findManyByIdProvinceReviews(Number(param), numericCount);
     } 
     else {
-      province = await placeService.findManyByNameProvinceReviews(param, Number(count));
+      province = await placeService.findManyByNameProvinceReviews(param, numericCount);
     }
     if (!province) {
       return res.status(404).json({ message: 'Province not found' });
