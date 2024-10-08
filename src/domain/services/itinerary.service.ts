@@ -81,6 +81,65 @@ export class ItineraryService {
     return this.itineraryRepository.findOne({ where: { id } });
   }
 
+  findAllByUser(user: User): Promise<Itinerary[]> {
+    return this.itineraryRepository.findMany({ where: { user } });
+  }
+
+  findOneByIdWithParticipants(id: number): Promise<Itinerary | null> {
+    return this.itineraryRepository.findOne({
+      where: { id: id },
+      relations: ['participants', 'user'],
+    });
+  }
+
+  async addUserToItinerary(itineraryId: number, userId: number): Promise<Itinerary> {
+    let itinerary = await this.findOneByIdWithParticipants(itineraryId);
+    if (!itinerary) {
+      throw new Error('Itinerary not found');
+    }
+    if (itinerary.user.id === userId) {
+      throw new Error('Owner cannot be added as a participant');
+    }
+    let user = await this.userService.findOneById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    if (!itinerary.participants.some((u) => u.id === user.id)) {
+      itinerary.participants.push(user);
+      return this.itineraryRepository.save(itinerary);
+    } else {
+      return Promise.resolve(itinerary);
+    }
+  }
+
+  async removeUserFromItinerary(itineraryId: number, participantId: number): Promise<Itinerary> {
+    let itinerary = await this.findOneByIdWithParticipants(itineraryId);
+    if (!itinerary) {
+      throw new Error('Itinerary not found');
+    }
+    if (itinerary.user.id === participantId) {
+      throw new Error('The owner cannot be removed by a participant');
+    }
+    let user = await this.userService.findOneById(participantId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const userIndex = itinerary.participants.findIndex((u) => u.id === user.id);
+    if (userIndex !== -1) {
+      itinerary.participants.splice(userIndex, 1);
+      return this.itineraryRepository.save(itinerary);
+    } else {
+      throw new Error('User is not part of the itinerary');
+    }
+  }
+
+  getItineraryWithParticipants(itineraryId: number): Promise<Itinerary | null> {
+    return this.itineraryRepository.findOne({
+      where: { id: itineraryId },
+      relations: ['participants', 'user'],
+    });
+  }
+
   private getDates(fromDate: Date, toDate: Date): Date[] {
     const dates = [];
     const currentDate = new Date(fromDate);
@@ -92,68 +151,5 @@ export class ItineraryService {
     }
 
     return dates;
-  }
-
-  findOneByIdWithParticipants(id: number): Promise<Itinerary | null> {
-    return this.itineraryRepository.findOne({
-      where: { id: id },
-      relations: ['participants', 'user'],
-    });
-  }
-  addUserToItinerary(itineraryId: number, userId: number): Promise<Itinerary> {
-    return this.findOneByIdWithParticipants(itineraryId) 
-      .then(itinerary => {
-        if (!itinerary) {
-          throw new Error("Itinerary not found");
-        }
-        if (itinerary.user.id === userId) {
-            throw new Error("Owner cannot be added as a participant");
-        }
-        return this.userService.findOneById(userId)
-          .then(user => {
-            if (!user) {
-              throw new Error("User not found");
-            }
-            if (!itinerary.participants.some(u => u.id === user.id)) {
-              itinerary.participants.push(user); 
-              return this.itineraryRepository.save(itinerary);
-            } else {
-              return Promise.resolve(itinerary); 
-            }
-        });
-      });
-  }
-  
-  removeUserFromItinerary(itineraryId: number, participantId: number): Promise<Itinerary> {
-    return this.findOneByIdWithParticipants(itineraryId)
-      .then(itinerary => {
-        if (!itinerary) {
-          throw new Error("Itinerary not found");
-        }
-        if (itinerary.user.id === participantId) {
-          throw new Error("The owner cannot be removed by a participant");
-        }
-        return this.userService.findOneById(participantId)
-          .then(user => {
-            if (!user) {
-              throw new Error("User not found");
-            }
-  
-            const userIndex = itinerary.participants.findIndex(u => u.id === user.id);
-  
-            if (userIndex !== -1) {
-              itinerary.participants.splice(userIndex, 1); 
-              return this.itineraryRepository.save(itinerary);
-            } else {
-              throw new Error("User is not part of the itinerary");
-            }
-          });
-      });
-  }
-  getItineraryWithParticipants(itineraryId: number): Promise<Itinerary | null> {
-    return this.itineraryRepository.findOne({
-      where: { id: itineraryId },
-      relations: ['participants', 'user'],
-    });
   }
 }

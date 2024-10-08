@@ -3,6 +3,7 @@ import { PlaceRepository } from '../repositories/place.repository';
 import { CreatePlaceDto } from '../../application/dtos/create-place.dto';
 import { ProvinceService } from './province.service';
 import { post } from '../../utils/http.util';
+import { Province } from '../entities/province';
 
 export class PlaceService {
   private placeRepository: PlaceRepository;
@@ -186,6 +187,35 @@ export class PlaceService {
 
         await this.create(createPlaceDto);
       }
+    }
+  }
+
+  async findManyByIdProvince(id: number): Promise<Province | null> {
+    try {
+      const province = await this.provinceService.findOneByIdWithPlaceReviews(id);
+
+      if (!province) {
+        throw new Error(`Province with ID ${id} not found`);
+      }
+
+      return province;
+    } catch (error) {
+      console.error('Error fetching province by ID with places and reviews:', error);
+      throw error;
+    }
+  }
+  async findManyByNameProvince(name: string): Promise<Province | null> {
+    try {
+      const province = await this.provinceService.findOneByNameWithPlaceReviews(name);
+
+      if (!province) {
+        throw new Error(`Province with ID ${name} not found`);
+      }
+
+      return province;
+    } catch (error) {
+      console.error('Error fetching province by ID with places and reviews:', error);
+      throw error;
     }
   }
 }

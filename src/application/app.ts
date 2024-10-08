@@ -17,6 +17,7 @@ import { ReviewService } from '../domain/services/review.service';
 import { CreateItineraryDto } from './dtos/create-itinerary.dto';
 import { authMiddleware } from '../infrastructure/middlewares/auth.middleware';
 import { ItineraryService } from '../domain/services/itinerary.service';
+import { ActivityService } from '../domain/services/activity.service';
 import { UserService } from '../domain/services/user.service';
 
 dotenv.config();
@@ -78,6 +79,7 @@ const provinceService = new ProvinceService();
 const placeService = new PlaceService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
+const activityService = new ActivityService();
 const userService = new UserService();
 
 app.get(
@@ -250,6 +252,46 @@ app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) =>
   }
 });
 
+app.get('/itinerary/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const itinerary = await itineraryService.findOneById(Number(id));
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: itinerary });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching itinerary' });
+  }
+});
+
+app.get('/user-itineraries', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const itineraries = await itineraryService.findAllByUser(req.user as User);
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: itineraries });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching itineraries' });
+  }
+});
+
+app.get('/activity/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const activity = await activityService.findOneById(Number(id));
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: activity });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching activity' });
+  }
+});
+
 app.get('/fetch-places', async (req: Request, res: Response) => {
   try {
     const province = (req.query.province as string) + ' Province';
@@ -331,6 +373,27 @@ app.get('/users/search', async (req, res) => {
   } catch (error) {
     console.error('Error searching user:', error);
     return res.status(500).json({ status: 'error', message: 'Error searching user' });
+  }
+});
+
+app.get('/provinces/:param', async (req: Request, res: Response) => {
+  const { param } = req.params;
+
+  try {
+    let province;
+    if (!isNaN(Number(param))) {
+      province = await placeService.findManyByIdProvince(Number(param));
+    } 
+    else {
+      province = await placeService.findManyByNameProvince(param);
+    }
+    if (!province) {
+      return res.status(404).json({ message: 'Province not found' });
+    }
+
+    return res.json(province); 
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching province', error });
   }
 });
 

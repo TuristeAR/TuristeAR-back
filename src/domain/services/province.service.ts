@@ -22,6 +22,30 @@ export class ProvinceService {
     return this.provinceRepository.findOne({ where: { id } });
   }
 
+  async findOneByIdWithPlaceReviews(id: number): Promise<Province | null> {
+    const province = await this.provinceRepository.findOne({
+      where: { id },
+      relations: ['places', 'places.reviews'],
+    });
+  
+    if (!province) {
+      return null; 
+    }
+  
+    province.places = province.places
+      .map((place) => {
+        if (place.reviews) {
+          place.reviews = place.reviews.filter((review) => review.rating >= 4);
+        }
+  
+        return place;
+      })
+      .filter((place) => place.reviews.length > 0) 
+      .slice(0, 4); 
+  
+    return province;
+  }
+
   async getProvinceNameFromId(id: number): Promise<string | null> {
     const province = await this.provinceRepository.findOne({ where: { id } });
 
@@ -47,5 +71,29 @@ export class ProvinceService {
     const province = await this.provinceRepository.findOne({ where: { name: provinceName } });
 
     return province?.id;
+  }
+
+  async findOneByNameWithPlaceReviews(name: string) {
+    const province = await this.provinceRepository.findOne({
+      where: { name },
+      relations: ['places', 'places.reviews'],
+    });
+  
+    if (!province) {
+      return null; 
+    }
+  
+    province.places = province.places
+      .map((place) => {
+        if (place.reviews) {
+          place.reviews = place.reviews.filter((review) => review.rating >= 4);
+        }
+  
+        return place;
+      })
+      .filter((place) => place.reviews.length > 0) 
+      .slice(0, 4); 
+  
+    return province;
   }
 }
