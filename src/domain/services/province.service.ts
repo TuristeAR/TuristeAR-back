@@ -22,11 +22,27 @@ export class ProvinceService {
     return this.provinceRepository.findOne({ where: { id } });
   }
 
-  async findOneByIdWithPlaceReviews(id: number): Promise<Province | null> {
+  async findOneByIdWithPlaceReviews(id: number, slice: number): Promise<Province | null> {
     const province = await this.provinceRepository.findOne({
       where: { id },
       relations: ['places', 'places.reviews'],
-    });
+      select: {
+        id: true, 
+        name: true,
+        description: true,
+        places: {
+          id: true, 
+          name: true,
+          reviews: {
+            authorName: true,
+            authorPhoto: true,
+            publishedTime: true,
+            photos: true,
+            rating: true, 
+            text: true, 
+          },
+        },
+    }});
   
     if (!province) {
       return null; 
@@ -41,7 +57,7 @@ export class ProvinceService {
         return place;
       })
       .filter((place) => place.reviews.length > 0) 
-      .slice(0, 4); 
+      .slice(0, slice); 
   
     return province;
   }
@@ -73,11 +89,27 @@ export class ProvinceService {
     return province?.id;
   }
 
-  async findOneByNameWithPlaceReviews(name: string) {
+  async findOneByNameWithPlaceReviews(name: string, slice: number) {
     const province = await this.provinceRepository.findOne({
       where: { name },
       relations: ['places', 'places.reviews'],
-    });
+      select: {
+        id: true, 
+        name: true,
+        description: true,
+        places: {
+          id: true, 
+          name: true,
+          reviews: {
+            authorName: true,
+            authorPhoto: true,
+            publishedTime: true,
+            photos: true,
+            rating: true, 
+            text: true, 
+          },
+        },
+    }});
   
     if (!province) {
       return null; 
@@ -92,7 +124,7 @@ export class ProvinceService {
         return place;
       })
       .filter((place) => place.reviews.length > 0) 
-      .slice(0, 4); 
+      .slice(0, slice); 
   
     return province;
   }

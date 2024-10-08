@@ -376,16 +376,16 @@ app.get('/users/search', async (req, res) => {
   }
 });
 
-app.get('/provinces/:param', async (req: Request, res: Response) => {
-  const { param } = req.params;
+app.get('/provinces/:param/:count', async (req: Request, res: Response) => {
+  const { param , count = 4} = req.params;
 
   try {
     let province;
     if (!isNaN(Number(param))) {
-      province = await placeService.findManyByIdProvince(Number(param));
+      province = await placeService.findManyByIdProvinceReviews(Number(param), Number(count));
     } 
     else {
-      province = await placeService.findManyByNameProvince(param);
+      province = await placeService.findManyByNameProvinceReviews(param, Number(count));
     }
     if (!province) {
       return res.status(404).json({ message: 'Province not found' });

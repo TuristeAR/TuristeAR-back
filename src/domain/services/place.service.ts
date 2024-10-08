@@ -190,9 +190,9 @@ export class PlaceService {
     }
   }
 
-  async findManyByIdProvince(id: number): Promise<Province | null> {
+  async findManyByIdProvinceReviews(id: number, slice: number): Promise<Province | null> {
     try {
-      const province = await this.provinceService.findOneByIdWithPlaceReviews(id);
+      const province = await this.provinceService.findOneByIdWithPlaceReviews(id, slice);
 
       if (!province) {
         throw new Error(`Province with ID ${id} not found`);
@@ -204,9 +204,9 @@ export class PlaceService {
       throw error;
     }
   }
-  async findManyByNameProvince(name: string): Promise<Province | null> {
+  async findManyByNameProvinceReviews(name: string, slice: number): Promise<Province | null> {
     try {
-      const province = await this.provinceService.findOneByNameWithPlaceReviews(name);
+      const province = await this.provinceService.findOneByNameWithPlaceReviews(name, slice);
 
       if (!province) {
         throw new Error(`Province with ID ${name} not found`);
