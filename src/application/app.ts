@@ -19,6 +19,7 @@ import { authMiddleware } from '../infrastructure/middlewares/auth.middleware';
 import { ItineraryService } from '../domain/services/itinerary.service';
 import { ActivityService } from '../domain/services/activity.service';
 import { UserService } from '../domain/services/user.service';
+import { PublicationService } from '../domain/services/publication.service';
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ AppDataSource.initialize()
 const weatherService = new WeatherService();
 const provinceService = new ProvinceService();
 const placeService = new PlaceService();
+const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
 const activityService = new ActivityService();
@@ -396,5 +398,38 @@ app.get('/provinces/:param/:count', async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error fetching province', error });
   }
 });
+
+app.get('/publications/:userID', async (req: Request, res: Response) => {
+  const { userID } = req.params;
+
+  try {
+    let publications;
+
+    if (!isNaN(Number(userID))) {
+      publications = await publicationService.findForUser(Number(userID));
+    }
+
+    if (!publications || publications.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publications);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching publications', error });
+  }
+});
+
+app.get('/publications', async (req: Request, res: Response) => {
+  try {
+    const publications = await publicationService.findAll({});
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: publications });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching publications' });
+  }
+});
+
 
 export default app;

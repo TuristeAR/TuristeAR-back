@@ -11,7 +11,22 @@ export class User extends AbstractEntity {
   name: string;
 
   @Column()
+  username: string;
+
+  @Column()
   profilePicture: string;
+
+  @Column()
+  description : string;
+
+  @Column()
+  coverPicture : string;
+
+  @Column()
+  location : string;
+
+  @Column()
+  birthdate : Date;
 
   @Column({ unique: true })
   googleId: string;

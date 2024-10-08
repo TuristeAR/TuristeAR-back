@@ -1,5 +1,5 @@
 import { UserService } from '../../../src/domain/services/user.service';
-import { UserRepository } from '../../../src/domain/repositories/user.repository';
+import { PublicationRepository } from '../../../src/domain/repositories/user.repository';
 import { CreateUserDto } from '../../../src/application/dtos/create-user.dto';
 import { User } from '../../../src/domain/entities/user';
 
@@ -7,10 +7,10 @@ jest.mock('../../../src/domain/repositories/user.repository');
 
 describe('UserService', () => {
   let userService: UserService;
-  let userRepository: jest.Mocked<UserRepository>;
+  let userRepository: jest.Mocked<PublicationRepository>;
 
   beforeEach(() => {
-    userRepository = new UserRepository() as jest.Mocked<UserRepository>;
+    userRepository = new PublicationRepository() as jest.Mocked<PublicationRepository>;
     userService = new UserService();
     (userService as any).userRepository = userRepository;
   });
@@ -32,6 +32,8 @@ describe('UserService', () => {
     const googleId = '123';
 
     const user: User = {
+      username: '',
+      birthdate: new Date(), coverPicture: '', description: '', location: '',
       id: 1,
       name: 'John Doe',
       email: 'john.doe@example.com',
@@ -39,7 +41,7 @@ describe('UserService', () => {
       profilePicture: 'https://example.com/profile.jpg',
       createdAt: new Date(),
       ownedItineraries: [],
-      joinedItineraries: [],
+      joinedItineraries: []
     };
 
     userRepository.findOne.mockResolvedValue(user);
