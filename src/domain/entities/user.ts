@@ -11,6 +11,9 @@ export class User extends AbstractEntity {
   name: string;
 
   @Column()
+  username: string;
+
+  @Column()
   profilePicture: string;
 
   @Column()
@@ -23,7 +26,7 @@ export class User extends AbstractEntity {
   location : string;
 
   @Column()
-  birthdate : string;
+  birthdate : Date;
 
   @Column({ unique: true })
   googleId: string;

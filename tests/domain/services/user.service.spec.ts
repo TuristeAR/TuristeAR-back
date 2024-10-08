@@ -32,7 +32,8 @@ describe('UserService', () => {
     const googleId = '123';
 
     const user: User = {
-      birthdate: '', coverPicture: '', description: '', location: '',
+      username: '',
+      birthdate: new Date(), coverPicture: '', description: '', location: '',
       id: 1,
       name: 'John Doe',
       email: 'john.doe@example.com',

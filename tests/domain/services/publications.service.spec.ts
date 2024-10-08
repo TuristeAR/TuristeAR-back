@@ -22,7 +22,7 @@ describe('PublicationService', () => {
       id: 1,
       description: 'Hola mundo',
       images: [],
-      creationDate: '2018-12-09',
+      creationDate: new Date(),
       createdAt: new Date(),
       user: { id: userID } as User,
     };

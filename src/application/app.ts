@@ -400,21 +400,36 @@ app.get('/provinces/:param', async (req: Request, res: Response) => {
 });
 
 app.get('/publications/:userID', async (req: Request, res: Response) => {
-  const { param } = req.params;
+  const { userID } = req.params;
 
   try {
     let publications;
-    if(!isNaN(Number(param))){
-      publications= await publicationService.findForUser(Number(param));
+
+    if (!isNaN(Number(userID))) {
+      publications = await publicationService.findForUser(Number(userID));
     }
-    if (!publications) {
+
+    if (!publications || publications.length === 0) {
       return res.status(404).json({ message: 'No se encontraron publicaciones' });
     }
 
     return res.json(publications);
-  }catch (error) {
+  } catch (error) {
     return res.status(500).json({ message: 'Error fetching publications', error });
   }
-})
+});
+
+app.get('/publications', async (req: Request, res: Response) => {
+  try {
+    const publications = await publicationService.findAll({});
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: publications });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching publications' });
+  }
+});
+
 
 export default app;
