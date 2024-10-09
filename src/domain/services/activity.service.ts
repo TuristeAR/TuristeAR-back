@@ -17,12 +17,6 @@ export class ActivityService {
     return this.activityRepository.findOne({ where: { id } });
   }
 
-    
-  async findAllByItineraryId(itineraryId: number): Promise<Activity[]> {
-    return await this.activityRepository.findByItineraryId(itineraryId); // Asegúrate de tener este método en tu repositorio
-  }
-  
-
   getActivityDates(openingHours: string[] | null, date: Date): Date[] {
     if (openingHours === null) {
       return this.createStartTimeAndEndTimeBetween9And12(date);

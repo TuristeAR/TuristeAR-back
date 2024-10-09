@@ -6,9 +6,6 @@ export class ActivityRepository extends AbstractRepository<Activity> {
   constructor() {
     super(AppDataSource.getRepository(Activity));
   }
-
-  findByItineraryId(itineraryId: number): Activity[] | PromiseLike<Activity[]> {
-    throw new Error('Method not implemented.');
-  }
   
+
 }

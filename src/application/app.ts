@@ -239,7 +239,7 @@ app.get('/review/:googleId', async (req: Request, res: Response) => {
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching reviews' });
   }
 });
-  
+
 app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) => {
   try {
     const createItineraryDto: CreateItineraryDto = req.body;
@@ -259,8 +259,9 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const itinerary = await itineraryService.findOneById(Number(id));
+    const activities = await itineraryService.findActivitiesById(Number(id));
 
-    return res.status(status.OK).json({ statusCode: status.OK, data: itinerary });
+    return res.status(status.OK).json({ statusCode: status.OK, data: { itinerary, activities } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
@@ -293,8 +294,6 @@ app.get('/activity/:id', async (req: Request, res: Response) => {
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching activity' });
   }
 });
-
-
 
 app.get('/fetch-places', async (req: Request, res: Response) => {
   try {
@@ -368,21 +367,20 @@ app.get('/itinerary/paticipants', (req, res) => {
     });
 });
 
-app.post('/itinerary/add-activity', (req,res) => {
+app.post('/itinerary/add-activity', (req, res) => {
+  const { itineraryId, activityId } = req.body;
 
-  const {itineraryId, activityId} = req.body;
-
-  itineraryService.addActivityToItinerary(itineraryId,activityId)
-  .then(() => {
-    return res
-      .status(200)
-      .json({ status: 'success', message: `Activity with ID ${activityId} add` });
-  })
-  .catch((error) => {
-    console.error('Error removing activity to itinerary:', error);
-    return res.status(500).json({ status: 'error', message: 'Error add activity to itinerary' });
-  });
-
+  itineraryService
+    .addActivityToItinerary(itineraryId, activityId)
+    .then(() => {
+      return res
+        .status(200)
+        .json({ status: 'success', message: `Activity with ID ${activityId} add` });
+    })
+    .catch((error) => {
+      console.error('Error removing activity to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error add activity to itinerary' });
+    });
 });
 
 app.delete('/itinerary/remove-activity', (req, res) => {
@@ -397,7 +395,9 @@ app.delete('/itinerary/remove-activity', (req, res) => {
     })
     .catch((error) => {
       console.error('Error removing activity to itinerary:', error);
-      return res.status(500).json({ status: 'error', message: 'Error removing activity to itinerary' });
+      return res
+        .status(500)
+        .json({ status: 'error', message: 'Error removing activity to itinerary' });
     });
 });
 
@@ -416,21 +416,20 @@ app.get('/users/search', async (req, res) => {
 app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
   const { param, count = 4 } = req.params;
   const numericCount = Math.min(Number(count), 4);
-  
+
   try {
-      const province = await placeService.findManyByPlaceProvinceReviews(param, numericCount);
+    const province = await placeService.findManyByPlaceProvinceReviews(param, numericCount);
 
-      if (!province) {
-          return res.status(404).json({ message: 'Province not found' });
-      }
+    if (!province) {
+      return res.status(404).json({ message: 'Province not found' });
+    }
 
-      return res.json(province); 
+    return res.json(province);
   } catch (error) {
-      console.error('Error fetching province:', error);
-      return res.status(500).json({ message: 'Error fetching province', error });
+    console.error('Error fetching province:', error);
+    return res.status(500).json({ message: 'Error fetching province', error });
   }
 });
-
 
 app.get('/publications/:userID', async (req: Request, res: Response) => {
   const { userID } = req.params;
@@ -463,6 +462,5 @@ app.get('/publications', async (req: Request, res: Response) => {
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching publications' });
   }
 });
-
 
 export default app;
