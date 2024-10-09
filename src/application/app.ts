@@ -357,7 +357,7 @@ app.delete('/itinerary/remove-user', (req, res) => {
 app.get('/itinerary/paticipants/:itineraryId', (req, res) => {
   const { itineraryId } = req.params;
   if (!itineraryId) {
-    return res.status(400).json({ status: 'error', message: 'itineraryId is required' });
+    return res.status(400).json({ status: 'error', message: 'itineraryId is required ' });
   }
   console.log("id",itineraryId)
    itineraryService
