@@ -86,21 +86,25 @@ export class ItineraryService {
   }
 
   async findActivitiesById(id: number): Promise<Itinerary | null> {
-    return this.itineraryRepository.findOne({
+    const itinerary = await this.itineraryRepository.findOne({
       where: { id },
-      relations: ['activities'],
-      select: {
-        id: true,
-        createdAt: true,
-        name: true,
-        activities: {
-          id: true,
-          name: true,
-          fromDate: true,
-          toDate: true,
-        },
-      },
+      relations: ['activities', 'activities.place'], // Incluyendo 'place' si necesitas esa información
     });
+  
+    if (!itinerary) return null;
+  
+    return {
+      ...itinerary,
+      activities: itinerary.activities.map(activity => ({
+        id: activity.id,
+        createdAt: activity.createdAt,
+        name: activity.name,
+        fromDate: activity.fromDate,
+        toDate: activity.toDate,
+        itinerary: activity.itinerary, 
+        place: activity.place, 
+      })),
+    };
   }
 
   findOneByIdWithParticipants(id: number): Promise<Itinerary | null> {
