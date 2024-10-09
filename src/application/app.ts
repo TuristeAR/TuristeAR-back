@@ -239,7 +239,7 @@ app.get('/review/:googleId', async (req: Request, res: Response) => {
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching reviews' });
   }
 });
-
+  
 app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) => {
   try {
     const createItineraryDto: CreateItineraryDto = req.body;
