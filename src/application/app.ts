@@ -368,6 +368,23 @@ app.get('/itinerary/paticipants', (req, res) => {
     });
 });
 
+app.post('/itinerary/add-activity', (req,res) => {
+
+  const {itineraryId, activityId} = req.body;
+
+  itineraryService.addActivityToItinerary(itineraryId,activityId)
+  .then(() => {
+    return res
+      .status(200)
+      .json({ status: 'success', message: `Activity with ID ${activityId} add` });
+  })
+  .catch((error) => {
+    console.error('Error removing activity to itinerary:', error);
+    return res.status(500).json({ status: 'error', message: 'Error add activity to itinerary' });
+  });
+
+});
+
 app.delete('/itinerary/remove-activity', (req, res) => {
   const { itineraryId, activityId } = req.body;
 

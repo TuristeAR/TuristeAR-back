@@ -92,6 +92,19 @@ export class ItineraryService {
     });
   }
 
+  async addActivityToItinerary (itineraryId:number, activityId: number): Promise<Itinerary> {
+    const itinerary = await this.findOneById(itineraryId);
+    if (!itinerary) {
+      throw new Error('Itinerary not found');
+    }
+    const activity = await this.activityService.findOneById(activityId);
+    if (!activity) {
+      throw new Error('Activity not found');
+    }
+    itinerary.activities.push(activity);
+    return this.itineraryRepository.save(itinerary);
+  }
+
   async addUserToItinerary(itineraryId: number, userId: number): Promise<Itinerary> {
     let itinerary = await this.findOneByIdWithParticipants(itineraryId);
     if (!itinerary) {
