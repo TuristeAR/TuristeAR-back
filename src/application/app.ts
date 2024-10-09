@@ -280,6 +280,19 @@ app.get('/user-itineraries', authMiddleware, async (req: Request, res: Response)
   }
 });
 
+app.get('/user-all', (_req: Request, res: Response) => {
+try{
+  const users = userService.findAll();
+
+  return res.status(status.OK).json({ statusCode: status.OK, listUser: users });
+
+} catch (error){
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error get all users' });
+  }
+});
+
 app.get('/activity/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

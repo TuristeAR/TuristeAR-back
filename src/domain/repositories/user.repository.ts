@@ -6,4 +6,7 @@ export class PublicationRepository extends AbstractRepository<User> {
   constructor() {
     super(AppDataSource.getRepository(User));
   }
+  findAll(): Promise<User[]>{
+    return this.repository.find();
+  }
 }
