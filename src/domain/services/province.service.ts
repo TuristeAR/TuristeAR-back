@@ -30,17 +30,18 @@ export class ProvinceService {
         id: true, 
         name: true,
         description: true,
+        images: true,
         places: {
-          id: true, 
-          name: true,
-          reviews: {
-            authorName: true,
-            authorPhoto: true,
-            publishedTime: true,
-            photos: true,
-            rating: true, 
-            text: true, 
-          },
+            id: true, 
+            name: true,
+            reviews: {
+                authorName: true,
+                authorPhoto: true,
+                publishedTime: true,
+                photos: true,
+                rating: true, 
+                text: true, 
+            },
         },
     }});
   
@@ -97,17 +98,18 @@ export class ProvinceService {
         id: true, 
         name: true,
         description: true,
+        images: true,
         places: {
-          id: true, 
-          name: true,
-          reviews: {
-            authorName: true,
-            authorPhoto: true,
-            publishedTime: true,
-            photos: true,
-            rating: true, 
-            text: true, 
-          },
+            id: true, 
+            name: true,
+            reviews: {
+                authorName: true,
+                authorPhoto: true,
+                publishedTime: true,
+                photos: true,
+                rating: true, 
+                text: true, 
+            },
         },
     }});
   
@@ -125,7 +127,6 @@ export class ProvinceService {
       })
       .filter((place) => place.reviews.length > 0) 
       .slice(0, slice); 
-  
     return province;
   }
 }
