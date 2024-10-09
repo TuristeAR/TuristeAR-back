@@ -140,6 +140,24 @@ export class ItineraryService {
     });
   }
 
+  async removeActivityFromItinerary(itineraryId: number, activityId: number): Promise<Itinerary> {
+    let itinerary = await this.findOneById(itineraryId);
+    if (!itinerary) {
+      throw new Error('Itinerary not found');
+    }
+    let activity = await this.activityService.findOneById(activityId);
+    if (!activity) {
+      throw new Error('Activity not found');
+    }
+    const activityIndex = itinerary.activities.findIndex((a) => a.id === activity.id);
+    if (activityIndex !== -1) {
+      itinerary.activities.splice(activityIndex, 1);
+      return this.itineraryRepository.save(itinerary);
+    } else {
+      throw new Error('Activity is not part of the itinerary');
+    }
+  }
+
   private getDates(fromDate: Date, toDate: Date): Date[] {
     const dates = [];
     const currentDate = new Date(fromDate);
