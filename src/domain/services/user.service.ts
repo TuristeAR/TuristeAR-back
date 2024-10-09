@@ -31,4 +31,8 @@ export class UserService {
       skip: offset,
     });
   }
+
+  findAll(): Promise<User[]>{
+    return this.userRepository.findAll();
+  }
 }
