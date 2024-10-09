@@ -413,26 +413,24 @@ app.get('/users/search', async (req, res) => {
   }
 });
 
-app.get('/provinces/:param/:count', async (req: Request, res: Response) => {
-  const { param , count = 4} = req.params;
+app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
+  const { param, count = 4 } = req.params;
   const numericCount = Math.min(Number(count), 4);
+  
   try {
-    let province;
-    if (!isNaN(Number(param))) {
-      province = await placeService.findManyByIdProvinceReviews(Number(param), numericCount);
-    } 
-    else {
-      province = await placeService.findManyByNameProvinceReviews(param, numericCount);
-    }
-    if (!province) {
-      return res.status(404).json({ message: 'Province not found' });
-    }
+      const province = await placeService.findManyByPlaceProvinceReviews(param, numericCount);
 
-    return res.json(province); 
+      if (!province) {
+          return res.status(404).json({ message: 'Province not found' });
+      }
+
+      return res.json(province); 
   } catch (error) {
-    return res.status(500).json({ message: 'Error fetching province', error });
+      console.error('Error fetching province:', error);
+      return res.status(500).json({ message: 'Error fetching province', error });
   }
 });
+
 
 app.get('/publications/:userID', async (req: Request, res: Response) => {
   const { userID } = req.params;

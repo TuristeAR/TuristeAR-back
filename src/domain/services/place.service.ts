@@ -190,32 +190,19 @@ export class PlaceService {
     }
   }
 
-  async findManyByIdProvinceReviews(id: number, slice: number): Promise<Province | null> {
+  async findManyByPlaceProvinceReviews(identifier: string | number, slice: number): Promise<Province | null> {
     try {
-      const province = await this.provinceService.findOneByIdWithPlaceReviews(id, slice);
+      
+        const province = await this.provinceService.findOneWithProvinceReviews(identifier, slice);
 
-      if (!province) {
-        throw new Error(`Province with ID ${id} not found`);
-      }
+        if (!province) {
+            throw new Error(`Province ${identifier} not found`);
+        }
 
-      return province;
+        return province;
     } catch (error) {
-      console.error('Error fetching province by ID with places and reviews:', error);
-      throw error;
+        console.error('Error fetching province with places and reviews:', error);
+        throw error;
     }
-  }
-  async findManyByNameProvinceReviews(name: string, slice: number): Promise<Province | null> {
-    try {
-      const province = await this.provinceService.findOneByNameWithPlaceReviews(name, slice);
-
-      if (!province) {
-        throw new Error(`Province with ID ${name} not found`);
-      }
-
-      return province;
-    } catch (error) {
-      console.error('Error fetching province by ID with places and reviews:', error);
-      throw error;
-    }
-  }
+}
 }
