@@ -15,7 +15,7 @@ export class PublicationService {
   }
 
   findAll({}): Promise<Publication[]> {
-    return this.publicationRepository.findMany({});
+    return this.publicationRepository.findMany({ relations: ['user'], take: 10 });
   }
 
 }
