@@ -354,18 +354,21 @@ app.delete('/itinerary/remove-user', (req, res) => {
     });
 });
 
-app.get('/itinerary/paticipants', (req, res) => {
-  const { itineraryId } = req.body;
-
-  itineraryService
-    .getItineraryWithParticipants(itineraryId)
-    .then((participants) => {
-      return res.status(200).json({ status: 'success', participants });
-    })
-    .catch((error) => {
-      console.error('Error removing user to itinerary:', error);
-      return res.status(500).json({ status: 'error', message: 'Error removing user to itinerary' });
-    });
+app.get('/itinerary/paticipants/:itineraryId', (req, res) => {
+  const { itineraryId } = req.params;
+  if (!itineraryId) {
+    return res.status(400).json({ status: 'error', message: 'itineraryId is required' });
+  }
+  console.log("id",itineraryId)
+   itineraryService
+     .getItineraryWithParticipants(Number(itineraryId))
+     .then((participants) => {
+       return res.status(200).json({ status: 'success', participants });
+     })
+     .catch((error) => {
+       console.error('Error get user to itinerary:', error);
+       return res.status(500).json({ status: 'error', message: 'Error get user to itinerary' });
+     });
 });
 
 app.post('/itinerary/add-activity', (req,res) => {
