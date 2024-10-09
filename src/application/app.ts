@@ -294,6 +294,8 @@ app.get('/activity/:id', async (req: Request, res: Response) => {
   }
 });
 
+
+
 app.get('/fetch-places', async (req: Request, res: Response) => {
   try {
     const province = (req.query.province as string) + ' Province';
@@ -363,6 +365,22 @@ app.get('/itinerary/paticipants', (req, res) => {
     .catch((error) => {
       console.error('Error removing user to itinerary:', error);
       return res.status(500).json({ status: 'error', message: 'Error removing user to itinerary' });
+    });
+});
+
+app.delete('/itinerary/remove-activity', (req, res) => {
+  const { itineraryId, activityId } = req.body;
+
+  itineraryService
+    .removeActivityFromItinerary(itineraryId, activityId)
+    .then(() => {
+      return res
+        .status(200)
+        .json({ status: 'success', message: `Activity with ID ${activityId} removed` });
+    })
+    .catch((error) => {
+      console.error('Error removing activity to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error removing activity to itinerary' });
     });
 });
 
