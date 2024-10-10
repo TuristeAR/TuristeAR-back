@@ -91,19 +91,19 @@ export class ItineraryService {
       where: { id },
       relations: ['activities', 'activities.place'], // Incluyendo 'place' si necesitas esa información
     });
-  
+
     if (!itinerary) return null;
-  
+
     return {
       ...itinerary,
-      activities: itinerary.activities.map(activity => ({
+      activities: itinerary.activities.map((activity) => ({
         id: activity.id,
         createdAt: activity.createdAt,
         name: activity.name,
         fromDate: activity.fromDate,
         toDate: activity.toDate,
-        itinerary: activity.itinerary, 
-        place: activity.place, 
+        itinerary: activity.itinerary,
+        place: activity.place,
       })),
     };
   }
@@ -115,7 +115,7 @@ export class ItineraryService {
     });
   }
 
-  async addActivityToItinerary (itineraryId:number, activityId: number): Promise<Itinerary> {
+  async addActivityToItinerary(itineraryId: number, activityId: number): Promise<Itinerary> {
     const itinerary = await this.findOneById(itineraryId);
     if (!itinerary) {
       throw new Error('Itinerary not found');
@@ -209,11 +209,10 @@ export class ItineraryService {
 
   getItinerariesWithParticipantsAndUserByUserId(userId: number): Promise<Itinerary[] | null> {
     return this.itineraryRepository.findMany({
-      where: {
-        participants: {
-          id: userId
-        }
-      },
+      where: [
+        { participants: { id: userId } }, // Primera condición
+        { user: { id: userId } }           // Segunda condición
+      ],
       relations: ['participants', 'user'],
     });
   }
