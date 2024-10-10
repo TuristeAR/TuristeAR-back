@@ -107,6 +107,19 @@ app.get('/auth/google/callback', (req, res, next) => {
   })(req, res, next);
 });
 
+app.get('/logout', authMiddleware, (req: Request, res: Response) => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ status: 'error', message: 'Error logging out' });
+    }
+
+    req.session.destroy(() => {
+      res.clearCookie('connect.sid');
+      res.redirect(`${process.env.FRONTEND_URL}`);
+    });
+  });
+});
+
 app.get('/session', (req: Request, res: Response) => {
   if (req.isAuthenticated && req.isAuthenticated()) {
     return res.send({
@@ -282,12 +295,11 @@ app.get('/user-itineraries', authMiddleware, async (req: Request, res: Response)
 });
 
 app.get('/user-all', (_req: Request, res: Response) => {
-try{
-  const users = userService.findAll();
+  try {
+    const users = userService.findAll();
 
-  return res.status(status.OK).json({ statusCode: status.OK, listUser: users });
-
-} catch (error){
+    return res.status(status.OK).json({ statusCode: status.OK, listUser: users });
+  } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error get all users' });
@@ -371,16 +383,16 @@ app.get('/itinerary/paticipants/:itineraryId', (req, res) => {
   if (!itineraryId) {
     return res.status(400).json({ status: 'error', message: 'itineraryId is required ' });
   }
-  console.log("id",itineraryId)
-   itineraryService
-     .getItineraryWithParticipants(Number(itineraryId))
-     .then((participants) => {
-       return res.status(200).json({ status: 'success', participants });
-     })
-     .catch((error) => {
-       console.error('Error get user to itinerary:', error);
-       return res.status(500).json({ status: 'error', message: 'Error get user to itinerary' });
-     });
+  console.log('id', itineraryId);
+  itineraryService
+    .getItineraryWithParticipants(Number(itineraryId))
+    .then((participants) => {
+      return res.status(200).json({ status: 'success', participants });
+    })
+    .catch((error) => {
+      console.error('Error get user to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error get user to itinerary' });
+    });
 });
 
 app.post('/itinerary/add-activity', (req, res) => {
@@ -480,13 +492,18 @@ app.get('/publications', async (req: Request, res: Response) => {
 });
 
 app.get('/places/province?', async (req: Request, res: Response) => {
-  const { provinceId, types, count = 4} = req.query;
+  const { provinceId, types, count = 4 } = req.query;
 
   try {
-   
-    const typesArray: string[] = Array.isArray(types) ? types.map(type => String(type)) : [String(types)];
-   
-    const places = await placeService.findPlaceByProvinceAndTypes(Number(provinceId), typesArray, Number(count));
+    const typesArray: string[] = Array.isArray(types)
+      ? types.map((type) => String(type))
+      : [String(types)];
+
+    const places = await placeService.findPlaceByProvinceAndTypes(
+      Number(provinceId),
+      typesArray,
+      Number(count),
+    );
 
     return res.status(status.OK).json({ statusCode: status.OK, data: places });
   } catch (error) {
