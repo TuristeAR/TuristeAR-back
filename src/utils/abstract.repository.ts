@@ -10,6 +10,7 @@ import {
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 export abstract class AbstractRepository<T extends ObjectLiteral> {
+  [x: string]: any;
   protected constructor(protected readonly repository: Repository<T>) {}
 
   create(data: DeepPartial<T>): Promise<T> {
