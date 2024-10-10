@@ -29,7 +29,7 @@ describe('PublicationService', () => {
 
     publicationRepository.findForUser.mockResolvedValue([publication]);
 
-    const result = await publicationService.findForUser(userID);
+    const result = await publicationService.findByUser(userID);
 
     expect(result).toEqual([publication]);
     expect(publicationRepository.findForUser).toHaveBeenCalledWith(userID);
@@ -41,7 +41,7 @@ describe('PublicationService', () => {
 
     publicationRepository.findForUser.mockResolvedValue([]);
 
-    const result = await publicationService.findForUser(userID);
+    const result = await publicationService.findByUser(userID);
 
     expect(result).toHaveLength(0);
   });
