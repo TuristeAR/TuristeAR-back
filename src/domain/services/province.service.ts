@@ -22,46 +22,6 @@ export class ProvinceService {
     return this.provinceRepository.findOne({ where: { id } });
   }
 
-  async findOneByIdWithPlaceReviews(id: number, slice: number): Promise<Province | null> {
-    const province = await this.provinceRepository.findOne({
-      where: { id },
-      relations: ['places', 'places.reviews'],
-      select: {
-        id: true, 
-        name: true,
-        description: true,
-        places: {
-          id: true, 
-          name: true,
-          reviews: {
-            authorName: true,
-            authorPhoto: true,
-            publishedTime: true,
-            photos: true,
-            rating: true, 
-            text: true, 
-          },
-        },
-    }});
-  
-    if (!province) {
-      return null; 
-    }
-  
-    province.places = province.places
-      .map((place) => {
-        if (place.reviews) {
-          place.reviews = place.reviews.filter((review) => review.rating >= 4);
-        }
-  
-        return place;
-      })
-      .filter((place) => place.reviews.length > 0) 
-      .slice(0, slice); 
-  
-    return province;
-  }
-
   async getProvinceNameFromId(id: number): Promise<string | null> {
     const province = await this.provinceRepository.findOne({ where: { id } });
 
@@ -89,14 +49,20 @@ export class ProvinceService {
     return province?.id;
   }
 
-  async findOneByNameWithPlaceReviews(name: string, slice: number) {
+  async findOneWithProvinceReviews(identifier: string | number, slice: number): Promise<Province | null> {
+    
+    const idNumber = typeof identifier === 'number' ? identifier : Number(identifier);
+    const isId = !isNaN(idNumber); 
+
     const province = await this.provinceRepository.findOne({
-      where: { name },
+      where: isId ? { id: idNumber } : { name: String(identifier) },
+      
       relations: ['places', 'places.reviews'],
       select: {
         id: true, 
         name: true,
         description: true,
+        images: true,
         places: {
           id: true, 
           name: true,
@@ -109,18 +75,19 @@ export class ProvinceService {
             text: true, 
           },
         },
-    }});
+      },
+    
+    });
   
     if (!province) {
       return null; 
     }
-  
+
     province.places = province.places
       .map((place) => {
         if (place.reviews) {
           place.reviews = place.reviews.filter((review) => review.rating >= 4);
         }
-  
         return place;
       })
       .filter((place) => place.reviews.length > 0) 
@@ -128,4 +95,5 @@ export class ProvinceService {
   
     return province;
   }
+  
 }

@@ -107,6 +107,19 @@ app.get('/auth/google/callback', (req, res, next) => {
   })(req, res, next);
 });
 
+app.get('/logout', authMiddleware, (req: Request, res: Response) => {
+  req.logout((err) => {
+    if (err) {
+      return res.status(500).json({ status: 'error', message: 'Error logging out' });
+    }
+
+    req.session.destroy(() => {
+      res.clearCookie('connect.sid');
+      res.redirect(`${process.env.FRONTEND_URL}`);
+    });
+  });
+});
+
 app.get('/session', (req: Request, res: Response) => {
   if (req.isAuthenticated && req.isAuthenticated()) {
     return res.send({
@@ -259,8 +272,9 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const itinerary = await itineraryService.findOneById(Number(id));
+    const activities = await itineraryService.findActivitiesById(Number(id));
 
-    return res.status(status.OK).json({ statusCode: status.OK, data: itinerary });
+    return res.status(status.OK).json({ statusCode: status.OK, data: { itinerary, activities } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
@@ -277,6 +291,18 @@ app.get('/user-itineraries', authMiddleware, async (req: Request, res: Response)
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching itineraries' });
+  }
+});
+
+app.get('/user-all', (_req: Request, res: Response) => {
+  try {
+    const users = userService.findAll();
+
+    return res.status(status.OK).json({ statusCode: status.OK, listUser: users });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error get all users' });
   }
 });
 
@@ -352,17 +378,54 @@ app.delete('/itinerary/remove-user', (req, res) => {
     });
 });
 
-app.get('/itinerary/paticipants', (req, res) => {
-  const { itineraryId } = req.body;
-
+app.get('/itinerary/paticipants/:itineraryId', (req, res) => {
+  const { itineraryId } = req.params;
+  if (!itineraryId) {
+    return res.status(400).json({ status: 'error', message: 'itineraryId is required ' });
+  }
+  console.log('id', itineraryId);
   itineraryService
-    .getItineraryWithParticipants(itineraryId)
+    .getItineraryWithParticipants(Number(itineraryId))
     .then((participants) => {
       return res.status(200).json({ status: 'success', participants });
     })
     .catch((error) => {
-      console.error('Error removing user to itinerary:', error);
-      return res.status(500).json({ status: 'error', message: 'Error removing user to itinerary' });
+      console.error('Error get user to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error get user to itinerary' });
+    });
+});
+
+app.post('/itinerary/add-activity', (req, res) => {
+  const { itineraryId, activityId } = req.body;
+
+  itineraryService
+    .addActivityToItinerary(itineraryId, activityId)
+    .then(() => {
+      return res
+        .status(200)
+        .json({ status: 'success', message: `Activity with ID ${activityId} add` });
+    })
+    .catch((error) => {
+      console.error('Error removing activity to itinerary:', error);
+      return res.status(500).json({ status: 'error', message: 'Error add activity to itinerary' });
+    });
+});
+
+app.delete('/itinerary/remove-activity', (req, res) => {
+  const { itineraryId, activityId } = req.body;
+
+  itineraryService
+    .removeActivityFromItinerary(itineraryId, activityId)
+    .then(() => {
+      return res
+        .status(200)
+        .json({ status: 'success', message: `Activity with ID ${activityId} removed` });
+    })
+    .catch((error) => {
+      console.error('Error removing activity to itinerary:', error);
+      return res
+        .status(500)
+        .json({ status: 'error', message: 'Error removing activity to itinerary' });
     });
 });
 
@@ -390,23 +453,20 @@ app.get('/users/search', async (req, res) => {
   }
 });
 
-app.get('/provinces/:param/:count', async (req: Request, res: Response) => {
-  const { param , count = 4} = req.params;
+app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
+  const { param, count = 4 } = req.params;
   const numericCount = Math.min(Number(count), 4);
+
   try {
-    let province;
-    if (!isNaN(Number(param))) {
-      province = await placeService.findManyByIdProvinceReviews(Number(param), numericCount);
-    } 
-    else {
-      province = await placeService.findManyByNameProvinceReviews(param, numericCount);
-    }
+    const province = await placeService.findManyByPlaceProvinceReviews(param, numericCount);
+
     if (!province) {
       return res.status(404).json({ message: 'Province not found' });
     }
 
-    return res.json(province); 
+    return res.json(province);
   } catch (error) {
+    console.error('Error fetching province:', error);
     return res.status(500).json({ message: 'Error fetching province', error });
   }
 });
@@ -443,5 +503,27 @@ app.get('/publications', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/places/province?', async (req: Request, res: Response) => {
+  const { provinceId, types, count = 4 } = req.query;
+
+  try {
+    const typesArray: string[] = Array.isArray(types)
+      ? types.map((type) => String(type))
+      : [String(types)];
+
+    const places = await placeService.findPlaceByProvinceAndTypes(
+      Number(provinceId),
+      typesArray,
+      Number(count),
+    );
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: places });
+  } catch (error) {
+    console.error('Error fetching places:', error);
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching places' });
+  }
+});
 
 export default app;

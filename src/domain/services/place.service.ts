@@ -4,6 +4,7 @@ import { CreatePlaceDto } from '../../application/dtos/create-place.dto';
 import { ProvinceService } from './province.service';
 import { post } from '../../utils/http.util';
 import { Province } from '../entities/province';
+import { In } from 'typeorm';
 
 export class PlaceService {
   private placeRepository: PlaceRepository;
@@ -190,32 +191,59 @@ export class PlaceService {
     }
   }
 
-  async findManyByIdProvinceReviews(id: number, slice: number): Promise<Province | null> {
+  async findManyByPlaceProvinceReviews(identifier: string | number, slice: number): Promise<Province | null> {
     try {
-      const province = await this.provinceService.findOneByIdWithPlaceReviews(id, slice);
+      
+        const province = await this.provinceService.findOneWithProvinceReviews(identifier, slice);
 
-      if (!province) {
-        throw new Error(`Province with ID ${id} not found`);
-      }
+        if (!province) {
+            throw new Error(`Province ${identifier} not found`);
+        }
 
-      return province;
+        return province;
     } catch (error) {
-      console.error('Error fetching province by ID with places and reviews:', error);
-      throw error;
+        console.error('Error fetching province with places and reviews:', error);
+        throw error;
     }
-  }
-  async findManyByNameProvinceReviews(name: string, slice: number): Promise<Province | null> {
-    try {
-      const province = await this.provinceService.findOneByNameWithPlaceReviews(name, slice);
+}
+async findPlaceByProvinceAndTypes(provinceId: number, types: string[], count: number): Promise<Place[]> {
+  try {
+    const places = await this.placeRepository.findMany({
+      where: {
+        province: { id: provinceId },
+      },
+      relations: ['province', 'reviews'],
+      select: {
+        id: true, 
+        name: true,
+        types: true,
+        rating: true,
+        address: true,
+        reviews: {
+          photos: true,
+        },
+      },
+    });
 
-      if (!province) {
-        throw new Error(`Province with ID ${name} not found`);
-      }
+    const filteredPlaces = places.filter((place) =>
+      place.types.some((type) => types.includes(type))
+    );
 
-      return province;
-    } catch (error) {
-      console.error('Error fetching province by ID with places and reviews:', error);
-      throw error;
-    }
+    const limitedReviewImages = filteredPlaces.map((place) => {
+      const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
+      return {
+        ...place,
+        reviews: firstReview ? [firstReview] : [], 
+      };
+    });
+
+    const result = limitedReviewImages.slice(0, count);
+
+    return result;
+  } catch (error) {
+    console.error('Error fetching places by province and types:', error);
+    throw error;
   }
+}
+
 }

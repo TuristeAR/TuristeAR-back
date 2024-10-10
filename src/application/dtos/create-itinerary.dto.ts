@@ -16,4 +16,8 @@ export class CreateItineraryDto {
 
   @IsDate()
   toDate: Date;
+
+  @IsArray()
+  @IsString({each: true})
+  participants: number;
 }

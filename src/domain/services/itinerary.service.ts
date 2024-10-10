@@ -86,11 +86,46 @@ export class ItineraryService {
     return this.itineraryRepository.findMany({ where: { user } });
   }
 
+  async findActivitiesById(id: number): Promise<Itinerary | null> {
+    const itinerary = await this.itineraryRepository.findOne({
+      where: { id },
+      relations: ['activities', 'activities.place'], // Incluyendo 'place' si necesitas esa información
+    });
+  
+    if (!itinerary) return null;
+  
+    return {
+      ...itinerary,
+      activities: itinerary.activities.map(activity => ({
+        id: activity.id,
+        createdAt: activity.createdAt,
+        name: activity.name,
+        fromDate: activity.fromDate,
+        toDate: activity.toDate,
+        itinerary: activity.itinerary, 
+        place: activity.place, 
+      })),
+    };
+  }
+
   findOneByIdWithParticipants(id: number): Promise<Itinerary | null> {
     return this.itineraryRepository.findOne({
       where: { id: id },
       relations: ['participants', 'user'],
     });
+  }
+
+  async addActivityToItinerary (itineraryId:number, activityId: number): Promise<Itinerary> {
+    const itinerary = await this.findOneById(itineraryId);
+    if (!itinerary) {
+      throw new Error('Itinerary not found');
+    }
+    const activity = await this.activityService.findOneById(activityId);
+    if (!activity) {
+      throw new Error('Activity not found');
+    }
+    itinerary.activities.push(activity);
+    return this.itineraryRepository.save(itinerary);
   }
 
   async addUserToItinerary(itineraryId: number, userId: number): Promise<Itinerary> {
@@ -139,6 +174,24 @@ export class ItineraryService {
       where: { id: itineraryId },
       relations: ['participants', 'user'],
     });
+  }
+
+  async removeActivityFromItinerary(itineraryId: number, activityId: number): Promise<Itinerary> {
+    let itinerary = await this.findOneById(itineraryId);
+    if (!itinerary) {
+      throw new Error('Itinerary not found');
+    }
+    let activity = await this.activityService.findOneById(activityId);
+    if (!activity) {
+      throw new Error('Activity not found');
+    }
+    const activityIndex = itinerary.activities.findIndex((a) => a.id === activity.id);
+    if (activityIndex !== -1) {
+      itinerary.activities.splice(activityIndex, 1);
+      return this.itineraryRepository.save(itinerary);
+    } else {
+      throw new Error('Activity is not part of the itinerary');
+    }
   }
 
   private getDates(fromDate: Date, toDate: Date): Date[] {
