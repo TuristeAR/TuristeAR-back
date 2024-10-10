@@ -366,6 +366,18 @@ app.get('/itinerary/paticipants', (req, res) => {
     });
 });
 
+app.get('/itinerary/byUser/:userId', (req, res) => {
+  const userId  = req.body;
+  itineraryService
+    .getItinerariesWithParticipantsAndUserByUserId(3)
+    .then((participants) => {
+      return res.status(200).json({ status: 'success', participants });
+    })
+    .catch((error) => {
+      return res.status(500).json({ status: 'error', message: 'Error getting itineraries'+error });
+    });
+});
+
 app.get('/users/search', async (req, res) => {
   const { name, offset = 0 } = req.query;
 
