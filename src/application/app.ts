@@ -429,6 +429,18 @@ app.delete('/itinerary/remove-activity', (req, res) => {
     });
 });
 
+app.get('/itinerary/byUser/:userId', (req, res) => {
+  const { userId }  = req.params;
+  itineraryService
+    .getItinerariesWithParticipantsAndUserByUserId(Number(userId))
+    .then((participants) => {
+      return res.status(200).json({ status: 'success', participants });
+    })
+    .catch((error) => {
+      return res.status(500).json({ status: 'error', message: 'Error getting itineraries'+error });
+    });
+});
+
 app.get('/users/search', async (req, res) => {
   const { name, offset = 0 } = req.query;
 
@@ -466,7 +478,7 @@ app.get('/publications/:userID', async (req: Request, res: Response) => {
     let publications;
 
     if (!isNaN(Number(userID))) {
-      publications = await publicationService.findForUser(Number(userID));
+      publications = await publicationService.findByUser(Number(userID));
     }
 
     if (!publications || publications.length === 0) {

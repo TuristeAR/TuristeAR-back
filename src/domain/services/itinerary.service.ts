@@ -8,6 +8,7 @@ import { Place } from '../entities/place';
 import { User } from '../entities/user';
 import { CreateActivityDto } from '../../application/dtos/create-activity.dto';
 import { UserService } from './user.service';
+import { Publication } from '../entities/publication';
 
 export class ItineraryService {
   private itineraryRepository: ItineraryRepository;
@@ -205,4 +206,16 @@ export class ItineraryService {
 
     return dates;
   }
+
+  getItinerariesWithParticipantsAndUserByUserId(userId: number): Promise<Itinerary[] | null> {
+    return this.itineraryRepository.findMany({
+      where: {
+        participants: {
+          id: userId
+        }
+      },
+      relations: ['participants', 'user'],
+    });
+  }
+
 }
