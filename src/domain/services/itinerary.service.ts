@@ -85,6 +85,28 @@ export class ItineraryService {
     return this.itineraryRepository.findMany({ where: { user } });
   }
 
+  async findActivitiesById(id: number): Promise<Itinerary | null> {
+    const itinerary = await this.itineraryRepository.findOne({
+      where: { id },
+      relations: ['activities', 'activities.place'], // Incluyendo 'place' si necesitas esa información
+    });
+  
+    if (!itinerary) return null;
+  
+    return {
+      ...itinerary,
+      activities: itinerary.activities.map(activity => ({
+        id: activity.id,
+        createdAt: activity.createdAt,
+        name: activity.name,
+        fromDate: activity.fromDate,
+        toDate: activity.toDate,
+        itinerary: activity.itinerary, 
+        place: activity.place, 
+      })),
+    };
+  }
+
   findOneByIdWithParticipants(id: number): Promise<Itinerary | null> {
     return this.itineraryRepository.findOne({
       where: { id: id },
