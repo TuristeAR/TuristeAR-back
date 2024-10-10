@@ -4,6 +4,7 @@ import { CreatePlaceDto } from '../../application/dtos/create-place.dto';
 import { ProvinceService } from './province.service';
 import { post } from '../../utils/http.util';
 import { Province } from '../entities/province';
+import { In } from 'typeorm';
 
 export class PlaceService {
   private placeRepository: PlaceRepository;
@@ -205,4 +206,44 @@ export class PlaceService {
         throw error;
     }
 }
+async findPlaceByProvinceAndTypes(provinceId: number, types: string[], count: number): Promise<Place[]> {
+  try {
+    const places = await this.placeRepository.findMany({
+      where: {
+        province: { id: provinceId },
+      },
+      relations: ['province', 'reviews'],
+      select: {
+        id: true, 
+        name: true,
+        types: true,
+        rating: true,
+        address: true,
+        reviews: {
+          photos: true,
+        },
+      },
+    });
+
+    const filteredPlaces = places.filter((place) =>
+      place.types.some((type) => types.includes(type))
+    );
+
+    const limitedReviewImages = filteredPlaces.map((place) => {
+      const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
+      return {
+        ...place,
+        reviews: firstReview ? [firstReview] : [], 
+      };
+    });
+
+    const result = limitedReviewImages.slice(0, count);
+
+    return result;
+  } catch (error) {
+    console.error('Error fetching places by province and types:', error);
+    throw error;
+  }
+}
+
 }
