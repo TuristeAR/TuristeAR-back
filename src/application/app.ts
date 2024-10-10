@@ -480,5 +480,22 @@ app.get('/publications', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/places/province?', async (req: Request, res: Response) => {
+  const { provinceId, types, count = 4} = req.query;
+
+  try {
+   
+    const typesArray: string[] = Array.isArray(types) ? types.map(type => String(type)) : [String(types)];
+   
+    const places = await placeService.findPlaceByProvinceAndTypes(Number(provinceId), typesArray, Number(count));
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: places });
+  } catch (error) {
+    console.error('Error fetching places:', error);
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching places' });
+  }
+});
 
 export default app;
