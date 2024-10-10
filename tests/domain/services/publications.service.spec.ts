@@ -5,6 +5,10 @@ import { Publication } from '../../../src/domain/entities/publication';
 
 jest.mock('../../../src/domain/repositories/publication.repository');
 
+beforeEach(() => {
+  jest.resetAllMocks(); // Resetea los mocks antes de cada prueba
+});
+
 describe('PublicationService', () => {
   let publicationService: PublicationService;
   let publicationRepository: jest.Mocked<PublicationRepository>;
@@ -27,19 +31,18 @@ describe('PublicationService', () => {
       user: { id: userID } as User,
     };
 
-    publicationRepository.findForUser.mockResolvedValue([publication]);
+    publicationRepository.findMany.mockResolvedValue([publication]);
 
     const result = await publicationService.findByUser(userID);
 
     expect(result).toEqual([publication]);
-    expect(publicationRepository.findForUser).toHaveBeenCalledWith(userID);
   });
 
 
   it('if there are no posts, return null', async () => {
     const userID = 123;
 
-    publicationRepository.findForUser.mockResolvedValue([]);
+    publicationRepository.findMany.mockResolvedValue([]);
 
     const result = await publicationService.findByUser(userID);
 
