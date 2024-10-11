@@ -6,4 +6,6 @@ export class ActivityRepository extends AbstractRepository<Activity> {
   constructor() {
     super(AppDataSource.getRepository(Activity));
   }
+  
+
 }
