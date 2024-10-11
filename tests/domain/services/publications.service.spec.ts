@@ -2,6 +2,7 @@ import { PublicationRepository } from '../../../src/domain/repositories/publicat
 import { User } from '../../../src/domain/entities/user';
 import { PublicationService } from '../../../src/domain/services/publication.service';
 import { Publication } from '../../../src/domain/entities/publication';
+import { Category } from '../../../src/domain/entities/category';
 
 jest.mock('../../../src/domain/repositories/publication.repository');
 
@@ -23,12 +24,14 @@ describe('PublicationService', () => {
     const userID = 1;
 
     const publication: Publication = {
+      likes: 0,
       id: 1,
+      category : new Category(),
       description: 'Hola mundo',
       images: [],
       creationDate: new Date(),
       createdAt: new Date(),
-      user: { id: userID } as User,
+      user: { id: userID } as User
     };
 
     publicationRepository.findMany.mockResolvedValue([publication]);
