@@ -10,8 +10,10 @@ export class PublicationService {
     this.publicationRepository = new PublicationRepository();
   }
 
-  findForUser(id : number): Promise<Publication[] | null> {
-    return this.publicationRepository.findForUser(id);
+  findByUser(id : number): Promise<Publication[] | null> {
+    return this.publicationRepository.findMany({
+      where: { user:{ id : id } }
+    });
   }
 
   findAll({}): Promise<Publication[]> {

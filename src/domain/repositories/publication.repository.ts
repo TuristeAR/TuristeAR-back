@@ -8,13 +8,4 @@ export class PublicationRepository extends AbstractRepository<Publication> {
   constructor() {
     super(AppDataSource.getRepository(Publication));
   }
-
-  findForUser(id: number) {
-    return this.repository.find({
-      where: { user: { id } },
-      relations: ['user'],
-    });
-  }
-
-
 }
