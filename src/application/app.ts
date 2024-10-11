@@ -351,9 +351,9 @@ app.post('/itinerary/add-user', (req, res) => {
     });
 });
 
-app.delete('/itinerary/remove-user', (req, res) => {
+app.delete('/itinerary/remove-user', authMiddleware, async (req, res) => {
   const { itineraryId, participantId } = req.body;
-
+  //validation in the service
   itineraryService
     .removeUserFromItinerary(itineraryId, participantId)
     .then(() => {
@@ -367,21 +367,42 @@ app.delete('/itinerary/remove-user', (req, res) => {
     });
 });
 
-app.get('/itinerary/paticipants/:itineraryId', (req, res) => {
+app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res) => {
   const { itineraryId } = req.params;
-  if (!itineraryId) {
-    return res.status(400).json({ status: 'error', message: 'itineraryId is required ' });
+  const userSession = req.user as User;
+
+  console.log("User session:", userSession);
+  
+  if (!userSession) {
+    return res.status(401).json({ status: 'error', message: 'User not authenticated' });
   }
-   itineraryService
-     .getItineraryWithParticipants(Number(itineraryId))
-     .then((participants) => {
-       return res.status(200).json({ status: 'success', participants });
-     })
-     .catch((error) => {
-       console.error('Error get user to itinerary:', error);
-       return res.status(500).json({ status: 'error', message: 'Error get user to itinerary' });
-     });
+  
+  if (!itineraryId) {
+    return res.status(400).json({ status: 'error', message: 'itineraryId is required' });
+  }
+
+  try {
+    const itineraryParticipants = await itineraryService.getItineraryWithParticipants(Number(itineraryId));(Number(itineraryId));
+
+    if (!itineraryParticipants) {
+      return res.status(404).json({ error: 'Itinerary not found' });
+    }
+
+    const isParticipant = itineraryParticipants.participants.some(participant => participant.id === userSession.id);
+    const isOwner = itineraryParticipants.user.id === userSession.id;
+
+    if (!isParticipant && !isOwner) {
+      return res.status(403).json({ error: 'You are not authorized to access this itinerary.' });
+    }
+
+    return res.status(200).json({ status: 'success', itineraryParticipants });
+  
+  } catch (error) {
+    console.error('Error fetching itinerary:', error);
+    return res.status(500).json({ status: 'error', message: 'Error fetching itinerary' });
+  }
 });
+
 
 app.post('/itinerary/add-activity', (req, res) => {
   const { itineraryId, activityId } = req.body;
