@@ -10,8 +10,9 @@ export class CreatePublicationDTO {
   images: string[];
   @IsString()
   creationDate: string;
-  category : Category;
-  user: User;
   @IsNumber()
   likes: number;
+
+  categoryId : number;
+  userId: number;
 }
