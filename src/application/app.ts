@@ -385,9 +385,6 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
 
   console.log("User session:", userSession);
   
-  if (!userSession) {
-    return res.status(401).json({ status: 'error', message: 'User not authenticated' });
-  }
   
   if (!itineraryId) {
     return res.status(400).json({ status: 'error', message: 'itineraryId is required' });
