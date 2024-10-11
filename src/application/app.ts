@@ -481,7 +481,7 @@ app.get('/publications/:userID', async (req: Request, res: Response) => {
       publications = await publicationService.findByUser(Number(userID));
     }
 
-    if (!publications || publications.length === 0) {
+    if (!publications) {
       return res.status(404).json({ message: 'No se encontraron publicaciones' });
     }
 
