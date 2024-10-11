@@ -20,6 +20,7 @@ import { ItineraryService } from '../domain/services/itinerary.service';
 import { ActivityService } from '../domain/services/activity.service';
 import { UserService } from '../domain/services/user.service';
 import { PublicationService } from '../domain/services/publication.service';
+import { Itinerary } from '../domain/entities/itinerary';
 
 dotenv.config();
 
@@ -362,9 +363,9 @@ app.post('/itinerary/add-user', (req, res) => {
     });
 });
 
-app.delete('/itinerary/remove-user', (req, res) => {
+app.delete('/itinerary/remove-user', authMiddleware, async (req, res) => {
   const { itineraryId, participantId } = req.body;
-
+  //validation in the service
   itineraryService
     .removeUserFromItinerary(itineraryId, participantId)
     .then(() => {
@@ -378,22 +379,39 @@ app.delete('/itinerary/remove-user', (req, res) => {
     });
 });
 
-app.get('/itinerary/paticipants/:itineraryId', (req, res) => {
+app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res) => {
   const { itineraryId } = req.params;
+  const userSession = req.user as User;
+
+  console.log("User session:", userSession);
+  
+  
   if (!itineraryId) {
-    return res.status(400).json({ status: 'error', message: 'itineraryId is required ' });
+    return res.status(400).json({ status: 'error', message: 'itineraryId is required' });
   }
-  console.log('id', itineraryId);
-  itineraryService
-    .getItineraryWithParticipants(Number(itineraryId))
-    .then((participants) => {
-      return res.status(200).json({ status: 'success', participants });
-    })
-    .catch((error) => {
-      console.error('Error get user to itinerary:', error);
-      return res.status(500).json({ status: 'error', message: 'Error get user to itinerary' });
-    });
+
+  try {
+    const itineraryParticipants = await itineraryService.getItineraryWithParticipants(Number(itineraryId));(Number(itineraryId));
+
+    if (!itineraryParticipants) {
+      return res.status(404).json({ error: 'Itinerary not found' });
+    }
+
+    const isParticipant = itineraryParticipants.participants.some(participant => participant.id === userSession.id);
+    const isOwner = itineraryParticipants.user.id === userSession.id;
+
+    if (!isParticipant && !isOwner) {
+      return res.status(403).json({ error: 'You are not authorized to access this itinerary.' });
+    }
+
+    return res.status(200).json({ status: 'success', itineraryParticipants });
+  
+  } catch (error) {
+    console.error('Error fetching itinerary:', error);
+    return res.status(500).json({ status: 'error', message: 'Error fetching itinerary' });
+  }
 });
+
 
 app.post('/itinerary/add-activity', (req, res) => {
   const { itineraryId, activityId } = req.body;
@@ -442,16 +460,34 @@ app.get('/itinerary/byUser/:userId', (req, res) => {
 });
 
 app.get('/users/search', async (req, res) => {
-  const { name, offset = 0 } = req.query;
+  const { name, offset = 0, itineraryId } = req.query;
 
   try {
-    const user = await userService.searchByName(name as string, offset as number);
-    return res.status(200).json({ status: 'success', data: user });
+    let excludedIds: number[] = [];
+
+    if (itineraryId) {
+      const itinerary = await itineraryService.getItineraryWithParticipants(Number(itineraryId));
+
+      if (itinerary && Array.isArray(itinerary.participants)) {
+        excludedIds = itinerary.participants.map((participant: User) => participant.id);
+        excludedIds.push(itinerary.user.id)
+      }
+    }
+
+    const users = await userService.searchByName(name as string, offset as number);
+
+    if (!Array.isArray(users)) {
+      return res.status(500).json({ status: 'error', message: 'Unexpected users format' });
+    }
+
+    const filteredUsers = users.filter(user => !excludedIds.includes(user.id));
+    return res.status(200).json({ status: 'success', data: filteredUsers });
   } catch (error) {
     console.error('Error searching user:', error);
     return res.status(500).json({ status: 'error', message: 'Error searching user' });
   }
 });
+
 
 app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
   const { param, count = 4 } = req.params;
