@@ -20,6 +20,7 @@ import { ItineraryService } from '../domain/services/itinerary.service';
 import { ActivityService } from '../domain/services/activity.service';
 import { UserService } from '../domain/services/user.service';
 import { PublicationService } from '../domain/services/publication.service';
+import { Itinerary } from '../domain/entities/itinerary';
 
 dotenv.config();
 
@@ -372,7 +373,6 @@ app.get('/itinerary/paticipants/:itineraryId', (req, res) => {
   if (!itineraryId) {
     return res.status(400).json({ status: 'error', message: 'itineraryId is required ' });
   }
-  console.log("id",itineraryId)
    itineraryService
      .getItineraryWithParticipants(Number(itineraryId))
      .then((participants) => {
@@ -418,16 +418,34 @@ app.delete('/itinerary/remove-activity', (req, res) => {
 });
 
 app.get('/users/search', async (req, res) => {
-  const { name, offset = 0 } = req.query;
+  const { name, offset = 0, itineraryId } = req.query;
 
   try {
-    const user = await userService.searchByName(name as string, offset as number);
-    return res.status(200).json({ status: 'success', data: user });
+    let excludedIds: number[] = [];
+
+    if (itineraryId) {
+      const itinerary = await itineraryService.getItineraryWithParticipants(Number(itineraryId));
+
+      if (itinerary && Array.isArray(itinerary.participants)) {
+        excludedIds = itinerary.participants.map((participant: User) => participant.id);
+        excludedIds.push(itinerary.user.id)
+      }
+    }
+
+    const users = await userService.searchByName(name as string, offset as number);
+
+    if (!Array.isArray(users)) {
+      return res.status(500).json({ status: 'error', message: 'Unexpected users format' });
+    }
+
+    const filteredUsers = users.filter(user => !excludedIds.includes(user.id));
+    return res.status(200).json({ status: 'success', data: filteredUsers });
   } catch (error) {
     console.error('Error searching user:', error);
     return res.status(500).json({ status: 'error', message: 'Error searching user' });
   }
 });
+
 
 app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
   const { param, count = 4 } = req.params;
