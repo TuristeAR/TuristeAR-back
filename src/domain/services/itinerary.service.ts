@@ -213,8 +213,8 @@ export class ItineraryService {
   getItinerariesWithParticipantsAndUserByUserId(userId: number): Promise<Itinerary[] | null> {
     return this.itineraryRepository.findMany({
       where: [
-        { participants: { id: userId } }, // Primera condición
-        { user: { id: userId } }, // Segunda condición
+        { participants: { id: userId } },
+        { user: { id: userId } },
       ],
       relations: ['participants', 'user'],
     });
