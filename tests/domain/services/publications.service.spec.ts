@@ -2,11 +2,12 @@ import { PublicationRepository } from '../../../src/domain/repositories/publicat
 import { User } from '../../../src/domain/entities/user';
 import { PublicationService } from '../../../src/domain/services/publication.service';
 import { Publication } from '../../../src/domain/entities/publication';
+import { Category } from '../../../src/domain/entities/category';
 
 jest.mock('../../../src/domain/repositories/publication.repository');
 
 beforeEach(() => {
-  jest.resetAllMocks(); // Resetea los mocks antes de cada prueba
+  jest.resetAllMocks();
 });
 
 describe('PublicationService', () => {
@@ -23,12 +24,14 @@ describe('PublicationService', () => {
     const userID = 1;
 
     const publication: Publication = {
+      likes: [],
       id: 1,
+      category : new Category(),
       description: 'Hola mundo',
       images: [],
       creationDate: new Date(),
       createdAt: new Date(),
-      user: { id: userID } as User,
+      user: { id: userID } as User
     };
 
     publicationRepository.findMany.mockResolvedValue([publication]);
@@ -48,4 +51,25 @@ describe('PublicationService', () => {
 
     expect(result).toHaveLength(0);
   });
+
+
+  it('should find publications by likes of users', async () => {
+    const publication: Publication = {
+      likes: [{ id : 1 } as User],
+      id: 1,
+      category: new Category(),
+      description: 'Hola mundo',
+      images: [],
+      creationDate: new Date(),
+      createdAt: new Date(),
+      user: { id: 1 } as User
+    };
+
+    publicationRepository.findMany.mockResolvedValue([publication]);
+
+    const result = await publicationService.findByLikesUser(1);
+
+    expect(result).toHaveLength(1);
+  });
+
 });

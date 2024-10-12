@@ -20,4 +20,16 @@ export class PublicationService {
     return this.publicationRepository.findMany({ relations: ['user'], take: 10 });
   }
 
+  async findByLikesUser(userId : number): Promise<Publication[] | null>  {
+    return this.publicationRepository.findMany({
+      where : { likes: { id: userId } },
+      relations: ['user']
+    });
+  }
+
+  async findByCategory(categoryId: number) {
+    return this.publicationRepository.findMany({
+      where: { category:{ id : categoryId } }
+    });
+  }
 }

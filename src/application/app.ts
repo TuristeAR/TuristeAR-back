@@ -21,6 +21,7 @@ import { ActivityService } from '../domain/services/activity.service';
 import { UserService } from '../domain/services/user.service';
 import { PublicationService } from '../domain/services/publication.service';
 import { Itinerary } from '../domain/entities/itinerary';
+import { CategoryService } from '../domain/services/category.service';
 
 dotenv.config();
 
@@ -80,6 +81,7 @@ const weatherService = new WeatherService();
 const provinceService = new ProvinceService();
 const placeService = new PlaceService();
 const publicationService = new PublicationService();
+const categoryService = new CategoryService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
 const activityService = new ActivityService();
@@ -383,21 +385,25 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
   const { itineraryId } = req.params;
   const userSession = req.user as User;
 
-  console.log("User session:", userSession);
-  
-  
+  console.log('User session:', userSession);
+
   if (!itineraryId) {
     return res.status(400).json({ status: 'error', message: 'itineraryId is required' });
   }
 
   try {
-    const itineraryParticipants = await itineraryService.getItineraryWithParticipants(Number(itineraryId));(Number(itineraryId));
+    const itineraryParticipants = await itineraryService.getItineraryWithParticipants(
+      Number(itineraryId),
+    );
+    Number(itineraryId);
 
     if (!itineraryParticipants) {
       return res.status(404).json({ error: 'Itinerary not found' });
     }
 
-    const isParticipant = itineraryParticipants.participants.some(participant => participant.id === userSession.id);
+    const isParticipant = itineraryParticipants.participants.some(
+      (participant) => participant.id === userSession.id,
+    );
     const isOwner = itineraryParticipants.user.id === userSession.id;
 
     if (!isParticipant && !isOwner) {
@@ -405,57 +411,55 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
     }
 
     return res.status(200).json({ status: 'success', itineraryParticipants });
-  
   } catch (error) {
     console.error('Error fetching itinerary:', error);
     return res.status(500).json({ status: 'error', message: 'Error fetching itinerary' });
   }
 });
 
-
 app.post('/itinerary/add-activity', (req, res) => {
-  const { itineraryId, activityId } = req.body;
+  const { itineraryId, createActivityDto } = req.body;
 
   itineraryService
-    .addActivityToItinerary(itineraryId, activityId)
-    .then(() => {
+    .addActivityToItinerary(itineraryId, createActivityDto) 
+    .then((itinerary) => {
       return res
         .status(200)
-        .json({ status: 'success', message: `Activity with ID ${activityId} add` });
+        .json({ status: 'success', message: `Activity added to itinerary`, itinerary });
     })
     .catch((error) => {
-      console.error('Error removing activity to itinerary:', error);
-      return res.status(500).json({ status: 'error', message: 'Error add activity to itinerary' });
+      console.error('Error adding activity to itinerary:', error);
+      return res
+        .status(500)
+        .json({ status: 'error', message: 'Error adding activity to itinerary' });
     });
 });
 
-app.delete('/itinerary/remove-activity', (req, res) => {
+app.delete('/itinerary/remove-activity', async (req, res) => {
   const { itineraryId, activityId } = req.body;
 
-  itineraryService
-    .removeActivityFromItinerary(itineraryId, activityId)
-    .then(() => {
-      return res
-        .status(200)
-        .json({ status: 'success', message: `Activity with ID ${activityId} removed` });
-    })
-    .catch((error) => {
-      console.error('Error removing activity to itinerary:', error);
-      return res
-        .status(500)
-        .json({ status: 'error', message: 'Error removing activity to itinerary' });
-    });
+  try {
+    await itineraryService.removeActivityFromItinerary(itineraryId, activityId);
+    return res
+      .status(200)
+      .json({ status: 'success', message: `Activity with ID ${activityId} removed` });
+  } catch (error) {
+    console.error('Error removing activity from itinerary:');
+    return res.status(500).json({ status: 'error' });
+  }
 });
 
 app.get('/itinerary/byUser/:userId', (req, res) => {
-  const { userId }  = req.params;
+  const { userId } = req.params;
   itineraryService
     .getItinerariesWithParticipantsAndUserByUserId(Number(userId))
     .then((participants) => {
       return res.status(200).json({ status: 'success', participants });
     })
     .catch((error) => {
-      return res.status(500).json({ status: 'error', message: 'Error getting itineraries'+error });
+      return res
+        .status(500)
+        .json({ status: 'error', message: 'Error getting itineraries' + error });
     });
 });
 
@@ -470,7 +474,7 @@ app.get('/users/search', async (req, res) => {
 
       if (itinerary && Array.isArray(itinerary.participants)) {
         excludedIds = itinerary.participants.map((participant: User) => participant.id);
-        excludedIds.push(itinerary.user.id)
+        excludedIds.push(itinerary.user.id);
       }
     }
 
@@ -480,14 +484,13 @@ app.get('/users/search', async (req, res) => {
       return res.status(500).json({ status: 'error', message: 'Unexpected users format' });
     }
 
-    const filteredUsers = users.filter(user => !excludedIds.includes(user.id));
+    const filteredUsers = users.filter((user) => !excludedIds.includes(user.id));
     return res.status(200).json({ status: 'success', data: filteredUsers });
   } catch (error) {
     console.error('Error searching user:', error);
     return res.status(500).json({ status: 'error', message: 'Error searching user' });
   }
 });
-
 
 app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
   const { param, count = 4 } = req.params;
@@ -507,6 +510,18 @@ app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/publications', async (req: Request, res: Response) => {
+  try {
+    const publications = await publicationService.findAll({});
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: publications });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching publications' });
+  }
+});
+
 app.get('/publications/:userID', async (req: Request, res: Response) => {
   const { userID } = req.params;
 
@@ -517,7 +532,7 @@ app.get('/publications/:userID', async (req: Request, res: Response) => {
       publications = await publicationService.findByUser(Number(userID));
     }
 
-    if (!publications || publications.length === 0) {
+    if (!publications) {
       return res.status(404).json({ message: 'No se encontraron publicaciones' });
     }
 
@@ -527,15 +542,57 @@ app.get('/publications/:userID', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/publications', async (req: Request, res: Response) => {
-  try {
-    const publications = await publicationService.findAll({});
+app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
+  const { userID } = req.params;
 
-    return res.status(status.OK).json({ statusCode: status.OK, data: publications });
+  try {
+    let publications;
+
+    if (!isNaN(Number(userID))) {
+      publications = await publicationService.findByLikesUser(Number(userID));
+    }
+
+    if (!publications) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publications);
   } catch (error) {
-    return res
-      .status(status.INTERNAL_SERVER_ERROR)
-      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching publications' });
+    return res.status(500).json({ message: 'Error fetching publications', error });
+  }
+});
+
+app.get('/publications/categories/:categoryId', async (req: Request, res: Response) => {
+  const { categoryId } = req.params;
+
+  try {
+    let publications;
+
+    if (!isNaN(Number(categoryId))) {
+      publications = await publicationService.findByCategory(Number(categoryId));
+    }
+
+    if (!publications) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publications);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching publications', error });
+  }
+});
+
+app.get('/categories', async (req: Request, res: Response) => {
+  try {
+    let categories = await categoryService.findAll();
+
+    if (!categories) {
+      return res.status(404).json({ message: 'No se encontraron las categorias' });
+    }
+
+    return res.json(categories);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching categories', error });
   }
 });
 

@@ -115,17 +115,32 @@ export class ItineraryService {
     });
   }
 
-  async addActivityToItinerary(itineraryId: number, activityId: number): Promise<Itinerary> {
-    const itinerary = await this.findOneById(itineraryId);
+  async addActivityToItinerary(
+    itineraryId: number,
+    createActivityDto: CreateActivityDto,
+  ): Promise<Itinerary> {
+    const itinerary = await this.itineraryRepository.findOne({
+      where: { id: itineraryId },
+      relations: ['activities'],
+    });
     if (!itinerary) {
       throw new Error('Itinerary not found');
     }
-    const activity = await this.activityService.findOneById(activityId);
+    const activity = await this.activityService.create(createActivityDto);
     if (!activity) {
-      throw new Error('Activity not found');
+      throw new Error('Failed to create activity');
     }
+
+    // Verifica si ya existen actividades y agrega la nueva sin perder las anteriores
+    if (!itinerary.activities) {
+      itinerary.activities = [];
+    }
+
+    // Añadir la nueva actividad
     itinerary.activities.push(activity);
-    return this.itineraryRepository.save(itinerary);
+
+    // Guardar el itinerario actualizado
+    return await this.itineraryRepository.save(itinerary);
   }
 
   async addUserToItinerary(itineraryId: number, userId: number): Promise<Itinerary> {
@@ -177,21 +192,24 @@ export class ItineraryService {
   }
 
   async removeActivityFromItinerary(itineraryId: number, activityId: number): Promise<Itinerary> {
-    let itinerary = await this.findOneById(itineraryId);
+    // Buscar el itinerario y sus actividades
+    const itinerary = await this.itineraryRepository.findOne({
+      where: { id: itineraryId },
+      relations: ['activities'],
+    });
     if (!itinerary) {
       throw new Error('Itinerary not found');
     }
-    let activity = await this.activityService.findOneById(activityId);
-    if (!activity) {
-      throw new Error('Activity not found');
+    // Buscar la actividad dentro del itinerario
+    const activityIndex = itinerary.activities.findIndex((activity) => activity.id === activityId);
+    // Verificar si la actividad existe en el itinerario
+    if (activityIndex === -1) {
+      throw new Error('Activity not found in the itinerary');
     }
-    const activityIndex = itinerary.activities.findIndex((a) => a.id === activity.id);
-    if (activityIndex !== -1) {
-      itinerary.activities.splice(activityIndex, 1);
-      return this.itineraryRepository.save(itinerary);
-    } else {
-      throw new Error('Activity is not part of the itinerary');
-    }
+    // Eliminar la actividad del itinerario
+    itinerary.activities.splice(activityIndex, 1);
+    // Guardar el itinerario actualizado
+    return await this.itineraryRepository.save(itinerary);
   }
 
   private getDates(fromDate: Date, toDate: Date): Date[] {
@@ -209,12 +227,8 @@ export class ItineraryService {
 
   getItinerariesWithParticipantsAndUserByUserId(userId: number): Promise<Itinerary[] | null> {
     return this.itineraryRepository.findMany({
-      where: [
-        { participants: { id: userId } }, // Primera condición
-        { user: { id: userId } }           // Segunda condición
-      ],
+      where: [{ participants: { id: userId } }, { user: { id: userId } }],
       relations: ['participants', 'user'],
     });
   }
-
 }
