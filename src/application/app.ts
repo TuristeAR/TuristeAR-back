@@ -21,6 +21,7 @@ import { ActivityService } from '../domain/services/activity.service';
 import { UserService } from '../domain/services/user.service';
 import { PublicationService } from '../domain/services/publication.service';
 import { Itinerary } from '../domain/entities/itinerary';
+import { CategoryService } from '../domain/services/category.service';
 
 dotenv.config();
 
@@ -80,6 +81,7 @@ const weatherService = new WeatherService();
 const provinceService = new ProvinceService();
 const placeService = new PlaceService();
 const publicationService = new PublicationService();
+const categoryService = new CategoryService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
 const activityService = new ActivityService();
@@ -559,6 +561,39 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
 });
 
 
+app.get('/publications/categories/:categoryId', async (req: Request, res: Response) => {
+  const { categoryId } = req.params;
+
+  try {
+    let publications;
+
+    if (!isNaN(Number(categoryId))) {
+      publications = await publicationService.findByCategory(Number(categoryId));
+    }
+
+    if (!publications) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publications);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching publications', error });
+  }
+});
+
+app.get('/categories', async (req: Request, res: Response) => {
+  try {
+    let categories= await categoryService.findAll();
+
+    if (!categories) {
+      return res.status(404).json({ message: 'No se encontraron las categorias' });
+    }
+
+    return res.json(categories);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching categories', error });
+  }
+});
 
 app.get('/places/province?', async (req: Request, res: Response) => {
   const { provinceId, types, count = 4 } = req.query;

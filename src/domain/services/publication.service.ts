@@ -26,4 +26,10 @@ export class PublicationService {
       relations: ['user']
     });
   }
+
+  async findByCategory(categoryId: number) {
+    return this.publicationRepository.findMany({
+      where: { category:{ id : categoryId } }
+    });
+  }
 }
