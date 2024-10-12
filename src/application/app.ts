@@ -418,18 +418,20 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
 });
 
 app.post('/itinerary/add-activity', (req, res) => {
-  const { itineraryId, activityId } = req.body;
+  const { itineraryId, createActivityDto } = req.body;
 
   itineraryService
-    .addActivityToItinerary(itineraryId, activityId)
-    .then(() => {
+    .addActivityToItinerary(itineraryId, createActivityDto) 
+    .then((itinerary) => {
       return res
         .status(200)
-        .json({ status: 'success', message: `Activity with ID ${activityId} add` });
+        .json({ status: 'success', message: `Activity added to itinerary`, itinerary });
     })
     .catch((error) => {
-      console.error('Error removing activity to itinerary:', error);
-      return res.status(500).json({ status: 'error', message: 'Error add activity to itinerary' });
+      console.error('Error adding activity to itinerary:', error);
+      return res
+        .status(500)
+        .json({ status: 'error', message: 'Error adding activity to itinerary' });
     });
 });
 
@@ -560,7 +562,6 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
   }
 });
 
-
 app.get('/publications/categories/:categoryId', async (req: Request, res: Response) => {
   const { categoryId } = req.params;
 
@@ -583,7 +584,7 @@ app.get('/publications/categories/:categoryId', async (req: Request, res: Respon
 
 app.get('/categories', async (req: Request, res: Response) => {
   try {
-    let categories= await categoryService.findAll();
+    let categories = await categoryService.findAll();
 
     if (!categories) {
       return res.status(404).json({ message: 'No se encontraron las categorias' });
