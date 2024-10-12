@@ -383,21 +383,25 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
   const { itineraryId } = req.params;
   const userSession = req.user as User;
 
-  console.log("User session:", userSession);
-  
-  
+  console.log('User session:', userSession);
+
   if (!itineraryId) {
     return res.status(400).json({ status: 'error', message: 'itineraryId is required' });
   }
 
   try {
-    const itineraryParticipants = await itineraryService.getItineraryWithParticipants(Number(itineraryId));(Number(itineraryId));
+    const itineraryParticipants = await itineraryService.getItineraryWithParticipants(
+      Number(itineraryId),
+    );
+    Number(itineraryId);
 
     if (!itineraryParticipants) {
       return res.status(404).json({ error: 'Itinerary not found' });
     }
 
-    const isParticipant = itineraryParticipants.participants.some(participant => participant.id === userSession.id);
+    const isParticipant = itineraryParticipants.participants.some(
+      (participant) => participant.id === userSession.id,
+    );
     const isOwner = itineraryParticipants.user.id === userSession.id;
 
     if (!isParticipant && !isOwner) {
@@ -405,13 +409,11 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
     }
 
     return res.status(200).json({ status: 'success', itineraryParticipants });
-  
   } catch (error) {
     console.error('Error fetching itinerary:', error);
     return res.status(500).json({ status: 'error', message: 'Error fetching itinerary' });
   }
 });
-
 
 app.post('/itinerary/add-activity', (req, res) => {
   const { itineraryId, activityId } = req.body;
@@ -429,33 +431,31 @@ app.post('/itinerary/add-activity', (req, res) => {
     });
 });
 
-app.delete('/itinerary/remove-activity', (req, res) => {
+app.delete('/itinerary/remove-activity', async (req, res) => {
   const { itineraryId, activityId } = req.body;
 
-  itineraryService
-    .removeActivityFromItinerary(itineraryId, activityId)
-    .then(() => {
-      return res
-        .status(200)
-        .json({ status: 'success', message: `Activity with ID ${activityId} removed` });
-    })
-    .catch((error) => {
-      console.error('Error removing activity to itinerary:', error);
-      return res
-        .status(500)
-        .json({ status: 'error', message: 'Error removing activity to itinerary' });
-    });
+  try {
+    await itineraryService.removeActivityFromItinerary(itineraryId, activityId);
+    return res
+      .status(200)
+      .json({ status: 'success', message: `Activity with ID ${activityId} removed` });
+  } catch (error) {
+    console.error('Error removing activity from itinerary:');
+    return res.status(500).json({ status: 'error' });
+  }
 });
 
 app.get('/itinerary/byUser/:userId', (req, res) => {
-  const { userId }  = req.params;
+  const { userId } = req.params;
   itineraryService
     .getItinerariesWithParticipantsAndUserByUserId(Number(userId))
     .then((participants) => {
       return res.status(200).json({ status: 'success', participants });
     })
     .catch((error) => {
-      return res.status(500).json({ status: 'error', message: 'Error getting itineraries'+error });
+      return res
+        .status(500)
+        .json({ status: 'error', message: 'Error getting itineraries' + error });
     });
 });
 
@@ -470,7 +470,7 @@ app.get('/users/search', async (req, res) => {
 
       if (itinerary && Array.isArray(itinerary.participants)) {
         excludedIds = itinerary.participants.map((participant: User) => participant.id);
-        excludedIds.push(itinerary.user.id)
+        excludedIds.push(itinerary.user.id);
       }
     }
 
@@ -480,14 +480,13 @@ app.get('/users/search', async (req, res) => {
       return res.status(500).json({ status: 'error', message: 'Unexpected users format' });
     }
 
-    const filteredUsers = users.filter(user => !excludedIds.includes(user.id));
+    const filteredUsers = users.filter((user) => !excludedIds.includes(user.id));
     return res.status(200).json({ status: 'success', data: filteredUsers });
   } catch (error) {
     console.error('Error searching user:', error);
     return res.status(500).json({ status: 'error', message: 'Error searching user' });
   }
 });
-
 
 app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
   const { param, count = 4 } = req.params;
