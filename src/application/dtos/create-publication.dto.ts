@@ -9,6 +9,7 @@ export class CreatePublicationDTO {
   images: string[];
   @IsString()
   creationDate: string;
+  @IsArray()
   @IsNumber()
   likes: number;
   @IsNumber()

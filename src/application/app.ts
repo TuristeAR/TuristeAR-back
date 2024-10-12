@@ -506,6 +506,18 @@ app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/publications', async (req: Request, res: Response) => {
+  try {
+    const publications = await publicationService.findAll({});
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: publications });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching publications' });
+  }
+});
+
 app.get('/publications/:userID', async (req: Request, res: Response) => {
   const { userID } = req.params;
 
@@ -526,17 +538,27 @@ app.get('/publications/:userID', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/publications', async (req: Request, res: Response) => {
-  try {
-    const publications = await publicationService.findAll({});
+app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
+  const { userID } = req.params;
 
-    return res.status(status.OK).json({ statusCode: status.OK, data: publications });
+  try {
+    let publications;
+
+    if (!isNaN(Number(userID))) {
+      publications = await publicationService.findByLikesUser(Number(userID));
+    }
+
+    if (!publications) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publications);
   } catch (error) {
-    return res
-      .status(status.INTERNAL_SERVER_ERROR)
-      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching publications' });
+    return res.status(500).json({ message: 'Error fetching publications', error });
   }
 });
+
+
 
 app.get('/places/province?', async (req: Request, res: Response) => {
   const { provinceId, types, count = 4 } = req.query;
