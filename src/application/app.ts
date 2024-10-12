@@ -351,7 +351,7 @@ app.get('/fetch-reviews', async (_req, res) => {
   }
 });
 
-app.post('/itinerary/add-user', (req, res) => {
+app.post('/itinerary/add-user', authMiddleware, (req, res) => {
   const { itineraryId, participantId } = req.body;
 
   itineraryService
