@@ -9,6 +9,6 @@ export class Category extends AbstractEntity {
   @Column()
   description: string;
 
-  @Column('simple-array', { nullable: false })
+  @Column()
   image: string;
 }
