@@ -463,7 +463,7 @@ app.get('/itinerary/byUser/:userId', (req, res) => {
     });
 });
 
-app.get('/users/search', async (req, res) => {
+app.get('/users/search', authMiddleware, async (req, res) => {
   const { name, offset = 0, itineraryId } = req.query;
 
   try {
