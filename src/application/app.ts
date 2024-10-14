@@ -647,14 +647,13 @@ app.get('/reviews/place/:idGoogle', async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'No reviews found for this place' });
     }
 
-    const response = reviews;
-
-    return res.json(response);
+    return res.json(reviews);
   } catch (error) {
     console.error('Error fetching reviews and place:', error);
     return res.status(500).json({ message: 'Error fetching reviews and place', error });
   }
 });
+
 app.get('/place/:idGoogle', async (req: Request, res: Response) => {
   const { idGoogle } = req.params;
 
@@ -665,9 +664,7 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Place not found' });
     }
 
-    const response = place;
-
-    return res.json(response);
+    return res.json(place);
   } catch (error) {
     console.error('Error fetching place:', error);
     return res.status(500).json({ message: 'Error fetching place', error });
