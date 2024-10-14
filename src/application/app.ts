@@ -562,6 +562,26 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/publications/saved/:userID', async (req: Request, res: Response) => {
+  const { userID } = req.params;
+
+  try {
+    let publications;
+
+    if (!isNaN(Number(userID))) {
+      publications = await publicationService.findBySavedUser(Number(userID));
+    }
+
+    if (!publications) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publications);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching publications', error });
+  }
+});
+
 app.get('/publications/categories/:categoryId', async (req: Request, res: Response) => {
   const { categoryId } = req.params;
 
