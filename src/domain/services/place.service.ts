@@ -215,6 +215,7 @@ async findPlaceByProvinceAndTypes(provinceId: number, types: string[], count: nu
       relations: ['province', 'reviews'],
       select: {
         id: true, 
+        googleId: true,
         name: true,
         types: true,
         rating: true,
@@ -244,6 +245,14 @@ async findPlaceByProvinceAndTypes(provinceId: number, types: string[], count: nu
     console.error('Error fetching places by province and types:', error);
     throw error;
   }
+}
+
+async findPlaceByGoogleId(googleId: string): Promise<Place> {
+  const place = await this.placeRepository.findOne({ where: { googleId } });
+  if (!place) {
+    throw new Error('Place not found');
+  }
+  return place;
 }
 
 }
