@@ -337,6 +337,24 @@ app.get('/fetch-places', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/fetch-activities-places/:province', async (req: Request, res: Response) => {
+  const provinceName = req.params.province;
+
+  try {
+    const places = await placeService.fetchPlacesByProvince(provinceName);
+    res.json({
+      status: 'success',
+      data: places,
+    });
+  } catch (error) {
+    console.error('Error fetching places:', error);
+    res.status(404).json({
+      status: 'error',
+      message: 'An error occurred.',
+    });
+  }
+});
+
 app.get('/fetch-reviews', async (_req, res) => {
   try {
     const places = await placeService.findAll();
@@ -421,7 +439,7 @@ app.post('/itinerary/add-activity', (req, res) => {
   const { itineraryId, createActivityDto } = req.body;
 
   itineraryService
-    .addActivityToItinerary(itineraryId, createActivityDto) 
+    .addActivityToItinerary(itineraryId, createActivityDto)
     .then((itinerary) => {
       return res
         .status(200)

@@ -191,59 +191,80 @@ export class PlaceService {
     }
   }
 
-  async findManyByPlaceProvinceReviews(identifier: string | number, slice: number): Promise<Province | null> {
-    try {
-      
-        const province = await this.provinceService.findOneWithProvinceReviews(identifier, slice);
-
-        if (!province) {
-            throw new Error(`Province ${identifier} not found`);
-        }
-
-        return province;
-    } catch (error) {
-        console.error('Error fetching province with places and reviews:', error);
-        throw error;
+  async fetchPlacesByProvince(provinceName: string) {
+    const province = await this.provinceService.findByName(provinceName);
+    if (!province) {
+      throw new Error('Province not found');
     }
-}
-async findPlaceByProvinceAndTypes(provinceId: number, types: string[], count: number): Promise<Place[]> {
-  try {
-    const places = await this.placeRepository.findMany({
-      where: {
-        province: { id: provinceId },
-      },
-      relations: ['province', 'reviews'],
-      select: {
-        id: true, 
-        name: true,
-        types: true,
-        rating: true,
-        address: true,
-        reviews: {
-          photos: true,
-        },
-      },
+  
+    // Obtén los lugares asociados a la provincia
+    const places = await this.placeRepository.find({
+      where: { province: { id: province.id } },
     });
+    console.log(places)
+    return places;
 
-    const filteredPlaces = places.filter((place) =>
-      place.types.some((type) => types.includes(type))
-    );
-
-    const limitedReviewImages = filteredPlaces.map((place) => {
-      const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
-      return {
-        ...place,
-        reviews: firstReview ? [firstReview] : [], 
-      };
-    });
-
-    const result = limitedReviewImages.slice(0, count);
-
-    return result;
-  } catch (error) {
-    console.error('Error fetching places by province and types:', error);
-    throw error;
   }
-}
 
+  async findManyByPlaceProvinceReviews(
+    identifier: string | number,
+    slice: number,
+  ): Promise<Province | null> {
+    try {
+      const province = await this.provinceService.findOneWithProvinceReviews(identifier, slice);
+
+      if (!province) {
+        throw new Error(`Province ${identifier} not found`);
+      }
+
+      return province;
+    } catch (error) {
+      console.error('Error fetching province with places and reviews:', error);
+      throw error;
+    }
+  }
+
+  async findPlaceByProvinceAndTypes(
+    provinceId: number,
+    types: string[],
+    count: number,
+  ): Promise<Place[]> {
+    try {
+      const places = await this.placeRepository.findMany({
+        where: {
+          province: { id: provinceId },
+        },
+        relations: ['province', 'reviews'],
+        select: {
+          id: true,
+          name: true,
+          types: true,
+          rating: true,
+          address: true,
+          reviews: {
+            photos: true,
+          },
+        },
+      });
+
+      const filteredPlaces = places.filter((place) =>
+        place.types.some((type) => types.includes(type)),
+      );
+
+      const limitedReviewImages = filteredPlaces.map((place) => {
+        const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
+        return {
+          ...place,
+          reviews: firstReview ? [firstReview] : [],
+        };
+      });
+
+      const result = limitedReviewImages.slice(0, count);
+
+      return result;
+    } catch (error) {
+      console.error('Error fetching places by province and types:', error);
+      throw error;
+    }
+  }
 }
