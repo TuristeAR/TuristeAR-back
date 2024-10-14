@@ -209,6 +209,7 @@ export class PlaceService {
       throw error;
     }
   }
+
   async findPlaceByProvinceAndTypes(
     provinceId: number,
     types: string[],
@@ -233,8 +234,10 @@ export class PlaceService {
         },
       });
 
+      const joinedTypes = types.join(',');
+
       const filteredPlaces = places.filter((place) =>
-        place.types.some((type) => types.includes(type)),
+        place.types.some((type) => joinedTypes.includes(type)),
       );
 
       const limitedReviewImages = filteredPlaces.map((place) => {
@@ -254,9 +257,11 @@ export class PlaceService {
 
   async findPlaceByGoogleId(googleId: string): Promise<Place> {
     const place = await this.placeRepository.findOne({ where: { googleId } });
+
     if (!place) {
       throw new Error('Place not found');
     }
+
     return place;
   }
 }
