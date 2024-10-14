@@ -12,24 +12,26 @@ export class PublicationService {
 
   findByUser(id : number): Promise<Publication[] | null> {
     return this.publicationRepository.findMany({
-      where: { user:{ id : id } }
+      where: { user:{ id : id } },
+      relations: ['category']
     });
   }
 
   findAll({}): Promise<Publication[]> {
-    return this.publicationRepository.findMany({ relations: ['user'], take: 10 });
+    return this.publicationRepository.findMany({ relations: ['user','category'], take: 10 });
   }
 
   async findByLikesUser(userId : number): Promise<Publication[] | null>  {
     return this.publicationRepository.findMany({
       where : { likes: { id: userId } },
-      relations: ['user']
+      relations: ['user','category']
     });
   }
 
   async findByCategory(categoryId: number) {
     return this.publicationRepository.findMany({
-      where: { category:{ id : categoryId } }
+      where: { category:{ id : categoryId } },
+      relations: ['category']
     });
   }
 }
