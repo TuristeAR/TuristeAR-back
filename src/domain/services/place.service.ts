@@ -191,19 +191,36 @@ export class PlaceService {
     }
   }
 
-  async findManyByPlaceProvinceReviews(identifier: string | number, slice: number): Promise<Province | null> {
+  async fetchPlacesByProvince(provinceName: string) {
+    const province = await this.provinceService.findByName(provinceName);
+    if (!province) {
+      throw new Error('Province not found');
+    }
+  
+    // Obtén los lugares asociados a la provincia
+    const places = await this.placeRepository.find({
+      where: { province: { id: province.id } },
+    });
+    console.log(places)
+    return places;
+
+  }
+
+  async findManyByPlaceProvinceReviews(
+    identifier: string | number,
+    slice: number,
+  ): Promise<Province | null> {
     try {
-      
-        const province = await this.provinceService.findOneWithProvinceReviews(identifier, slice);
+      const province = await this.provinceService.findOneWithProvinceReviews(identifier, slice);
 
-        if (!province) {
-            throw new Error(`Province ${identifier} not found`);
-        }
+      if (!province) {
+        throw new Error(`Province ${identifier} not found`);
+      }
 
-        return province;
+      return province;
     } catch (error) {
-        console.error('Error fetching province with places and reviews:', error);
-        throw error;
+      console.error('Error fetching province with places and reviews:', error);
+      throw error;
     }
 }
 async findPlaceByProvinceAndTypes(provinceId: number, types: string[], count: number): Promise<Place[]> {
@@ -226,19 +243,19 @@ async findPlaceByProvinceAndTypes(provinceId: number, types: string[], count: nu
       },
     });
 
-    const filteredPlaces = places.filter((place) =>
-      place.types.some((type) => types.includes(type))
-    );
+      const filteredPlaces = places.filter((place) =>
+        place.types.some((type) => types.includes(type)),
+      );
 
-    const limitedReviewImages = filteredPlaces.map((place) => {
-      const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
-      return {
-        ...place,
-        reviews: firstReview ? [firstReview] : [], 
-      };
-    });
+      const limitedReviewImages = filteredPlaces.map((place) => {
+        const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
+        return {
+          ...place,
+          reviews: firstReview ? [firstReview] : [],
+        };
+      });
 
-    const result = limitedReviewImages.slice(0, count);
+      const result = limitedReviewImages.slice(0, count);
 
     return result;
   } catch (error) {
