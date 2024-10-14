@@ -5,7 +5,6 @@ import { get, getWithoutJson } from '../../utils/http.util';
 
 export class ReviewService {
   private reviewRepository: ReviewRepository;
-
   constructor() {
     this.reviewRepository = new ReviewRepository();
   }
@@ -41,7 +40,6 @@ export class ReviewService {
       };
 
       const results = await get(searchUrl, searchHeaders);
-
       if (results.reviews) {
         reviews.push(...results.reviews);
 
@@ -85,5 +83,13 @@ export class ReviewService {
     } catch (error) {
       console.error('Error fetching reviews', error);
     }
+  }
+
+  async findReviewsByPlaceId(googleId: string): Promise<Review[]> {
+    const reviews = await this.reviewRepository.findMany({
+      where: { place: { googleId: googleId } },
+      order: { rating: 'DESC' },
+    });
+    return reviews;
   }
 }

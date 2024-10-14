@@ -27,6 +27,20 @@ export class Publication extends AbstractEntity {
   })
   likes: User[];
 
+  @ManyToMany(() => User)
+  @JoinTable({
+    joinColumn: { name: 'publicationId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
+  })
+  reposts: User[];
+
+  @ManyToMany(() => User)
+  @JoinTable({
+    joinColumn: { name: 'publicationId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
+  })
+  saved: User[];
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user: User;

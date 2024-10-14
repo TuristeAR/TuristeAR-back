@@ -369,7 +369,7 @@ app.get('/fetch-reviews', async (_req, res) => {
   }
 });
 
-app.post('/itinerary/add-user', (req, res) => {
+app.post('/itinerary/add-user', authMiddleware, (req, res) => {
   const { itineraryId, participantId } = req.body;
 
   itineraryService
@@ -481,7 +481,7 @@ app.get('/itinerary/byUser/:userId', (req, res) => {
     });
 });
 
-app.get('/users/search', async (req, res) => {
+app.get('/users/search', authMiddleware, async (req, res) => {
   const { name, offset = 0, itineraryId } = req.query;
 
   try {
@@ -511,8 +511,8 @@ app.get('/users/search', async (req, res) => {
 });
 
 app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
-  const { param, count = 4 } = req.params;
-  const numericCount = Math.min(Number(count), 4);
+  const { param, count = 10 } = req.params;
+  const numericCount = Math.min(Number(count), 10);
 
   try {
     const province = await placeService.findManyByPlaceProvinceReviews(param, numericCount);
@@ -580,6 +580,26 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/publications/saved/:userID', async (req: Request, res: Response) => {
+  const { userID } = req.params;
+
+  try {
+    let publications;
+
+    if (!isNaN(Number(userID))) {
+      publications = await publicationService.findBySavedUser(Number(userID));
+    }
+
+    if (!publications) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publications);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching publications', error });
+  }
+});
+
 app.get('/publications/categories/:categoryId', async (req: Request, res: Response) => {
   const { categoryId } = req.params;
 
@@ -627,13 +647,49 @@ app.get('/places/province?', async (req: Request, res: Response) => {
       typesArray,
       Number(count),
     );
-
     return res.status(status.OK).json({ statusCode: status.OK, data: places });
   } catch (error) {
     console.error('Error fetching places:', error);
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching places' });
+  }
+});
+
+app.get('/reviews/place/:idGoogle', async (req: Request, res: Response) => {
+  const { idGoogle } = req.params;
+
+  try {
+    const reviews = await reviewService.findReviewsByPlaceId(idGoogle);
+
+    if (!reviews || reviews.length === 0) {
+      return res.status(404).json({ message: 'No reviews found for this place' });
+    }
+
+    const response = reviews;
+
+    return res.json(response);
+  } catch (error) {
+    console.error('Error fetching reviews and place:', error);
+    return res.status(500).json({ message: 'Error fetching reviews and place', error });
+  }
+});
+app.get('/place/:idGoogle', async (req: Request, res: Response) => {
+  const { idGoogle } = req.params;
+
+  try {
+    const place = await placeService.findOneByGoogleId(idGoogle);
+
+    if (!place) {
+      return res.status(404).json({ message: 'Place not found' });
+    }
+
+    const response = place;
+
+    return res.json(response);
+  } catch (error) {
+    console.error('Error fetching place:', error);
+    return res.status(500).json({ message: 'Error fetching place', error });
   }
 });
 

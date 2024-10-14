@@ -222,30 +222,26 @@ export class PlaceService {
       console.error('Error fetching province with places and reviews:', error);
       throw error;
     }
-  }
-
-  async findPlaceByProvinceAndTypes(
-    provinceId: number,
-    types: string[],
-    count: number,
-  ): Promise<Place[]> {
-    try {
-      const places = await this.placeRepository.findMany({
-        where: {
-          province: { id: provinceId },
+}
+async findPlaceByProvinceAndTypes(provinceId: number, types: string[], count: number): Promise<Place[]> {
+  try {
+    const places = await this.placeRepository.findMany({
+      where: {
+        province: { id: provinceId },
+      },
+      relations: ['province', 'reviews'],
+      select: {
+        id: true, 
+        googleId: true,
+        name: true,
+        types: true,
+        rating: true,
+        address: true,
+        reviews: {
+          photos: true,
         },
-        relations: ['province', 'reviews'],
-        select: {
-          id: true,
-          name: true,
-          types: true,
-          rating: true,
-          address: true,
-          reviews: {
-            photos: true,
-          },
-        },
-      });
+      },
+    });
 
       const filteredPlaces = places.filter((place) =>
         place.types.some((type) => types.includes(type)),
@@ -261,10 +257,19 @@ export class PlaceService {
 
       const result = limitedReviewImages.slice(0, count);
 
-      return result;
-    } catch (error) {
-      console.error('Error fetching places by province and types:', error);
-      throw error;
-    }
+    return result;
+  } catch (error) {
+    console.error('Error fetching places by province and types:', error);
+    throw error;
   }
+}
+
+async findPlaceByGoogleId(googleId: string): Promise<Place> {
+  const place = await this.placeRepository.findOne({ where: { googleId } });
+  if (!place) {
+    throw new Error('Place not found');
+  }
+  return place;
+}
+
 }
