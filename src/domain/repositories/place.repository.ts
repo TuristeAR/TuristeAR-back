@@ -6,4 +6,8 @@ export class PlaceRepository extends AbstractRepository<Place> {
   constructor() {
     super(AppDataSource.getRepository(Place));
   }
+
+  async find(criteria: any): Promise<Place[]> {
+    return this.repository.find(criteria);
+  }
 }
