@@ -20,7 +20,6 @@ import { ItineraryService } from '../domain/services/itinerary.service';
 import { ActivityService } from '../domain/services/activity.service';
 import { UserService } from '../domain/services/user.service';
 import { PublicationService } from '../domain/services/publication.service';
-import { Itinerary } from '../domain/entities/itinerary';
 import { CategoryService } from '../domain/services/category.service';
 
 dotenv.config();
@@ -421,7 +420,7 @@ app.post('/itinerary/add-activity', (req, res) => {
   const { itineraryId, createActivityDto } = req.body;
 
   itineraryService
-    .addActivityToItinerary(itineraryId, createActivityDto) 
+    .addActivityToItinerary(itineraryId, createActivityDto)
     .then((itinerary) => {
       return res
         .status(200)
