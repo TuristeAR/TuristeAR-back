@@ -192,6 +192,21 @@ export class PlaceService {
     }
   }
 
+  async fetchPlacesByProvince(provinceName: string) {
+    const province = await this.provinceService.findByName(provinceName);
+    if (!province) {
+      throw new Error('Province not found');
+    }
+  
+    // Obtén los lugares asociados a la provincia
+    const places = await this.placeRepository.find({
+      where: { province: { id: province.id } },
+    });
+    console.log(places)
+    return places;
+
+  }
+
   async findManyByPlaceProvinceReviews(
     identifier: string | number,
     slice: number,

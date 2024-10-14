@@ -18,6 +18,11 @@ export class ProvinceService {
     return this.provinceRepository.findMany({});
   }
 
+  async findByName(name: string): Promise<Province | null> {
+    return await this.provinceRepository.findOne({ where: {name: name } });
+  }
+
+  
   findOneById(id: number): Promise<Province | null> {
     return this.provinceRepository.findOne({ where: { id } });
   }
