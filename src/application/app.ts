@@ -336,6 +336,24 @@ app.get('/fetch-places', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/fetch-activities-places/:province', async (req: Request, res: Response) => {
+  const provinceName = req.params.province;
+
+  try {
+    const places = await placeService.fetchPlacesByProvince(provinceName);
+    res.json({
+      status: 'success',
+      data: places,
+    });
+  } catch (error) {
+    console.error('Error fetching places:', error);
+    res.status(404).json({
+      status: 'error',
+      message: 'An error occurred.',
+    });
+  }
+});
+
 app.get('/fetch-reviews', async (_req, res) => {
   try {
     const places = await placeService.findAll();
@@ -670,5 +688,29 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error fetching place', error });
   }
 });
+
+app.put('/editProfile/:userId', async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { description, location, birthdate } = req.body;
+
+  try {
+    let user = await userService.findOneById(Number(userId));
+
+    if (!user) {
+      return res.status(404).json({ message: 'No se encontró al usuario' });
+    }
+
+    user.description = description || user.description;
+    user.location = location || user.location;
+    user.birthdate = birthdate ? new Date(birthdate) : user.birthdate;
+
+    await userService.save(user);
+
+    return res.json({ message: 'Datos modificados correctamente', user });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error al modificar los datos', error });
+  }
+});
+
 
 export default app;
