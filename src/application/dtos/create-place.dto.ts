@@ -1,8 +1,9 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsInstance, IsNumber, IsString } from 'class-validator';
+import { Province } from '../../domain/entities/province';
 
 export class CreatePlaceDto {
-  @IsNumber()
-  provinceId: number;
+  @IsInstance(Province)
+  province: Province;
 
   @IsString()
   googleId: string;

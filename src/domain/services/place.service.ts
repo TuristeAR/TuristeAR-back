@@ -4,7 +4,6 @@ import { CreatePlaceDto } from '../../application/dtos/create-place.dto';
 import { ProvinceService } from './province.service';
 import { post } from '../../utils/http.util';
 import { Province } from '../entities/province';
-import { In } from 'typeorm';
 
 export class PlaceService {
   private placeRepository: PlaceRepository;
@@ -44,7 +43,9 @@ export class PlaceService {
 
     do {
       if (filteredPlaces.length === 0) {
-        return null;
+        const place = await this.fetchPlaceByTypesAndProvinceId(currentPlaces, types, provinceId);
+
+        filteredPlaces.push(place);
       }
 
       const randomPlace = filteredPlaces[Math.floor(Math.random() * filteredPlaces.length)];
@@ -57,28 +58,6 @@ export class PlaceService {
     } while (filteredPlaces.length > 0);
 
     return null;
-  }
-
-  isOpenThisDay(place: Place, date: Date): boolean {
-    if (place.openingHours === null) {
-      return true;
-    }
-
-    const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-    const dayName = daysOfWeek[date.getDay()];
-    const openingHoursForToday = place.openingHours.find((hours) => hours.startsWith(dayName));
-
-    return !(!openingHoursForToday || openingHoursForToday.includes('Cerrado'));
-  }
-
-  private filterPlacesByTypes(places: Place[], currentPlaces: Place[], types: string[]) {
-    const filteredPlaces = places.filter((place) =>
-      place.types.some((type) => types.includes(type)),
-    );
-
-    return filteredPlaces.filter(
-      (place) => !currentPlaces.some((existingPlace) => existingPlace.id === place.id),
-    );
   }
 
   async fetchPlaces(province: string) {
@@ -173,8 +152,10 @@ export class PlaceService {
           place.location.longitude,
         );
 
+        const province = await this.provinceService.findOneById(provinceId as number);
+
         const createPlaceDto: CreatePlaceDto = {
-          provinceId: provinceId as number,
+          province: province as Province,
           googleId: place.id,
           name: place.displayName.text,
           types: place.types ?? null,
@@ -222,29 +203,36 @@ export class PlaceService {
       console.error('Error fetching province with places and reviews:', error);
       throw error;
     }
-}
-async findPlaceByProvinceAndTypes(provinceId: number, types: string[], count: number): Promise<Place[]> {
-  try {
-    const places = await this.placeRepository.findMany({
-      where: {
-        province: { id: provinceId },
-      },
-      relations: ['province', 'reviews'],
-      select: {
-        id: true, 
-        googleId: true,
-        name: true,
-        types: true,
-        rating: true,
-        address: true,
-        reviews: {
-          photos: true,
+  }
+
+  async findPlaceByProvinceAndTypes(
+    provinceId: number,
+    types: string[],
+    count: number,
+  ): Promise<Place[]> {
+    try {
+      const places = await this.placeRepository.findMany({
+        where: {
+          province: { id: provinceId },
         },
-      },
-    });
+        relations: ['province', 'reviews'],
+        select: {
+          id: true,
+          googleId: true,
+          name: true,
+          types: true,
+          rating: true,
+          address: true,
+          reviews: {
+            photos: true,
+          },
+        },
+      });
+
+      const joinedTypes = types.join(',');
 
       const filteredPlaces = places.filter((place) =>
-        place.types.some((type) => types.includes(type)),
+        place.types.some((type) => joinedTypes.includes(type)),
       );
 
       const limitedReviewImages = filteredPlaces.map((place) => {
@@ -255,21 +243,108 @@ async findPlaceByProvinceAndTypes(provinceId: number, types: string[], count: nu
         };
       });
 
-      const result = limitedReviewImages.slice(0, count);
-
-    return result;
-  } catch (error) {
-    console.error('Error fetching places by province and types:', error);
-    throw error;
+      return limitedReviewImages.slice(0, count);
+    } catch (error) {
+      console.error('Error fetching places by province and types:', error);
+      throw error;
+    }
   }
-}
 
-async findPlaceByGoogleId(googleId: string): Promise<Place> {
-  const place = await this.placeRepository.findOne({ where: { googleId } });
-  if (!place) {
-    throw new Error('Place not found');
+  async findPlaceByGoogleId(googleId: string): Promise<Place> {
+    const place = await this.placeRepository.findOne({ where: { googleId } });
+
+    if (!place) {
+      throw new Error('Place not found');
+    }
+
+    return place;
   }
-  return place;
-}
 
+  private isOpenThisDay(place: Place, date: Date): boolean {
+    if (place.openingHours === null) {
+      return true;
+    }
+
+    const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const dayName = daysOfWeek[date.getDay()];
+    const openingHoursForToday = place.openingHours.find((hours) => hours.startsWith(dayName));
+
+    return !(!openingHoursForToday || openingHoursForToday.includes('Cerrado'));
+  }
+
+  private filterPlacesByTypes(places: any[], currentPlaces: Place[], types: string[]) {
+    const joinedTypes = types.join(',');
+
+    const filteredPlaces = places.filter((place) =>
+      place.types.some((type: string) => joinedTypes.includes(type)),
+    );
+
+    return filteredPlaces.filter(
+      (place) => !currentPlaces.some((existingPlace) => existingPlace.id === place.id),
+    );
+  }
+
+  private async fetchPlaceByTypesAndProvinceId(
+    currentPlaces: Place[],
+    types: string[],
+    provinceId: number,
+  ) {
+    let results: any[] = [];
+
+    const provinceName = await this.provinceService.getProvinceNameFromId(provinceId);
+
+    const searchHeaders = {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': process.env.GOOGLE_API_KEY as string,
+      'X-Goog-FieldMask': 'places',
+    };
+
+    const splitTypes = types[0].split(',');
+
+    for (const type of splitTypes) {
+      const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
+
+      const searchBody = {
+        textQuery: type + ' in ' + provinceName + ' Province',
+        includedType: type,
+        strictTypeFiltering: true,
+        languageCode: 'es',
+        regionCode: 'AR',
+        pageSize: 10,
+      };
+
+      results.push(...(await post(searchUrl, searchHeaders, searchBody)).places);
+    }
+
+    const places = this.filterPlacesByTypes(results, currentPlaces, types);
+
+    const randomPlace = places[Math.floor(Math.random() * places.length)];
+
+    return this.savePlaceInDatabase(randomPlace, provinceId);
+  }
+
+  private async savePlaceInDatabase(place: any, provinceId: number) {
+    const existingPlace = await this.findOneByGoogleId(place.id);
+
+    if (!existingPlace) {
+      const province = await this.provinceService.findOneById(provinceId);
+
+      const createPlaceDto: CreatePlaceDto = {
+        province: province as Province,
+        googleId: place.id,
+        name: place.displayName.text,
+        types: place.types ?? null,
+        address: place.shortFormattedAddress,
+        latitude: place.location.latitude,
+        longitude: place.location.longitude,
+        rating: place.rating || null,
+        openingHours: place.currentOpeningHours?.weekdayDescriptions ?? null,
+        phoneNumber: place.nationalPhoneNumber ?? null,
+      };
+
+      return this.create(createPlaceDto);
+    }
+
+    return existingPlace;
+  }
 }
