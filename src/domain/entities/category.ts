@@ -12,7 +12,4 @@ export class Category extends AbstractEntity {
 
   @Column()
   image: string;
-
-  @ManyToMany(() => Province, (province) => province.categories)
-  provinces: Province[];
 }

@@ -1,12 +1,20 @@
 import { PublicationRepository } from '../repositories/publication.repository';
 import { Publication } from '../entities/publication';
 import { CreatePublicationDTO } from '../../application/dtos/create-publication.dto';
+import { UserRepository } from '../repositories/user.repository';
+import { CategoryRepository } from '../repositories/category.repository';
+import { Category } from '../entities/category';
+import { User } from '../entities/user';
 
 export class PublicationService {
   private publicationRepository: PublicationRepository;
+  private userRepository: UserRepository;
+  private categoryRepository: CategoryRepository;
 
   constructor() {
     this.publicationRepository = new PublicationRepository();
+    this.userRepository = new UserRepository();
+    this.categoryRepository = new CategoryRepository();
   }
 
   findByUser(id: number): Promise<Publication[] | null> {
@@ -44,7 +52,31 @@ export class PublicationService {
     });
   }
 
-  async createPublication(publication: CreatePublicationDTO) {
-    return this.publicationRepository.create(publication);
+  async createPublication(publicationDTO: CreatePublicationDTO, user : User): Promise<Publication> {
+    const { description, images, categoryId} = publicationDTO;
+
+    const newPublication = new Publication();
+    newPublication.description = description;
+    newPublication.images = images;
+    newPublication.likes = [];
+    newPublication.reposts = [];
+    newPublication.saved = [];
+    newPublication.creationDate = new Date();
+
+    try {
+      const category : Category | null = await this.categoryRepository.findOne({ where: { id: categoryId } });
+      if (!category) {
+        throw new Error('Categoría no encontrada');
+      }
+      newPublication.category = category;
+
+      newPublication.user = user;
+
+      return this.publicationRepository.save(newPublication);
+    } catch (error) {
+      console.error('Error al crear publicación:', error);
+      throw error;
+    }
   }
+
 }

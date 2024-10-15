@@ -718,13 +718,14 @@ app.post('/createPublication', async (req: Request, res: Response) => {
   try {
     const createPublicationDTO: CreatePublicationDTO = req.body;
 
-    const publication = await publicationService.createPublication(createPublicationDTO);
+    const publication = await publicationService.createPublication(createPublicationDTO, req.user as User);
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: publication });
   } catch (error) {
+    console.error('Error creando publicación:', error); // Log del error
     return res
       .status(status.INTERNAL_SERVER_ERROR)
-      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error creating province' });
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: error || 'Error creating publication' });
   }
 });
 

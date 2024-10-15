@@ -26,14 +26,6 @@ export class Province extends AbstractEntity {
   @OneToMany(() => Place, (place) => place.province)
   places: Place[];
 
-  @ManyToMany(() => Category, { cascade: true })
-  @JoinTable({
-    name: 'categories_province',
-    joinColumn: { name: 'provinceId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'categoryId', referencedColumnName: 'id' }
-  })
-  categories: Category[];
-
   @OneToMany(() => Culture, (culture) => culture.province) 
   cultures: Culture[];
 }
