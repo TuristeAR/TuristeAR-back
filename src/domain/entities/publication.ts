@@ -44,4 +44,13 @@ export class Publication extends AbstractEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user: User;
+
+
+  constructor(description: string, images: string[], category: Category, user: User) {
+    super();
+    this.description = description;
+    this.images = images;
+    this.category = category;
+    this.user = user;
+  }
 }

@@ -22,6 +22,8 @@ import { UserService } from '../domain/services/user.service';
 import { PublicationService } from '../domain/services/publication.service';
 import { Itinerary } from '../domain/entities/itinerary';
 import { CategoryService } from '../domain/services/category.service';
+import { Publication } from '../domain/entities/publication';
+import { CreatePublicationDTO } from './dtos/create-publication.dto';
 
 dotenv.config();
 
@@ -674,6 +676,7 @@ app.get('/reviews/place/:idGoogle', async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error fetching reviews and place', error });
   }
 });
+
 app.get('/place/:idGoogle', async (req: Request, res: Response) => {
   const { idGoogle } = req.params;
 
@@ -716,5 +719,18 @@ app.put('/editProfile/:userId', async (req: Request, res: Response) => {
   }
 });
 
+app.post('/createPublication', async (req: Request, res: Response) => {
+  try {
+    const createPublicationDTO: CreatePublicationDTO = req.body;
+
+    const publication = await publicationService.createPublication(createPublicationDTO);
+
+    return res.status(status.CREATED).json({ statusCode: status.CREATED, data: publication });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error creating province' });
+  }
+});
 
 export default app;
