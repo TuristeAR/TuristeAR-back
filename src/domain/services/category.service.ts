@@ -22,4 +22,8 @@ export class CategoryService {
     return this.categoryRepository.findMany({});
   }
 
+  findById(id: number){
+    return this.categoryRepository.findOne({ where : { id: id } });
+  }
+
 }
