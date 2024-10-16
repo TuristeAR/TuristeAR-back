@@ -18,11 +18,10 @@ export class ProvinceService {
     return this.provinceRepository.findMany({});
   }
 
-  async findByName(name: string): Promise<Province | null> {
-    return await this.provinceRepository.findOne({ where: {name: name } });
+  findByName(name: string): Promise<Province | null> {
+    return this.provinceRepository.findOne({ where: { name: name } });
   }
 
-  
   findOneById(id: number): Promise<Province | null> {
     return this.provinceRepository.findOne({ where: { id } });
   }
@@ -51,41 +50,42 @@ export class ProvinceService {
 
     const province = await this.provinceRepository.findOne({ where: { name: provinceName } });
 
-    return province?.id;
+    return province?.id || null;
   }
 
-  async findOneWithProvinceReviews(identifier: string | number, slice: number): Promise<Province | null> {
-    
+  async findOneWithProvinceReviews(
+    identifier: string | number,
+    slice: number,
+  ): Promise<Province | null> {
     const idNumber = typeof identifier === 'number' ? identifier : Number(identifier);
-    const isId = !isNaN(idNumber); 
+    const isId = !isNaN(idNumber);
 
     const province = await this.provinceRepository.findOne({
       where: isId ? { id: idNumber } : { name: String(identifier) },
-      
+
       relations: ['places', 'places.reviews'],
       select: {
-        id: true, 
+        id: true,
         name: true,
         description: true,
         images: true,
         places: {
-          id: true, 
+          id: true,
           name: true,
           reviews: {
             authorName: true,
             authorPhoto: true,
             publishedTime: true,
             photos: true,
-            rating: true, 
-            text: true, 
+            rating: true,
+            text: true,
           },
         },
       },
-    
     });
-  
+
     if (!province) {
-      return null; 
+      return null;
     }
 
     province.places = province.places
@@ -95,10 +95,9 @@ export class ProvinceService {
         }
         return place;
       })
-      .filter((place) => place.reviews.length > 0) 
-      .slice(0, slice); 
-  
+      .filter((place) => place.reviews.length > 0)
+      .slice(0, slice);
+
     return province;
   }
-  
 }
