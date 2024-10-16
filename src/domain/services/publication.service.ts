@@ -79,4 +79,19 @@ export class PublicationService {
     }
   }
 
+  async findById(id: number) {
+    return this.publicationRepository.findOne({ where : {id : id}, relations: ['user', 'category', 'likes', 'reposts', 'saved'] });
+  }
+
+  async handleLike(publication: Publication | null, user : User) {
+    publication?.likes.push(user)
+
+    if (!publication) {
+      console.log('La publicación es nula o no se encontró.');
+      throw new Error('La publicación es nula o no se encontró.');
+    }
+
+    await this.publicationRepository.save(publication);
+  }
+
 }
