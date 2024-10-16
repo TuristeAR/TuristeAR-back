@@ -21,7 +21,6 @@ import { ActivityService } from '../domain/services/activity.service';
 import { UserService } from '../domain/services/user.service';
 import { PublicationService } from '../domain/services/publication.service';
 import { CategoryService } from '../domain/services/category.service';
-import { Publication } from '../domain/entities/publication';
 import { CreatePublicationDTO } from './dtos/create-publication.dto';
 
 dotenv.config();
@@ -106,7 +105,7 @@ app.get('/auth/google/callback', (req, res, next) => {
         return res.redirect(`${process.env.FRONTEND_URL}/login`);
       }
 
-      res.redirect(`${process.env.FRONTEND_URL}`);
+      res.redirect(`${process.env.FRONTEND_URL}/formQuestion`);
     });
   })(req, res, next);
 });
@@ -718,14 +717,18 @@ app.post('/createPublication', async (req: Request, res: Response) => {
   try {
     const createPublicationDTO: CreatePublicationDTO = req.body;
 
-    const publication = await publicationService.createPublication(createPublicationDTO, req.user as User);
+    const publication = await publicationService.createPublication(
+      createPublicationDTO,
+      req.user as User,
+    );
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: publication });
   } catch (error) {
     console.error('Error creando publicación:', error); // Log del error
-    return res
-      .status(status.INTERNAL_SERVER_ERROR)
-      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: error || 'Error creating publication' });
+    return res.status(status.INTERNAL_SERVER_ERROR).json({
+      statusCode: status.INTERNAL_SERVER_ERROR,
+      message: error || 'Error creating publication',
+    });
   }
 });
 
@@ -733,9 +736,12 @@ app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res:
   const { publicationId } = req.params;
   const publication = await publicationService.findById(Number(publicationId));
 
-  publicationService.handleLike(publication,req.user as User)
-    .then((updatedPublication) => {
-      return res.status(200).json({ status: 'success', data: { message : 'Publicacion agregada correctamente' } });
+  publicationService
+    .handleLike(publication, req.user as User)
+    .then(() => {
+      return res
+        .status(200)
+        .json({ status: 'success', data: { message: 'Publicación agregada correctamente' } });
     })
     .catch((error) => {
       console.error('Error adding user to likes:', error);
