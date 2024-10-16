@@ -48,6 +48,6 @@ describe('GET /auth/google/callback', () => {
 
   it('redirects to frontend on successful authentication', async () => {
     const response = await request(app).get('/auth/google/callback');
-    expect(response.headers.location).toBe(`${process.env.FRONTEND_URL}/formQuestion`);
+    expect(response.headers.location).toBe(`${process.env.FRONTEND_URL}/formQuestions`);
   });
 });
