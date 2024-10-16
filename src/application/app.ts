@@ -105,7 +105,7 @@ app.get('/auth/google/callback', (req, res, next) => {
         return res.redirect(`${process.env.FRONTEND_URL}/login`);
       }
 
-      res.redirect(`${process.env.FRONTEND_URL}/formQuestion`);
+      res.redirect(`${process.env.FRONTEND_URL}/formQuestions`);
     });
   })(req, res, next);
 });
