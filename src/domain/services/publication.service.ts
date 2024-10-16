@@ -21,12 +21,14 @@ export class PublicationService {
     return this.publicationRepository.findMany({
       where: { user: { id: id } },
       relations: ['user', 'category', 'likes', 'reposts', 'saved'],
+      order: { id: 'DESC'},
     });
   }
 
   findAll({}): Promise<Publication[]> {
     return this.publicationRepository.findMany({
       relations: ['user', 'category', 'likes', 'reposts', 'saved'],
+      order: { id: 'DESC'},
       take: 10,
     });
   }
@@ -35,6 +37,7 @@ export class PublicationService {
     return this.publicationRepository.findMany({
       where: { likes: { id: userId } },
       relations: ['user', 'category', 'likes', 'reposts', 'saved'],
+      order: { id: 'DESC'},
     });
   }
 
@@ -42,6 +45,7 @@ export class PublicationService {
     return this.publicationRepository.findMany({
       where: { category: { id: categoryId } },
       relations: ['user', 'category', 'likes', 'reposts', 'saved'],
+      order: { id: 'DESC'},
     });
   }
 
@@ -49,6 +53,7 @@ export class PublicationService {
     return this.publicationRepository.findMany({
       where: { saved: { id: userId } },
       relations: ['user', 'category', 'likes', 'reposts', 'saved'],
+      order: { id: 'DESC'},
     });
   }
 
@@ -83,15 +88,20 @@ export class PublicationService {
     return this.publicationRepository.findOne({ where : {id : id}, relations: ['user', 'category', 'likes', 'reposts', 'saved'] });
   }
 
-  async handleLike(publication: Publication | null, user : User) {
-    publication?.likes.push(user)
-
+  async handleLike(publication: Publication | null, user: User) {
     if (!publication) {
       console.log('La publicación es nula o no se encontró.');
       throw new Error('La publicación es nula o no se encontró.');
     }
 
+    const userAlreadyLiked = publication.likes.some((likedUser) => likedUser.id === user.id);
+
+    if (userAlreadyLiked) {
+      publication.likes = publication.likes.filter((likedUser) => likedUser.id !== user.id);
+    } else {
+      publication.likes.push(user);
+    }
+
     await this.publicationRepository.save(publication);
   }
-
 }
