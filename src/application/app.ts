@@ -729,10 +729,9 @@ app.post('/createPublication', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/handleLike/:publicationId', async (req: Request, res: Response) => {
+app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res: Response) => {
   const { publicationId } = req.params;
   const publication = await publicationService.findById(Number(publicationId));
-
 
   publicationService.handleLike(publication,req.user as User)
     .then((updatedPublication) => {
