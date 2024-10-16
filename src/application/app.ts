@@ -729,4 +729,18 @@ app.post('/createPublication', async (req: Request, res: Response) => {
   }
 });
 
+app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res: Response) => {
+  const { publicationId } = req.params;
+  const publication = await publicationService.findById(Number(publicationId));
+
+  publicationService.handleLike(publication,req.user as User)
+    .then((updatedPublication) => {
+      return res.status(200).json({ status: 'success', data: { message : 'Publicacion agregada correctamente' } });
+    })
+    .catch((error) => {
+      console.error('Error adding user to likes:', error);
+      return res.status(500).json({ status: 'error', message: 'Error adding user to likes' });
+    });
+});
+
 export default app;
