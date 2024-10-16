@@ -8,7 +8,6 @@ import { Place } from '../entities/place';
 import { User } from '../entities/user';
 import { CreateActivityDto } from '../../application/dtos/create-activity.dto';
 import { UserService } from './user.service';
-import { Publication } from '../entities/publication';
 
 export class ItineraryService {
   private itineraryRepository: ItineraryRepository;
@@ -28,13 +27,13 @@ export class ItineraryService {
   async create(user: User, createItineraryDto: CreateItineraryDto) {
     const dates = this.getDates(createItineraryDto.fromDate, createItineraryDto.toDate);
 
-    const places: Place[] = [];
-
-    const itinerary = new Itinerary();
+    const places = await this.placeService.findManyByProvinceId(createItineraryDto.provinceId);
 
     const provinceName = await this.provinceService.getProvinceNameFromId(
       createItineraryDto.provinceId,
     );
+
+    const itinerary = new Itinerary();
 
     itinerary.name = `Viaje a ${provinceName}`;
     itinerary.fromDate = createItineraryDto.fromDate;
@@ -44,16 +43,19 @@ export class ItineraryService {
 
     const savedItinerary = await this.itineraryRepository.create(itinerary);
 
+    let itineraryPlaces: Place[] = [];
+
     for (const date of dates) {
       const place = await this.placeService.findOneByDateWithTypesAndProvinceId(
         places,
+        itineraryPlaces,
         date,
         createItineraryDto.types,
         createItineraryDto.provinceId,
       );
 
       if (place) {
-        places.push(place);
+        itineraryPlaces.push(place);
 
         const activityDates = this.activityService.getActivityDates(place.openingHours, date);
 
