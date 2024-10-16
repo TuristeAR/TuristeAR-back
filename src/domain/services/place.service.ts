@@ -26,19 +26,20 @@ export class PlaceService {
     return this.placeRepository.findOne({ where: { googleId } });
   }
 
+  findManyByProvinceId(provinceId: number): Promise<Place[]> {
+    return this.placeRepository.findMany({
+      where: { province: { id: provinceId } },
+      relations: ['province'],
+    });
+  }
+
   async findOneByDateWithTypesAndProvinceId(
+    places: Place[],
     currentPlaces: Place[],
     date: Date,
     types: string[],
     provinceId: number,
   ): Promise<Place | null> {
-    let places: Place[];
-
-    places = await this.placeRepository.findMany({
-      where: { province: { id: provinceId } },
-      relations: ['province'],
-    });
-
     const filteredPlaces = this.filterPlacesByTypes(places, currentPlaces, types);
 
     do {
@@ -174,17 +175,14 @@ export class PlaceService {
 
   async fetchPlacesByProvince(provinceName: string) {
     const province = await this.provinceService.findByName(provinceName);
+
     if (!province) {
       throw new Error('Province not found');
     }
-  
-    // Obtén los lugares asociados a la provincia
-    const places = await this.placeRepository.find({
+
+    return await this.placeRepository.find({
       where: { province: { id: province.id } },
     });
-    console.log(places)
-    return places;
-
   }
 
   async findManyByPlaceProvinceReviews(
@@ -302,18 +300,23 @@ export class PlaceService {
     const splitTypes = types[0].split(',');
 
     for (const type of splitTypes) {
-      const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
+      try {
+        const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
 
-      const searchBody = {
-        textQuery: type + ' in ' + provinceName + ' Province',
-        includedType: type,
-        strictTypeFiltering: true,
-        languageCode: 'es',
-        regionCode: 'AR',
-        pageSize: 10,
-      };
+        const searchBody = {
+          textQuery: type + ' in ' + provinceName + ' Province',
+          includedType: type,
+          strictTypeFiltering: true,
+          languageCode: 'es',
+          regionCode: 'AR',
+        };
 
-      results.push(...(await post(searchUrl, searchHeaders, searchBody)).places);
+        const result = await post(searchUrl, searchHeaders, searchBody);
+
+        results.push(...result.places);
+      } catch (error) {
+        results.push(...[]);
+      }
     }
 
     const places = this.filterPlacesByTypes(results, currentPlaces, types);

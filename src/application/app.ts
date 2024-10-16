@@ -712,5 +712,4 @@ app.put('/editProfile/:userId', async (req: Request, res: Response) => {
   }
 });
 
-
 export default app;
