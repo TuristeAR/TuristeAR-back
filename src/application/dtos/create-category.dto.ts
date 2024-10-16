@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsArray, IsNumber, IsString } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString()
@@ -6,4 +6,8 @@ export class CreateCategoryDto {
 
   @IsString()
   image: string;
+
+  @IsArray()
+  @IsNumber()
+  provinces : number;
 }

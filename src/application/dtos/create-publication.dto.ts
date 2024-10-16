@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 
 export class CreatePublicationDTO {
@@ -12,17 +12,20 @@ export class CreatePublicationDTO {
   @IsString()
   creationDate: string;
 
+  @IsOptional()
   @IsArray()
-  @IsNumber()
-  likes: number;
+  @IsString({each: true})
+  likes?: number[];
 
+  @IsOptional()
   @IsArray()
-  @IsNumber()
-  reposts: number;
+  @IsString({each: true})
+  reposts?: number[];
 
+  @IsOptional()
   @IsArray()
-  @IsNumber()
-  saved: number;
+  @IsString({each: true})
+  saved?: number[];
 
   @IsNumber()
   categoryId : number;

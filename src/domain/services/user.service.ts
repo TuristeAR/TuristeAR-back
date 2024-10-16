@@ -1,13 +1,13 @@
-import { PublicationRepository } from '../repositories/user.repository';
+import { UserRepository } from '../repositories/user.repository';
 import { User } from '../entities/user';
 import { CreateUserDto } from '../../application/dtos/create-user.dto';
 import { Like } from 'typeorm';
 
 export class UserService {
-  private userRepository: PublicationRepository;
+  private userRepository: UserRepository;
 
   constructor() {
-    this.userRepository = new PublicationRepository();
+    this.userRepository = new UserRepository();
   }
 
   create(createUserDto: CreateUserDto): Promise<User> {
