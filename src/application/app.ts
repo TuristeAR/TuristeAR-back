@@ -713,9 +713,11 @@ app.put('/editProfile/:userId', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/createPublication', async (req: Request, res: Response) => {
+app.post('/createPublication', authMiddleware,async (req: Request, res: Response) => {
   try {
     const createPublicationDTO: CreatePublicationDTO = req.body;
+
+    console.log(req.body)
 
     const publication = await publicationService.createPublication(
       createPublicationDTO,
