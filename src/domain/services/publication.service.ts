@@ -19,7 +19,7 @@ export class PublicationService {
 
   findByUser(id: number): Promise<Publication[] | null> {
     return this.publicationRepository.findMany({
-      where: { user: { id: id } },
+      where: [{ reposts: { id: id } }, { user: { id: id } }],
       relations: ['user', 'category', 'likes', 'reposts', 'saved'],
       order: { id: 'DESC'},
     });
@@ -100,6 +100,23 @@ export class PublicationService {
       publication.likes = publication.likes.filter((likedUser) => likedUser.id !== user.id);
     } else {
       publication.likes.push(user);
+    }
+
+    await this.publicationRepository.save(publication);
+  }
+
+  async handleSaved(publication: Publication | null, user: User) {
+    if (!publication) {
+      console.log('La publicación es nula o no se encontró.');
+      throw new Error('La publicación es nula o no se encontró.');
+    }
+
+    const userAlreadySaved = publication.saved.some((savedUser) => savedUser.id === user.id);
+
+    if (userAlreadySaved) {
+      publication.saved = publication.saved.filter((savedUser) => savedUser.id !== user.id);
+    } else {
+      publication.saved.push(user);
     }
 
     await this.publicationRepository.save(publication);

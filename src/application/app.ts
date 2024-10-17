@@ -751,4 +751,21 @@ app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res:
     });
 });
 
+app.post('/handleSaved/:publicationId', authMiddleware, async (req: Request, res: Response) => {
+  const { publicationId } = req.params;
+  const publication = await publicationService.findById(Number(publicationId));
+
+  publicationService
+    .handleSaved(publication, req.user as User)
+    .then(() =>  {
+      return res
+        .status(200)
+        .json({ status: 'success', data: { message: 'Publicación guardada correctamente' } });
+    })
+    .catch((error) => {
+      console.error('Error adding user to saved:', error);
+      return res.status(500).json({ status: 'error', message: 'Error adding user to saved' });
+    });
+});
+
 export default app;
