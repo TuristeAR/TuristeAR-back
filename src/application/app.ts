@@ -768,4 +768,21 @@ app.post('/handleSaved/:publicationId', authMiddleware, async (req: Request, res
     });
 });
 
+app.post('/handleReposts/:publicationId', authMiddleware, async (req: Request, res: Response) => {
+  const { publicationId } = req.params;
+  const publication = await publicationService.findById(Number(publicationId));
+
+  publicationService
+    .handleReposts(publication, req.user as User)
+    .then(() =>  {
+      return res
+        .status(200)
+        .json({ status: 'success', data: { message: 'Publicación reposteada correctamente' } });
+    })
+    .catch((error) => {
+      console.error('Error adding user to reposts:', error);
+      return res.status(500).json({ status: 'error', message: 'Error adding user to reposts' });
+    });
+});
+
 export default app;
