@@ -121,4 +121,21 @@ export class PublicationService {
 
     await this.publicationRepository.save(publication);
   }
+
+  async handleReposts(publication: Publication | null, user: User) {
+    if (!publication) {
+      console.log('La publicación es nula o no se encontró.');
+      throw new Error('La publicación es nula o no se encontró.');
+    }
+
+    const userAlreadyRepost = publication.reposts.some((repostUser) => repostUser.id === user.id);
+
+    if (userAlreadyRepost) {
+      publication.reposts = publication.reposts.filter((repostUser) => repostUser.id !== user.id);
+    } else {
+      publication.reposts.push(user);
+    }
+
+    await this.publicationRepository.save(publication);
+  }
 }
