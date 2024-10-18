@@ -692,7 +692,7 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
 
 app.put('/editProfile/:userId', async (req: Request, res: Response) => {
   const { userId } = req.params;
-  const { description, location, birthdate } = req.body;
+  const { description, location, birthdate, profilePicture, coverPicture } = req.body;
 
   try {
     let user = await userService.findOneById(Number(userId));
@@ -704,6 +704,8 @@ app.put('/editProfile/:userId', async (req: Request, res: Response) => {
     user.description = description || user.description;
     user.location = location || user.location;
     user.birthdate = birthdate ? new Date(birthdate) : user.birthdate;
+    user.profilePicture= profilePicture || user.profilePicture;
+    user.coverPicture= coverPicture || user.coverPicture;
 
     await userService.save(user);
 
