@@ -690,12 +690,11 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
   }
 });
 
-app.put('/editProfile/:userId', async (req: Request, res: Response) => {
-  const { userId } = req.params;
+app.put('/editProfile', authMiddleware, async (req: Request, res: Response) => {
   const { description, location, birthdate, profilePicture, coverPicture } = req.body;
 
   try {
-    let user = await userService.findOneById(Number(userId));
+    let user = req.user as User
 
     if (!user) {
       return res.status(404).json({ message: 'No se encontró al usuario' });
