@@ -20,8 +20,9 @@ import { ItineraryService } from '../domain/services/itinerary.service';
 import { ActivityService } from '../domain/services/activity.service';
 import { UserService } from '../domain/services/user.service';
 import { PublicationService } from '../domain/services/publication.service';
-import { Itinerary } from '../domain/entities/itinerary';
 import { CategoryService } from '../domain/services/category.service';
+import { Publication } from '../domain/entities/publication';
+import { CreatePublicationDTO } from './dtos/create-publication.dto';
 
 dotenv.config();
 
@@ -337,6 +338,24 @@ app.get('/fetch-places', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/fetch-activities-places/:province', async (req: Request, res: Response) => {
+  const provinceName = req.params.province;
+
+  try {
+    const places = await placeService.fetchPlacesByProvince(provinceName);
+    res.json({
+      status: 'success',
+      data: places,
+    });
+  } catch (error) {
+    console.error('Error fetching places:', error);
+    res.status(404).json({
+      status: 'error',
+      message: 'An error occurred.',
+    });
+  }
+});
+
 app.get('/fetch-reviews', async (_req, res) => {
   try {
     const places = await placeService.findAll();
@@ -421,7 +440,7 @@ app.post('/itinerary/add-activity', (req, res) => {
   const { itineraryId, createActivityDto } = req.body;
 
   itineraryService
-    .addActivityToItinerary(itineraryId, createActivityDto) 
+    .addActivityToItinerary(itineraryId, createActivityDto)
     .then((itinerary) => {
       return res
         .status(200)
@@ -562,6 +581,26 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/publications/saved/:userID', async (req: Request, res: Response) => {
+  const { userID } = req.params;
+
+  try {
+    let publications;
+
+    if (!isNaN(Number(userID))) {
+      publications = await publicationService.findBySavedUser(Number(userID));
+    }
+
+    if (!publications) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publications);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching publications', error });
+  }
+});
+
 app.get('/publications/categories/:categoryId', async (req: Request, res: Response) => {
   const { categoryId } = req.params;
 
@@ -628,14 +667,13 @@ app.get('/reviews/place/:idGoogle', async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'No reviews found for this place' });
     }
 
-    const response = reviews;
-
-    return res.json(response);
+    return res.json(reviews);
   } catch (error) {
     console.error('Error fetching reviews and place:', error);
     return res.status(500).json({ message: 'Error fetching reviews and place', error });
   }
 });
+
 app.get('/place/:idGoogle', async (req: Request, res: Response) => {
   const { idGoogle } = req.params;
 
@@ -646,12 +684,48 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Place not found' });
     }
 
-    const response = place;
-
-    return res.json(response);
+    return res.json(place);
   } catch (error) {
     console.error('Error fetching place:', error);
     return res.status(500).json({ message: 'Error fetching place', error });
+  }
+});
+
+app.put('/editProfile/:userId', async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { description, location, birthdate } = req.body;
+
+  try {
+    let user = await userService.findOneById(Number(userId));
+
+    if (!user) {
+      return res.status(404).json({ message: 'No se encontró al usuario' });
+    }
+
+    user.description = description || user.description;
+    user.location = location || user.location;
+    user.birthdate = birthdate ? new Date(birthdate) : user.birthdate;
+
+    await userService.save(user);
+
+    return res.json({ message: 'Datos modificados correctamente', user });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error al modificar los datos', error });
+  }
+});
+
+app.post('/createPublication', async (req: Request, res: Response) => {
+  try {
+    const createPublicationDTO: CreatePublicationDTO = req.body;
+
+    const publication = await publicationService.createPublication(createPublicationDTO, req.user as User);
+
+    return res.status(status.CREATED).json({ statusCode: status.CREATED, data: publication });
+  } catch (error) {
+    console.error('Error creando publicación:', error); // Log del error
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: error || 'Error creating publication' });
   }
 });
 

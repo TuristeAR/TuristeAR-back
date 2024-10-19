@@ -24,6 +24,7 @@ describe('PublicationService', () => {
     const userID = 1;
 
     const publication: Publication = {
+      reposts: [], saved: [],
       likes: [],
       id: 1,
       category : new Category(),
@@ -55,6 +56,7 @@ describe('PublicationService', () => {
 
   it('should find publications by likes of users', async () => {
     const publication: Publication = {
+      reposts: [], saved: [],
       likes: [{ id : 1 } as User],
       id: 1,
       category: new Category(),

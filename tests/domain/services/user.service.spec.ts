@@ -1,5 +1,5 @@
 import { UserService } from '../../../src/domain/services/user.service';
-import { PublicationRepository } from '../../../src/domain/repositories/user.repository';
+import { UserRepository } from '../../../src/domain/repositories/user.repository';
 import { CreateUserDto } from '../../../src/application/dtos/create-user.dto';
 import { User } from '../../../src/domain/entities/user';
 
@@ -7,10 +7,10 @@ jest.mock('../../../src/domain/repositories/user.repository');
 
 describe('UserService', () => {
   let userService: UserService;
-  let userRepository: jest.Mocked<PublicationRepository>;
+  let userRepository: jest.Mocked<UserRepository>;
 
   beforeEach(() => {
-    userRepository = new PublicationRepository() as jest.Mocked<PublicationRepository>;
+    userRepository = new UserRepository() as jest.Mocked<UserRepository>;
     userService = new UserService();
     (userService as any).userRepository = userRepository;
   });

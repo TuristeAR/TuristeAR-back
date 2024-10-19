@@ -18,7 +18,7 @@ describe('PlaceService', () => {
 
   it('creates a new place', async () => {
     const createPlaceDto: CreatePlaceDto = {
-      provinceId: 1,
+      province: new Province(),
       googleId: 'some-google-id',
       name: 'Test Place',
       types: ['type1', 'type2'],

@@ -18,7 +18,7 @@ export class Publication extends AbstractEntity {
 
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'categoryId' })
-  category: Category;
+  category: Category | null;
 
   @ManyToMany(() => User)
   @JoinTable({
@@ -26,6 +26,20 @@ export class Publication extends AbstractEntity {
     inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
   })
   likes: User[];
+
+  @ManyToMany(() => User)
+  @JoinTable({
+    joinColumn: { name: 'publicationId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
+  })
+  reposts: User[];
+
+  @ManyToMany(() => User)
+  @JoinTable({
+    joinColumn: { name: 'publicationId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
+  })
+  saved: User[];
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
