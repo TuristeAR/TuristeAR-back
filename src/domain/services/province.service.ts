@@ -1,7 +1,7 @@
 import { Province } from '../entities/province';
 import { ProvinceRepository } from '../repositories/province.repository';
-import { CreateProvinceDto } from '../../application/dtos/create-province.dto';
-import { get } from '../../utils/http.util';
+import { CreateProvinceDto } from '../../infrastructure/dtos/create-province.dto';
+import { get } from '../utils/http.util';
 
 export class ProvinceService {
   private provinceRepository: ProvinceRepository;

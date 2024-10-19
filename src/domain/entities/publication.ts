@@ -1,7 +1,5 @@
-import { Entity, Column, OneToMany, ManyToMany, ManyToOne, JoinColumn, JoinTable } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
-import { Itinerary } from './itinerary';
-import { Weather } from './weather';
+import { Entity, Column, ManyToMany, ManyToOne, JoinColumn, JoinTable } from 'typeorm';
+import { AbstractEntity } from '../../infrastructure/entities/abstract.entity';
 import { User } from './user';
 import { Category } from './category';
 

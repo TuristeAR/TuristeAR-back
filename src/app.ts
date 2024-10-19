@@ -5,23 +5,23 @@ import express, { Request, Response } from 'express';
 import session from 'express-session';
 import status from 'http-status';
 import passport from 'passport';
-import { initializePassport } from '../infrastructure/config/passport';
-import { AppDataSource } from '../infrastructure/database/data-source';
-import { User } from '../domain/entities/user';
-import { CreateWeatherDto } from './dtos/create-weather.dto';
-import { WeatherService } from '../domain/services/weather.service';
-import { CreateProvinceDto } from './dtos/create-province.dto';
-import { ProvinceService } from '../domain/services/province.service';
-import { PlaceService } from '../domain/services/place.service';
-import { ReviewService } from '../domain/services/review.service';
-import { CreateItineraryDto } from './dtos/create-itinerary.dto';
-import { authMiddleware } from '../infrastructure/middlewares/auth.middleware';
-import { ItineraryService } from '../domain/services/itinerary.service';
-import { ActivityService } from '../domain/services/activity.service';
-import { UserService } from '../domain/services/user.service';
-import { PublicationService } from '../domain/services/publication.service';
-import { CategoryService } from '../domain/services/category.service';
-import { CreatePublicationDTO } from './dtos/create-publication.dto';
+import { initializePassport } from './infrastructure/config/passport';
+import { AppDataSource } from './infrastructure/database/data-source';
+import { User } from './domain/entities/user';
+import { CreateWeatherDto } from './infrastructure/dtos/create-weather.dto';
+import { WeatherService } from './domain/services/weather.service';
+import { CreateProvinceDto } from './infrastructure/dtos/create-province.dto';
+import { ProvinceService } from './domain/services/province.service';
+import { PlaceService } from './domain/services/place.service';
+import { ReviewService } from './domain/services/review.service';
+import { CreateItineraryDto } from './infrastructure/dtos/create-itinerary.dto';
+import { authMiddleware } from './infrastructure/middlewares/auth.middleware';
+import { ItineraryService } from './domain/services/itinerary.service';
+import { ActivityService } from './domain/services/activity.service';
+import { UserService } from './domain/services/user.service';
+import { PublicationService } from './domain/services/publication.service';
+import { CategoryService } from './domain/services/category.service';
+import { CreatePublicationDTO } from './infrastructure/dtos/create-publication.dto';
 
 dotenv.config();
 
@@ -704,8 +704,8 @@ app.put('/editProfile/:userId', async (req: Request, res: Response) => {
     user.description = description || user.description;
     user.location = location || user.location;
     user.birthdate = birthdate ? new Date(birthdate) : user.birthdate;
-    user.profilePicture= profilePicture || user.profilePicture;
-    user.coverPicture= coverPicture || user.coverPicture;
+    user.profilePicture = profilePicture || user.profilePicture;
+    user.coverPicture = coverPicture || user.coverPicture;
 
     await userService.save(user);
 
@@ -715,11 +715,11 @@ app.put('/editProfile/:userId', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/createPublication', authMiddleware,async (req: Request, res: Response) => {
+app.post('/createPublication', authMiddleware, async (req: Request, res: Response) => {
   try {
     const createPublicationDTO: CreatePublicationDTO = req.body;
 
-    console.log(req.body)
+    console.log(req.body);
 
     const publication = await publicationService.createPublication(
       createPublicationDTO,
@@ -759,7 +759,7 @@ app.post('/handleSaved/:publicationId', authMiddleware, async (req: Request, res
 
   publicationService
     .handleSaved(publication, req.user as User)
-    .then(() =>  {
+    .then(() => {
       return res
         .status(200)
         .json({ status: 'success', data: { message: 'Publicación guardada correctamente' } });
@@ -776,7 +776,7 @@ app.post('/handleReposts/:publicationId', authMiddleware, async (req: Request, r
 
   publicationService
     .handleReposts(publication, req.user as User)
-    .then(() =>  {
+    .then(() => {
       return res
         .status(200)
         .json({ status: 'success', data: { message: 'Publicación reposteada correctamente' } });

@@ -1,6 +1,6 @@
 import { Activity } from '../entities/activity';
 import { ActivityRepository } from '../repositories/activity.repository';
-import { CreateActivityDto } from '../../application/dtos/create-activity.dto';
+import { CreateActivityDto } from '../../infrastructure/dtos/create-activity.dto';
 
 export class ActivityService {
   private activityRepository: ActivityRepository;

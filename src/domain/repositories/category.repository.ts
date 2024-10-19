@@ -1,5 +1,4 @@
-import { AbstractRepository } from '../../utils/abstract.repository';
-import { Itinerary } from '../entities/itinerary';
+import { AbstractRepository } from '../../infrastructure/repositories/abstract.repository';
 import { AppDataSource } from '../../infrastructure/database/data-source';
 import { Category } from '../entities/category';
 

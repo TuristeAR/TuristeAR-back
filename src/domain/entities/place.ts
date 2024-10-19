@@ -1,5 +1,5 @@
 import { Entity, Column, JoinColumn, OneToMany, ManyToOne } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
+import { AbstractEntity } from '../../infrastructure/entities/abstract.entity';
 import { Province } from './province';
 import { Review } from './review';
 import { Activity } from './activity';

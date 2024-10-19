@@ -1,4 +1,4 @@
-import { CreateReviewDto } from '../../../src/application/dtos/create-review.dto';
+import { CreateReviewDto } from '../../../src/infrastructure/dtos/create-review.dto';
 import { ReviewRepository } from '../../../src/domain/repositories/review.repository';
 import { ReviewService } from '../../../src/domain/services/review.service';
 import { Review } from '../../../src/domain/entities/review';

@@ -1,7 +1,7 @@
 import { Review } from '../entities/review';
 import { ReviewRepository } from '../repositories/review.repository';
-import { CreateReviewDto } from '../../application/dtos/create-review.dto';
-import { get, getWithoutJson } from '../../utils/http.util';
+import { CreateReviewDto } from '../../infrastructure/dtos/create-review.dto';
+import { get, getWithoutJson } from '../utils/http.util';
 
 export class ReviewService {
   private reviewRepository: ReviewRepository;
@@ -86,10 +86,9 @@ export class ReviewService {
   }
 
   async findReviewsByPlaceId(googleId: string): Promise<Review[]> {
-    const reviews = await this.reviewRepository.findMany({
+    return await this.reviewRepository.findMany({
       where: { place: { googleId: googleId } },
       order: { rating: 'DESC' },
     });
-    return reviews;
   }
 }

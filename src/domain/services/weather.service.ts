@@ -1,5 +1,5 @@
 import { Weather } from '../entities/weather';
-import { CreateWeatherDto } from '../../application/dtos/create-weather.dto';
+import { CreateWeatherDto } from '../../infrastructure/dtos/create-weather.dto';
 import { WeatherRepository } from '../repositories/weather.repository';
 
 export class WeatherService {

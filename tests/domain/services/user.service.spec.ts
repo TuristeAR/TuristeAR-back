@@ -1,6 +1,6 @@
 import { UserService } from '../../../src/domain/services/user.service';
 import { UserRepository } from '../../../src/domain/repositories/user.repository';
-import { CreateUserDto } from '../../../src/application/dtos/create-user.dto';
+import { CreateUserDto } from '../../../src/infrastructure/dtos/create-user.dto';
 import { User } from '../../../src/domain/entities/user';
 
 jest.mock('../../../src/domain/repositories/user.repository');
@@ -33,7 +33,10 @@ describe('UserService', () => {
 
     const user: User = {
       username: '',
-      birthdate: new Date(), coverPicture: '', description: '', location: '',
+      birthdate: new Date(),
+      coverPicture: '',
+      description: '',
+      location: '',
       id: 1,
       name: 'John Doe',
       email: 'john.doe@example.com',
@@ -41,7 +44,7 @@ describe('UserService', () => {
       profilePicture: 'https://example.com/profile.jpg',
       createdAt: new Date(),
       ownedItineraries: [],
-      joinedItineraries: []
+      joinedItineraries: [],
     };
 
     userRepository.findOne.mockResolvedValue(user);

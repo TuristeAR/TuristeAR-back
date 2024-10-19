@@ -1,4 +1,4 @@
-import { CreateWeatherDto } from '../../../src/application/dtos/create-weather.dto';
+import { CreateWeatherDto } from '../../../src/infrastructure/dtos/create-weather.dto';
 import { WeatherRepository } from '../../../src/domain/repositories/weather.repository';
 import { WeatherService } from '../../../src/domain/services/weather.service';
 import { Weather } from '../../../src/domain/entities/weather';

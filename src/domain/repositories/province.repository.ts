@@ -1,4 +1,4 @@
-import { AbstractRepository } from '../../utils/abstract.repository';
+import { AbstractRepository } from '../../infrastructure/repositories/abstract.repository';
 import { AppDataSource } from '../../infrastructure/database/data-source';
 import { Province } from '../entities/province';
 

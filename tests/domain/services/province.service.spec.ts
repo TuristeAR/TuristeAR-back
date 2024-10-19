@@ -1,4 +1,4 @@
-import { CreateProvinceDto } from '../../../src/application/dtos/create-province.dto';
+import { CreateProvinceDto } from '../../../src/infrastructure/dtos/create-province.dto';
 import { ProvinceRepository } from '../../../src/domain/repositories/province.repository';
 import { ProvinceService } from '../../../src/domain/services/province.service';
 import { Province } from '../../../src/domain/entities/province';

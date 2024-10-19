@@ -1,23 +1,23 @@
 import { TypeOfCulture } from '../entities/typeOfCulture';
-import { CreateTypeOfCultureDto } from '../../application/dtos/create-typeOfCulture.dto';
+import { CreateTypeOfCultureDto } from '../../infrastructure/dtos/create-typeOfCulture.dto';
 import { TypeOfCultureRepository } from '../repositories/typeOfCulture.repository';
 
 export class TypeOfCultureService {
-    private typeOfCultureRepository: TypeOfCultureRepository;
+  private typeOfCultureRepository: TypeOfCultureRepository;
 
-    constructor() {
-        this.typeOfCultureRepository = new TypeOfCultureRepository();
-    }
+  constructor() {
+    this.typeOfCultureRepository = new TypeOfCultureRepository();
+  }
 
-    create(createTypeOfCultureDto: CreateTypeOfCultureDto): Promise<TypeOfCulture> {
-        return this.typeOfCultureRepository.create(createTypeOfCultureDto);
-    }
+  create(createTypeOfCultureDto: CreateTypeOfCultureDto): Promise<TypeOfCulture> {
+    return this.typeOfCultureRepository.create(createTypeOfCultureDto);
+  }
 
-    findAll(): Promise<TypeOfCulture[]> {
-        return this.typeOfCultureRepository.findMany({});
-    }
+  findAll(): Promise<TypeOfCulture[]> {
+    return this.typeOfCultureRepository.findMany({});
+  }
 
-    findOneById(id: number): Promise<TypeOfCulture | null> {
-        return this.typeOfCultureRepository.findOne({ where: { id } });
-    }
+  findOneById(id: number): Promise<TypeOfCulture | null> {
+    return this.typeOfCultureRepository.findOne({ where: { id } });
+  }
 }

@@ -2,11 +2,11 @@ import { ItineraryRepository } from '../repositories/itinerary.repository';
 import { ProvinceService } from './province.service';
 import { PlaceService } from './place.service';
 import { Itinerary } from '../entities/itinerary';
-import { CreateItineraryDto } from '../../application/dtos/create-itinerary.dto';
+import { CreateItineraryDto } from '../../infrastructure/dtos/create-itinerary.dto';
 import { ActivityService } from './activity.service';
 import { Place } from '../entities/place';
 import { User } from '../entities/user';
-import { CreateActivityDto } from '../../application/dtos/create-activity.dto';
+import { CreateActivityDto } from '../../infrastructure/dtos/create-activity.dto';
 import { UserService } from './user.service';
 
 export class ItineraryService {

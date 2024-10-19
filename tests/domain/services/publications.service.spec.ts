@@ -24,15 +24,16 @@ describe('PublicationService', () => {
     const userID = 1;
 
     const publication: Publication = {
-      reposts: [], saved: [],
+      reposts: [],
+      saved: [],
       likes: [],
       id: 1,
-      category : new Category(),
+      category: new Category(),
       description: 'Hola mundo',
       images: [],
       creationDate: new Date(),
       createdAt: new Date(),
-      user: { id: userID } as User
+      user: { id: userID } as User,
     };
 
     publicationRepository.findMany.mockResolvedValue([publication]);
@@ -41,7 +42,6 @@ describe('PublicationService', () => {
 
     expect(result).toEqual([publication]);
   });
-
 
   it('if there are no posts, return null', async () => {
     const userID = 123;
@@ -53,18 +53,18 @@ describe('PublicationService', () => {
     expect(result).toHaveLength(0);
   });
 
-
   it('should find publications by likes of users', async () => {
     const publication: Publication = {
-      reposts: [], saved: [],
-      likes: [{ id : 1 } as User],
+      reposts: [],
+      saved: [],
+      likes: [{ id: 1 } as User],
       id: 1,
       category: new Category(),
       description: 'Hola mundo',
       images: [],
       creationDate: new Date(),
       createdAt: new Date(),
-      user: { id: 1 } as User
+      user: { id: 1 } as User,
     };
 
     publicationRepository.findMany.mockResolvedValue([publication]);
@@ -73,5 +73,4 @@ describe('PublicationService', () => {
 
     expect(result).toHaveLength(1);
   });
-
 });

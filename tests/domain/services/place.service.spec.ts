@@ -1,4 +1,4 @@
-import { CreatePlaceDto } from '../../../src/application/dtos/create-place.dto';
+import { CreatePlaceDto } from '../../../src/infrastructure/dtos/create-place.dto';
 import { PlaceRepository } from '../../../src/domain/repositories/place.repository';
 import { PlaceService } from '../../../src/domain/services/place.service';
 import { Place } from '../../../src/domain/entities/place';

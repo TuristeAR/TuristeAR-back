@@ -1,9 +1,5 @@
-import { Entity, Column, OneToMany, ManyToMany, ManyToOne, JoinColumn, JoinTable } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
-import { Itinerary } from './itinerary';
-import { Weather } from './weather';
-import { User } from './user';
-import { Province } from './province';
+import { Entity, Column } from 'typeorm';
+import { AbstractEntity } from '../../infrastructure/entities/abstract.entity';
 
 @Entity()
 export class Category extends AbstractEntity {

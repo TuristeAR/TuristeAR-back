@@ -1,5 +1,5 @@
 import { Repository } from 'typeorm';
-import { AbstractRepository } from '../../../src/utils/abstract.repository';
+import { AbstractRepository } from '../../../src/infrastructure/repositories/abstract.repository';
 import { mock, instance, when, verify } from 'ts-mockito';
 
 class TestEntity {

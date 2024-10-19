@@ -1,9 +1,8 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { AbstractEntity } from '../../infrastructure/entities/abstract.entity';
 import { Weather } from './weather';
 import { Place } from './place';
 import { Culture } from './culture';
-import { Category } from './category';
 
 @Entity()
 export class Province extends AbstractEntity {
@@ -26,6 +25,6 @@ export class Province extends AbstractEntity {
   @OneToMany(() => Place, (place) => place.province)
   places: Place[];
 
-  @OneToMany(() => Culture, (culture) => culture.province) 
+  @OneToMany(() => Culture, (culture) => culture.province)
   cultures: Culture[];
 }

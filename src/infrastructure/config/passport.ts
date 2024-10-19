@@ -1,7 +1,7 @@
 import { PassportStatic, Profile } from 'passport';
 import { Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
 import { UserService } from '../../domain/services/user.service';
-import { CreateUserDto } from '../../application/dtos/create-user.dto';
+import { CreateUserDto } from '../dtos/create-user.dto';
 
 export const initializePassport = (passport: PassportStatic) => {
   const userService = new UserService();

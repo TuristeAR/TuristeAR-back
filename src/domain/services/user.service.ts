@@ -1,6 +1,6 @@
 import { UserRepository } from '../repositories/user.repository';
 import { User } from '../entities/user';
-import { CreateUserDto } from '../../application/dtos/create-user.dto';
+import { CreateUserDto } from '../../infrastructure/dtos/create-user.dto';
 import { Like } from 'typeorm';
 
 export class UserService {
@@ -21,7 +21,7 @@ export class UserService {
   findOneByGoogleId(googleId: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { googleId } });
   }
-  
+
   searchByName(name: string, offset: number): Promise<User[]> {
     return this.userRepository.findMany({
       where: {
@@ -32,7 +32,7 @@ export class UserService {
     });
   }
 
-  findAll(): Promise<User[]>{
+  findAll(): Promise<User[]> {
     return this.userRepository.findAll();
   }
 

@@ -1,8 +1,8 @@
 import { Place } from '../entities/place';
 import { PlaceRepository } from '../repositories/place.repository';
-import { CreatePlaceDto } from '../../application/dtos/create-place.dto';
+import { CreatePlaceDto } from '../../infrastructure/dtos/create-place.dto';
 import { ProvinceService } from './province.service';
-import { post } from '../../utils/http.util';
+import { post } from '../utils/http.util';
 import { Province } from '../entities/province';
 
 export class PlaceService {
