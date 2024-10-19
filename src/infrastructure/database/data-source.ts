@@ -11,6 +11,8 @@ import { Publication } from '../../domain/entities/publication';
 import { Culture } from '../../domain/entities/culture';
 import { TypeOfCulture } from '../../domain/entities/typeOfCulture';
 import { Category } from '../../domain/entities/category';
+import { Message } from '../../domain/entities/message';
+import { Forum } from '../../domain/entities/forum';
 
 dotenv.config();
 
@@ -21,7 +23,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [User, Weather, Province, Place, Review, Itinerary, Activity, Publication, Culture, TypeOfCulture, Category],
+  entities: [User, Weather, Province, Place, Review, Itinerary, Activity, Publication, Culture, TypeOfCulture, Category, Forum, Message],
   synchronize: true,
   logging: true,
   timezone: '-03:00',

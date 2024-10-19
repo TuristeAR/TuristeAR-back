@@ -6,6 +6,7 @@ import { Activity } from './activity';
 
 @Entity()
 export class Place extends AbstractEntity {
+
   @ManyToOne(() => Province, (province) => province.places)
   @JoinColumn({ name: 'provinceId' })
   province: Province;
