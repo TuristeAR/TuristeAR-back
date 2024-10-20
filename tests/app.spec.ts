@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import passport from 'passport';
 import request from 'supertest';
-import app from '../../src/app';
+import app from '../src/app';
 
 jest.mock('passport', () => ({
   authenticate: jest.fn((strategy, callback) => {

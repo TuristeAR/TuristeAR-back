@@ -1,4 +1,4 @@
-import { get, post } from '../../src/domain/utils/http.util';
+import { get, post } from '../../../src/domain/utils/http.util';
 
 global.fetch = jest.fn();
 
