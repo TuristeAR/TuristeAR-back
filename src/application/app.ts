@@ -850,6 +850,7 @@ app.get('/forum/:id', async (req: Request, res: Response) => {
   }
 });
 
+
 io.on('connection', (socket) => {
   socket.on('createMessage', async (data) => {
     try {
