@@ -49,8 +49,6 @@ const io = new SocketIOServer(server, {
 });
 
 io.on('connection', (socket) => {
-  console.log('Un cliente se ha conectado', socket.id);
-
   socket.on('message', (msg) => {
     console.log('Mensaje recibido:', msg);
     io.emit('message', msg);
