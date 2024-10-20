@@ -16,10 +16,10 @@ export class Message extends AbstractEntity {
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user: User | null;
 
   @ManyToOne(() => Forum, (forum) => forum.messages)  // Relación ManyToOne con Forum
   @JoinColumn({ name: 'forumId' })
-  forum: Forum;
+  forum: Forum | null;
 
 }

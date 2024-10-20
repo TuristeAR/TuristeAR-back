@@ -24,6 +24,8 @@ import { CategoryService } from '../domain/services/category.service';
 import { CreatePublicationDTO } from './dtos/create-publication.dto';
 import { ForumService } from '../domain/services/forum.service';
 import { Forum } from '../domain/entities/forum';
+import { Message } from '../domain/entities/message';
+import { MessageService } from '../domain/services/message.service';
 
 dotenv.config();
 
@@ -84,6 +86,7 @@ const provinceService = new ProvinceService();
 const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const forumService = new ForumService();
+const messageService = new MessageService();
 const categoryService = new CategoryService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
@@ -823,8 +826,22 @@ app.get('/forum/:id', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/createMessage/:forumId', (req: Request, res: Response) =>{
+app.post('/createMessage/:forumId',authMiddleware, async (req: Request, res: Response) =>{
+  try {
+    const {content, images}= req.body;
+    const forum= await forumService.findById(Number(req.params.forumId))
 
+    let message= new Message();
+    message.forum= forum;
+    message.user= req.user as User
+    message.content=content;
+    message.images= images ? images : [];
+
+    await messageService.createMessage(message);
+    return res.json(message);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching forums', error });
+  }
 })
 
 export default app;
