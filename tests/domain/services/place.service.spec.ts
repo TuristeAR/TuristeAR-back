@@ -1,10 +1,10 @@
 import { CreatePlaceDto } from '../../../src/infrastructure/dtos/create-place.dto';
-import { PlaceRepository } from '../../../src/domain/repositories/place.repository';
+import { PlaceRepository } from '../../../src/infrastructure/repositories/place.repository';
 import { PlaceService } from '../../../src/domain/services/place.service';
 import { Place } from '../../../src/domain/entities/place';
 import { Province } from '../../../src/domain/entities/province';
 
-jest.mock('../../../src/domain/repositories/place.repository');
+jest.mock('../../../src/infrastructure/repositories/place.repository');
 
 describe('PlaceService', () => {
   let placeService: PlaceService;

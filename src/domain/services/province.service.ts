@@ -1,39 +1,16 @@
 import { Province } from '../entities/province';
-import { ProvinceRepository } from '../repositories/province.repository';
-import { CreateProvinceDto } from '../../infrastructure/dtos/create-province.dto';
 import { get } from '../utils/http.util';
+import { FindProvinceByIdUseCase } from '../../application/use-cases/province-use-cases/find-province-by-id.use-case';
+import { FindProvinceByNameUseCase } from '../../application/use-cases/province-use-cases/find-province-by-name.use-case';
+import { FindProvinceWithReviewsUseCase } from '../../application/use-cases/province-use-cases/find-province-with-reviews.use-case';
 
 export class ProvinceService {
-  private provinceRepository: ProvinceRepository;
-
-  constructor() {
-    this.provinceRepository = new ProvinceRepository();
-  }
-
-  create(createProvinceDto: CreateProvinceDto): Promise<Province> {
-    return this.provinceRepository.create(createProvinceDto);
-  }
-
-  findAll(): Promise<Province[]> {
-    return this.provinceRepository.findMany({});
-  }
-
-  findByName(name: string): Promise<Province | null> {
-    return this.provinceRepository.findOne({ where: { name: name } });
-  }
-
-  findOneById(id: number): Promise<Province | null> {
-    return this.provinceRepository.findOne({ where: { id } });
-  }
-
   async getProvinceNameFromId(id: number): Promise<string | null> {
-    const province = await this.provinceRepository.findOne({ where: { id } });
+    const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
 
-    if (!province) {
-      throw new Error('Province not found');
-    }
+    const province = await findProvinceByIdUseCase.execute(id);
 
-    return province.name;
+    return province?.name || null;
   }
 
   async getProvinceIdFromCoordinates(latitude: number, longitude: number) {
@@ -48,7 +25,9 @@ export class ProvinceService {
 
     const provinceName = response.ubicacion.provincia.nombre;
 
-    const province = await this.provinceRepository.findOne({ where: { name: provinceName } });
+    const findProvinceByNameUseCase = new FindProvinceByNameUseCase();
+
+    const province = await findProvinceByNameUseCase.execute(provinceName);
 
     return province?.id || null;
   }
@@ -58,31 +37,12 @@ export class ProvinceService {
     slice: number,
   ): Promise<Province | null> {
     const idNumber = typeof identifier === 'number' ? identifier : Number(identifier);
+
     const isId = !isNaN(idNumber);
 
-    const province = await this.provinceRepository.findOne({
-      where: isId ? { id: idNumber } : { name: String(identifier) },
+    const findProvinceWithReviewsUseCase = new FindProvinceWithReviewsUseCase();
 
-      relations: ['places', 'places.reviews'],
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        images: true,
-        places: {
-          id: true,
-          name: true,
-          reviews: {
-            authorName: true,
-            authorPhoto: true,
-            publishedTime: true,
-            photos: true,
-            rating: true,
-            text: true,
-          },
-        },
-      },
-    });
+    const province = await findProvinceWithReviewsUseCase.execute(isId, idNumber, identifier);
 
     if (!province) {
       return null;

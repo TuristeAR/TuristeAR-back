@@ -1,22 +1,4 @@
-import { Activity } from '../entities/activity';
-import { ActivityRepository } from '../repositories/activity.repository';
-import { CreateActivityDto } from '../../infrastructure/dtos/create-activity.dto';
-
 export class ActivityService {
-  private activityRepository: ActivityRepository;
-
-  constructor() {
-    this.activityRepository = new ActivityRepository();
-  }
-
-  create(createActivityDto: CreateActivityDto): Promise<Activity> {
-    return this.activityRepository.create(createActivityDto);
-  }
-
-  findOneById(id: number): Promise<Activity | null> {
-    return this.activityRepository.findOne({ where: { id } });
-  }
-
   getActivityDates(openingHours: string[] | null, date: Date): Date[] {
     if (openingHours === null) {
       return this.createStartTimeAndEndTimeBetween9And12(date);

@@ -1,10 +1,10 @@
 import { CreateReviewDto } from '../../../src/infrastructure/dtos/create-review.dto';
-import { ReviewRepository } from '../../../src/domain/repositories/review.repository';
+import { ReviewRepository } from '../../../src/infrastructure/repositories/review.repository';
 import { ReviewService } from '../../../src/domain/services/review.service';
 import { Review } from '../../../src/domain/entities/review';
 import { Place } from '../../../src/domain/entities/place';
 
-jest.mock('../../../src/domain/repositories/review.repository');
+jest.mock('../../../src/infrastructure/repositories/review.repository');
 
 describe('ReviewService', () => {
   let reviewService: ReviewService;

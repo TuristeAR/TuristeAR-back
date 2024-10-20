@@ -1,9 +1,9 @@
 import { CreateProvinceDto } from '../../../src/infrastructure/dtos/create-province.dto';
-import { ProvinceRepository } from '../../../src/domain/repositories/province.repository';
+import { ProvinceRepository } from '../../../src/infrastructure/repositories/province.repository';
 import { ProvinceService } from '../../../src/domain/services/province.service';
 import { Province } from '../../../src/domain/entities/province';
 
-jest.mock('../../../src/domain/repositories/province.repository');
+jest.mock('../../../src/infrastructure/repositories/province.repository');
 
 describe('ProvinceService', () => {
   let provinceService: ProvinceService;

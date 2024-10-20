@@ -1,9 +1,9 @@
 import { CreateWeatherDto } from '../../../src/infrastructure/dtos/create-weather.dto';
-import { WeatherRepository } from '../../../src/domain/repositories/weather.repository';
+import { WeatherRepository } from '../../../src/infrastructure/repositories/weather.repository';
 import { WeatherService } from '../../../src/domain/services/weather.service';
 import { Weather } from '../../../src/domain/entities/weather';
 
-jest.mock('../../../src/domain/repositories/weather.repository');
+jest.mock('../../../src/infrastructure/repositories/weather.repository');
 
 describe('WeatherService', () => {
   let weatherService: WeatherService;

@@ -1,31 +1,8 @@
-import { Review } from '../entities/review';
-import { ReviewRepository } from '../repositories/review.repository';
 import { CreateReviewDto } from '../../infrastructure/dtos/create-review.dto';
 import { get, getWithoutJson } from '../utils/http.util';
+import { CreateReviewUseCase } from '../../application/use-cases/review-use-cases/create-review.use-case';
 
 export class ReviewService {
-  private reviewRepository: ReviewRepository;
-  constructor() {
-    this.reviewRepository = new ReviewRepository();
-  }
-
-  create(createReviewDto: CreateReviewDto): Promise<Review> {
-    return this.reviewRepository.create(createReviewDto);
-  }
-
-  findAll(): Promise<Review[]> {
-    return this.reviewRepository.findMany({});
-  }
-
-  findOneByGoogleId(googleId: string): Promise<Review | null> {
-    return this.reviewRepository.findOne({
-      where: {
-        place: { googleId },
-      },
-      relations: ['place'],
-    });
-  }
-
   async fetchReviews(googleId: string) {
     try {
       let reviews: any[] = [];
@@ -78,17 +55,12 @@ export class ReviewService {
           photos: reviewPhotos.shift() || null,
         };
 
-        await this.create(createReviewDto);
+        const createReviewUseCase = new CreateReviewUseCase();
+
+        await createReviewUseCase.execute(createReviewDto);
       }
     } catch (error) {
       console.error('Error fetching reviews', error);
     }
-  }
-
-  async findReviewsByPlaceId(googleId: string): Promise<Review[]> {
-    return await this.reviewRepository.findMany({
-      where: { place: { googleId: googleId } },
-      order: { rating: 'DESC' },
-    });
   }
 }

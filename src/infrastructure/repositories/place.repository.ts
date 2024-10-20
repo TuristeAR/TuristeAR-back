@@ -1,6 +1,6 @@
-import { AbstractRepository } from '../../infrastructure/repositories/abstract.repository';
-import { Place } from '../entities/place';
-import { AppDataSource } from '../../infrastructure/database/data-source';
+import { AbstractRepository } from './abstract.repository';
+import { Place } from '../../domain/entities/place';
+import { AppDataSource } from '../database/data-source';
 
 export class PlaceRepository extends AbstractRepository<Place> {
   constructor() {

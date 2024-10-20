@@ -9,19 +9,42 @@ import { initializePassport } from './infrastructure/config/passport';
 import { AppDataSource } from './infrastructure/database/data-source';
 import { User } from './domain/entities/user';
 import { CreateWeatherDto } from './infrastructure/dtos/create-weather.dto';
-import { WeatherService } from './domain/services/weather.service';
 import { CreateProvinceDto } from './infrastructure/dtos/create-province.dto';
-import { ProvinceService } from './domain/services/province.service';
 import { PlaceService } from './domain/services/place.service';
 import { ReviewService } from './domain/services/review.service';
 import { CreateItineraryDto } from './infrastructure/dtos/create-itinerary.dto';
 import { authMiddleware } from './infrastructure/middlewares/auth.middleware';
 import { ItineraryService } from './domain/services/itinerary.service';
-import { ActivityService } from './domain/services/activity.service';
-import { UserService } from './domain/services/user.service';
 import { PublicationService } from './domain/services/publication.service';
-import { CategoryService } from './domain/services/category.service';
 import { CreatePublicationDTO } from './infrastructure/dtos/create-publication.dto';
+import { FindActivityByIdUseCase } from './application/use-cases/activity-use-cases/find-activity-by-id.use-case';
+import { FindAllCategoryUseCase } from './application/use-cases/category-use-cases/find-all-category.use-case';
+import { CreateWeatherUseCase } from './application/use-cases/weather-use-cases/create-weather.use-case';
+import { FindAllWeatherUseCase } from './application/use-cases/weather-use-cases/find-all-weather.use-case';
+import { FindAllUserUseCase } from './application/use-cases/user-use-cases/find-all-user.use-case';
+import { FindUserByNameUseCase } from './application/use-cases/user-use-cases/find-user-by-name.use-case';
+import { FindUserByIdUseCase } from './application/use-cases/user-use-cases/find-user-by.id.use-case';
+import { UpdateUserUseCase } from './application/use-cases/user-use-cases/update-user.use-case';
+import { FindAllReviewUseCase } from './application/use-cases/review-use-cases/find-all-review.use-case';
+import { FindReviewByGoogleIdUseCase } from './application/use-cases/review-use-cases/find-review-by-googleId.use-case';
+import { FindReviewByPlaceIdUseCase } from './application/use-cases/review-use-cases/find-review-by-placeId.use-case';
+import { CreateProvinceUseCase } from './application/use-cases/province-use-cases/create-province.use-case';
+import { FindAllProvinceUseCase } from './application/use-cases/province-use-cases/find-all-province.use-case';
+import { FindProvinceByIdUseCase } from './application/use-cases/province-use-cases/find-province-by-id.use-case';
+import { FindAllPublicationUseCase } from './application/use-cases/publication-use-cases/find-all-publication.use-case';
+import { FindPublicationByUserUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user.use-case';
+import { FindPublicationByUserLikesUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user-likes.use-case';
+import { FindPublicationByUserSavesUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user-saves.use-case';
+import { FindPublicationByCategoryUseCase } from './application/use-cases/publication-use-cases/find-publication-by-category.use-case';
+import { FindPublicationByIdUseCase } from './application/use-cases/publication-use-cases/find-publication-by-id.use-case';
+import { FindProvinceByNameUseCase } from './application/use-cases/province-use-cases/find-province-by-name.use-case';
+import { FindPlaceByProvinceUseCase } from './application/use-cases/place-use-cases/find-place-by-province.use-case';
+import { FindAllPlaceUseCase } from './application/use-cases/place-use-cases/find-all-place.use-case';
+import { FindPlaceByGoogleIdUseCase } from './application/use-cases/place-use-cases/find-place-by-googleId.use-case';
+import { FindItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-id.use-case';
+import { FindItineraryByUserUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-user.use-case';
+import { FindItineraryWithParticipantsUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-with-participants.use-case';
+import { FindItineraryByUserWithParticipantsUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-user-with-participants.use-case';
 
 dotenv.config();
 
@@ -77,15 +100,10 @@ AppDataSource.initialize()
   })
   .catch((error) => console.log('Data Source initialization error', error));
 
-const weatherService = new WeatherService();
-const provinceService = new ProvinceService();
 const placeService = new PlaceService();
 const publicationService = new PublicationService();
-const categoryService = new CategoryService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
-const activityService = new ActivityService();
-const userService = new UserService();
 
 app.get(
   '/auth/google',
@@ -142,7 +160,9 @@ app.post('/weather', async (req: Request, res: Response) => {
   try {
     const createWeatherDto: CreateWeatherDto = req.body;
 
-    const weather = await weatherService.create(createWeatherDto);
+    const createWeatherUseCase = new CreateWeatherUseCase();
+
+    const weather = await createWeatherUseCase.execute(createWeatherDto);
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: weather });
   } catch (error) {
@@ -154,7 +174,9 @@ app.post('/weather', async (req: Request, res: Response) => {
 
 app.get('/weather', async (_req, res) => {
   try {
-    const weather = await weatherService.findAll();
+    const findAllWeatherUseCase = new FindAllWeatherUseCase();
+
+    const weather = await findAllWeatherUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, data: weather });
   } catch (error) {
@@ -168,7 +190,9 @@ app.post('/province', async (req: Request, res: Response) => {
   try {
     const createProvinceDto: CreateProvinceDto = req.body;
 
-    const province = await provinceService.create(createProvinceDto);
+    const createProvinceUseCase = new CreateProvinceUseCase();
+
+    const province = await createProvinceUseCase.execute(createProvinceDto);
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: province });
   } catch (error) {
@@ -180,7 +204,9 @@ app.post('/province', async (req: Request, res: Response) => {
 
 app.get('/province', async (_req, res) => {
   try {
-    const provinces = await provinceService.findAll();
+    const findAllProvinceUseCase = new FindAllProvinceUseCase();
+
+    const provinces = await findAllProvinceUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, data: provinces });
   } catch (error) {
@@ -194,7 +220,9 @@ app.get('/province/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const province = await provinceService.findOneById(Number(id));
+    const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
+
+    const province = await findProvinceByIdUseCase.execute(Number(id));
 
     return res.status(status.OK).json({ statusCode: status.OK, data: province });
   } catch (error) {
@@ -206,7 +234,9 @@ app.get('/province/:id', async (req: Request, res: Response) => {
 
 app.get('/place', async (_req, res) => {
   try {
-    const places = await placeService.findAll();
+    const findAllPlaceUseCase = new FindAllPlaceUseCase();
+
+    const places = await findAllPlaceUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, data: places });
   } catch (error) {
@@ -220,7 +250,9 @@ app.get('/place/:googleId', async (req: Request, res: Response) => {
   try {
     const { googleId } = req.params;
 
-    const place = await placeService.findOneByGoogleId(googleId);
+    const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
+
+    const place = await findPlaceByGoogleIdUseCase.execute(googleId);
 
     return res.status(status.OK).json({ statusCode: status.OK, data: place });
   } catch (error) {
@@ -232,7 +264,9 @@ app.get('/place/:googleId', async (req: Request, res: Response) => {
 
 app.get('/review', async (_req, res) => {
   try {
-    const reviews = await reviewService.findAll();
+    const findAllReviewUseCase = new FindAllReviewUseCase();
+
+    const reviews = await findAllReviewUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, data: reviews });
   } catch (error) {
@@ -246,7 +280,9 @@ app.get('/review/:googleId', async (req: Request, res: Response) => {
   try {
     const { googleId } = req.params;
 
-    const reviews = await reviewService.findOneByGoogleId(googleId);
+    const findReviewByGoogleIdUseCase = new FindReviewByGoogleIdUseCase();
+
+    const reviews = await findReviewByGoogleIdUseCase.execute(googleId);
 
     return res.status(status.OK).json({ statusCode: status.OK, data: reviews });
   } catch (error) {
@@ -274,8 +310,11 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const itinerary = await itineraryService.findOneById(Number(id));
-    const activities = await itineraryService.findActivitiesById(Number(id));
+    const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
+
+    const itinerary = await findItineraryByIdUseCase.execute(Number(id));
+
+    const activities = await itineraryService.findActivitiesByItineraryId(Number(id));
 
     return res.status(status.OK).json({ statusCode: status.OK, data: { itinerary, activities } });
   } catch (error) {
@@ -287,7 +326,9 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
 app.get('/user-itineraries', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const itineraries = await itineraryService.findAllByUser(req.user as User);
+    const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
+
+    const itineraries = await findItineraryByUserUseCase.execute(req.user as User);
 
     return res.status(status.OK).json({ statusCode: status.OK, data: itineraries });
   } catch (error) {
@@ -299,7 +340,9 @@ app.get('/user-itineraries', authMiddleware, async (req: Request, res: Response)
 
 app.get('/user-all', (_req: Request, res: Response) => {
   try {
-    const users = userService.findAll();
+    const findAllUserUseCase = new FindAllUserUseCase();
+
+    const users = findAllUserUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, listUser: users });
   } catch (error) {
@@ -313,7 +356,9 @@ app.get('/activity/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const activity = await activityService.findOneById(Number(id));
+    const findActivityByIdUseCase = new FindActivityByIdUseCase();
+
+    const activity = await findActivityByIdUseCase.execute(Number(id));
 
     return res.status(status.OK).json({ statusCode: status.OK, data: activity });
   } catch (error) {
@@ -341,13 +386,26 @@ app.get('/fetch-activities-places/:province', async (req: Request, res: Response
   const provinceName = req.params.province;
 
   try {
-    const places = await placeService.fetchPlacesByProvince(provinceName);
+    const findProvinceByNameUseCase = new FindProvinceByNameUseCase();
+
+    const province = await findProvinceByNameUseCase.execute(provinceName);
+
+    if (!province) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Province not found.',
+      });
+    }
+
+    const findPlaceByProvinceUseCase = new FindPlaceByProvinceUseCase();
+
+    const places = await findPlaceByProvinceUseCase.execute(province.id as number);
+
     res.json({
       status: 'success',
       data: places,
     });
   } catch (error) {
-    console.error('Error fetching places:', error);
     res.status(404).json({
       status: 'error',
       message: 'An error occurred.',
@@ -357,7 +415,9 @@ app.get('/fetch-activities-places/:province', async (req: Request, res: Response
 
 app.get('/fetch-reviews', async (_req, res) => {
   try {
-    const places = await placeService.findAll();
+    const findAllPlaceUseCase = new FindAllPlaceUseCase();
+
+    const places = await findAllPlaceUseCase.execute();
 
     for (const place of places) {
       await reviewService.fetchReviews(place.googleId);
@@ -377,8 +437,7 @@ app.post('/itinerary/add-user', authMiddleware, (req, res) => {
     .then((updatedItinerary) => {
       return res.status(200).json({ status: 'success', data: updatedItinerary });
     })
-    .catch((error) => {
-      console.error('Error adding user to itinerary:', error);
+    .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to itinerary' });
     });
 });
@@ -393,26 +452,27 @@ app.delete('/itinerary/remove-user', authMiddleware, async (req, res) => {
         .status(200)
         .json({ status: 'success', message: `User with ID ${participantId} removed` });
     })
-    .catch((error) => {
-      console.error('Error removing user to itinerary:', error);
+    .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error removing user to itinerary' });
     });
 });
 
 app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res) => {
   const { itineraryId } = req.params;
-  const userSession = req.user as User;
 
-  console.log('User session:', userSession);
+  const userSession = req.user as User;
 
   if (!itineraryId) {
     return res.status(400).json({ status: 'error', message: 'itineraryId is required' });
   }
 
   try {
-    const itineraryParticipants = await itineraryService.getItineraryWithParticipants(
+    const findItineraryWithParticipantsUseCase = new FindItineraryWithParticipantsUseCase();
+
+    const itineraryParticipants = await findItineraryWithParticipantsUseCase.execute(
       Number(itineraryId),
     );
+
     Number(itineraryId);
 
     if (!itineraryParticipants) {
@@ -422,6 +482,7 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
     const isParticipant = itineraryParticipants.participants.some(
       (participant) => participant.id === userSession.id,
     );
+
     const isOwner = itineraryParticipants.user.id === userSession.id;
 
     if (!isParticipant && !isOwner) {
@@ -430,7 +491,6 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
 
     return res.status(200).json({ status: 'success', itineraryParticipants });
   } catch (error) {
-    console.error('Error fetching itinerary:', error);
     return res.status(500).json({ status: 'error', message: 'Error fetching itinerary' });
   }
 });
@@ -445,8 +505,7 @@ app.post('/itinerary/add-activity', (req, res) => {
         .status(200)
         .json({ status: 'success', message: `Activity added to itinerary`, itinerary });
     })
-    .catch((error) => {
-      console.error('Error adding activity to itinerary:', error);
+    .catch(() => {
       return res
         .status(500)
         .json({ status: 'error', message: 'Error adding activity to itinerary' });
@@ -458,19 +517,23 @@ app.delete('/itinerary/remove-activity', async (req, res) => {
 
   try {
     await itineraryService.removeActivityFromItinerary(itineraryId, activityId);
+
     return res
       .status(200)
       .json({ status: 'success', message: `Activity with ID ${activityId} removed` });
   } catch (error) {
-    console.error('Error removing activity from itinerary:');
     return res.status(500).json({ status: 'error' });
   }
 });
 
 app.get('/itinerary/byUser/:userId', (req, res) => {
   const { userId } = req.params;
-  itineraryService
-    .getItinerariesWithParticipantsAndUserByUserId(Number(userId))
+
+  const findItineraryByUserWithParticipantsUseCase =
+    new FindItineraryByUserWithParticipantsUseCase();
+
+  findItineraryByUserWithParticipantsUseCase
+    .execute(Number(userId))
     .then((participants) => {
       return res.status(200).json({ status: 'success', participants });
     })
@@ -482,13 +545,15 @@ app.get('/itinerary/byUser/:userId', (req, res) => {
 });
 
 app.get('/users/search', authMiddleware, async (req, res) => {
-  const { name, offset = 0, itineraryId } = req.query;
+  const { name, itineraryId } = req.query;
 
   try {
     let excludedIds: number[] = [];
 
     if (itineraryId) {
-      const itinerary = await itineraryService.getItineraryWithParticipants(Number(itineraryId));
+      const findItineraryWithParticipantsUseCase = new FindItineraryWithParticipantsUseCase();
+
+      const itinerary = await findItineraryWithParticipantsUseCase.execute(Number(itineraryId));
 
       if (itinerary && Array.isArray(itinerary.participants)) {
         excludedIds = itinerary.participants.map((participant: User) => participant.id);
@@ -496,16 +561,18 @@ app.get('/users/search', authMiddleware, async (req, res) => {
       }
     }
 
-    const users = await userService.searchByName(name as string, offset as number);
+    const findUserByNameUseCase = new FindUserByNameUseCase();
+
+    const users = await findUserByNameUseCase.execute(name as string);
 
     if (!Array.isArray(users)) {
       return res.status(500).json({ status: 'error', message: 'Unexpected users format' });
     }
 
     const filteredUsers = users.filter((user) => !excludedIds.includes(user.id));
+
     return res.status(200).json({ status: 'success', data: filteredUsers });
   } catch (error) {
-    console.error('Error searching user:', error);
     return res.status(500).json({ status: 'error', message: 'Error searching user' });
   }
 });
@@ -523,14 +590,15 @@ app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
 
     return res.json(province);
   } catch (error) {
-    console.error('Error fetching province:', error);
     return res.status(500).json({ message: 'Error fetching province', error });
   }
 });
 
-app.get('/publications', async (req: Request, res: Response) => {
+app.get('/publications', async (_req: Request, res: Response) => {
   try {
-    const publications = await publicationService.findAll({});
+    const findAllPublicationUseCase = new FindAllPublicationUseCase();
+
+    const publications = await findAllPublicationUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, data: publications });
   } catch (error) {
@@ -547,7 +615,9 @@ app.get('/publications/:userID', async (req: Request, res: Response) => {
     let publications;
 
     if (!isNaN(Number(userID))) {
-      publications = await publicationService.findByUser(Number(userID));
+      const findPublicationByUserUseCase = new FindPublicationByUserUseCase();
+
+      publications = await findPublicationByUserUseCase.execute(Number(userID));
     }
 
     if (!publications) {
@@ -567,7 +637,9 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
     let publications;
 
     if (!isNaN(Number(userID))) {
-      publications = await publicationService.findByLikesUser(Number(userID));
+      const findPublicationByUserLikesUseCase = new FindPublicationByUserLikesUseCase();
+
+      publications = await findPublicationByUserLikesUseCase.execute(Number(userID));
     }
 
     if (!publications) {
@@ -587,7 +659,9 @@ app.get('/publications/saved/:userID', async (req: Request, res: Response) => {
     let publications;
 
     if (!isNaN(Number(userID))) {
-      publications = await publicationService.findBySavedUser(Number(userID));
+      const findPublicationByUserSavesUseCase = new FindPublicationByUserSavesUseCase();
+
+      publications = await findPublicationByUserSavesUseCase.execute(Number(userID));
     }
 
     if (!publications) {
@@ -607,7 +681,9 @@ app.get('/publications/categories/:categoryId', async (req: Request, res: Respon
     let publications;
 
     if (!isNaN(Number(categoryId))) {
-      publications = await publicationService.findByCategory(Number(categoryId));
+      const findPublicationByCategoryUseCase = new FindPublicationByCategoryUseCase();
+
+      publications = await findPublicationByCategoryUseCase.execute(Number(categoryId));
     }
 
     if (!publications) {
@@ -620,9 +696,11 @@ app.get('/publications/categories/:categoryId', async (req: Request, res: Respon
   }
 });
 
-app.get('/categories', async (req: Request, res: Response) => {
+app.get('/categories', async (_req: Request, res: Response) => {
   try {
-    let categories = await categoryService.findAll();
+    const findAllCategoryUseCase = new FindAllCategoryUseCase();
+
+    const categories = await findAllCategoryUseCase.execute();
 
     if (!categories) {
       return res.status(404).json({ message: 'No se encontraron las categorias' });
@@ -649,7 +727,6 @@ app.get('/places/province?', async (req: Request, res: Response) => {
     );
     return res.status(status.OK).json({ statusCode: status.OK, data: places });
   } catch (error) {
-    console.error('Error fetching places:', error);
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching places' });
@@ -660,7 +737,9 @@ app.get('/reviews/place/:idGoogle', async (req: Request, res: Response) => {
   const { idGoogle } = req.params;
 
   try {
-    const reviews = await reviewService.findReviewsByPlaceId(idGoogle);
+    const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
+
+    const reviews = await findReviewByPlaceIdUseCase.execute(idGoogle);
 
     if (!reviews || reviews.length === 0) {
       return res.status(404).json({ message: 'No reviews found for this place' });
@@ -668,7 +747,6 @@ app.get('/reviews/place/:idGoogle', async (req: Request, res: Response) => {
 
     return res.json(reviews);
   } catch (error) {
-    console.error('Error fetching reviews and place:', error);
     return res.status(500).json({ message: 'Error fetching reviews and place', error });
   }
 });
@@ -677,7 +755,9 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
   const { idGoogle } = req.params;
 
   try {
-    const place = await placeService.findOneByGoogleId(idGoogle);
+    const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
+
+    const place = await findPlaceByGoogleIdUseCase.execute(idGoogle);
 
     if (!place) {
       return res.status(404).json({ message: 'Place not found' });
@@ -685,7 +765,6 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
 
     return res.json(place);
   } catch (error) {
-    console.error('Error fetching place:', error);
     return res.status(500).json({ message: 'Error fetching place', error });
   }
 });
@@ -695,7 +774,9 @@ app.put('/editProfile/:userId', async (req: Request, res: Response) => {
   const { description, location, birthdate, profilePicture, coverPicture } = req.body;
 
   try {
-    let user = await userService.findOneById(Number(userId));
+    const findUserByIdUseCase = new FindUserByIdUseCase();
+
+    let user = await findUserByIdUseCase.execute(Number(userId));
 
     if (!user) {
       return res.status(404).json({ message: 'No se encontró al usuario' });
@@ -707,7 +788,9 @@ app.put('/editProfile/:userId', async (req: Request, res: Response) => {
     user.profilePicture = profilePicture || user.profilePicture;
     user.coverPicture = coverPicture || user.coverPicture;
 
-    await userService.save(user);
+    const updateUserUseCase = new UpdateUserUseCase();
+
+    await updateUserUseCase.execute(user);
 
     return res.json({ message: 'Datos modificados correctamente', user });
   } catch (error) {
@@ -719,8 +802,6 @@ app.post('/createPublication', authMiddleware, async (req: Request, res: Respons
   try {
     const createPublicationDTO: CreatePublicationDTO = req.body;
 
-    console.log(req.body);
-
     const publication = await publicationService.createPublication(
       createPublicationDTO,
       req.user as User,
@@ -728,7 +809,6 @@ app.post('/createPublication', authMiddleware, async (req: Request, res: Respons
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: publication });
   } catch (error) {
-    console.error('Error creando publicación:', error); // Log del error
     return res.status(status.INTERNAL_SERVER_ERROR).json({
       statusCode: status.INTERNAL_SERVER_ERROR,
       message: error || 'Error creating publication',
@@ -738,7 +818,10 @@ app.post('/createPublication', authMiddleware, async (req: Request, res: Respons
 
 app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res: Response) => {
   const { publicationId } = req.params;
-  const publication = await publicationService.findById(Number(publicationId));
+
+  const findPublicationByIdUseCase = new FindPublicationByIdUseCase();
+
+  const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
 
   publicationService
     .handleLike(publication, req.user as User)
@@ -747,15 +830,17 @@ app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res:
         .status(200)
         .json({ status: 'success', data: { message: 'Publicación agregada correctamente' } });
     })
-    .catch((error) => {
-      console.error('Error adding user to likes:', error);
+    .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to likes' });
     });
 });
 
 app.post('/handleSaved/:publicationId', authMiddleware, async (req: Request, res: Response) => {
   const { publicationId } = req.params;
-  const publication = await publicationService.findById(Number(publicationId));
+
+  const findPublicationByIdUseCase = new FindPublicationByIdUseCase();
+
+  const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
 
   publicationService
     .handleSaved(publication, req.user as User)
@@ -764,15 +849,17 @@ app.post('/handleSaved/:publicationId', authMiddleware, async (req: Request, res
         .status(200)
         .json({ status: 'success', data: { message: 'Publicación guardada correctamente' } });
     })
-    .catch((error) => {
-      console.error('Error adding user to saved:', error);
+    .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to saved' });
     });
 });
 
 app.post('/handleReposts/:publicationId', authMiddleware, async (req: Request, res: Response) => {
   const { publicationId } = req.params;
-  const publication = await publicationService.findById(Number(publicationId));
+
+  const findPublicationByIdUseCase = new FindPublicationByIdUseCase();
+
+  const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
 
   publicationService
     .handleReposts(publication, req.user as User)
@@ -781,8 +868,7 @@ app.post('/handleReposts/:publicationId', authMiddleware, async (req: Request, r
         .status(200)
         .json({ status: 'success', data: { message: 'Publicación reposteada correctamente' } });
     })
-    .catch((error) => {
-      console.error('Error adding user to reposts:', error);
+    .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to reposts' });
     });
 });

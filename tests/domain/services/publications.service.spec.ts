@@ -1,10 +1,10 @@
-import { PublicationRepository } from '../../../src/domain/repositories/publication.repository';
+import { PublicationRepository } from '../../../src/infrastructure/repositories/publication.repository';
 import { User } from '../../../src/domain/entities/user';
 import { PublicationService } from '../../../src/domain/services/publication.service';
 import { Publication } from '../../../src/domain/entities/publication';
 import { Category } from '../../../src/domain/entities/category';
 
-jest.mock('../../../src/domain/repositories/publication.repository');
+jest.mock('../../../src/infrastructure/repositories/publication.repository');
 
 beforeEach(() => {
   jest.resetAllMocks();
