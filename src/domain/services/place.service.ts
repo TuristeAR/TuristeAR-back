@@ -207,6 +207,7 @@ export class PlaceService {
     provinceId: number,
     types: string[],
     count: number,
+    offset: number
   ): Promise<Place[]> {
     try {
       const places = await this.placeRepository.findMany({
@@ -225,6 +226,8 @@ export class PlaceService {
             photos: true,
           },
         },
+        skip: offset,
+        take: count
       });
 
       const joinedTypes = types.join(',');

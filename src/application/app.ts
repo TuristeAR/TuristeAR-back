@@ -663,7 +663,7 @@ app.get('/categories', async (req: Request, res: Response) => {
 });
 
 app.get('/places/province?', async (req: Request, res: Response) => {
-  const { provinceId, types, count = 4 } = req.query;
+  const { provinceId, types, count = 4, offset = 0 } = req.query;
 
   try {
     const typesArray: string[] = Array.isArray(types)
@@ -674,6 +674,7 @@ app.get('/places/province?', async (req: Request, res: Response) => {
       Number(provinceId),
       typesArray,
       Number(count),
+      Number(offset)
     );
     return res.status(status.OK).json({ statusCode: status.OK, data: places });
   } catch (error) {
