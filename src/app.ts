@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import session from 'express-session';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import status from 'http-status';
 import passport from 'passport';
 import { initializePassport } from './infrastructure/config/passport';
@@ -45,6 +47,10 @@ import { FindItineraryByIdUseCase } from './application/use-cases/itinerary-use-
 import { FindItineraryByUserUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-user.use-case';
 import { FindItineraryWithParticipantsUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-with-participants.use-case';
 import { FindItineraryByUserWithParticipantsUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-user-with-participants.use-case';
+import { Message } from './domain/entities/message';
+import { CreateMessageUseCase } from './application/use-cases/message-use-cases/create-message.use-case';
+import { FindAllForumUseCase } from './application/use-cases/forum-use-cases/find-all-forum.use-case';
+import { FindForumByIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-id.use-case';
 
 dotenv.config();
 
@@ -55,6 +61,26 @@ const getCorsOrigins = () => {
 };
 
 const app = express();
+
+const server = http.createServer(app);
+
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: getCorsOrigins(),
+    credentials: true,
+  },
+});
+
+io.on('connection', (socket) => {
+  socket.on('message', (msg) => {
+    console.log('Mensaje recibido:', msg);
+    io.emit('message', msg);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Cliente desconectado', socket.id);
+  });
+});
 
 app.use(bodyParser.json());
 
@@ -94,7 +120,7 @@ AppDataSource.initialize()
   .then(() => {
     console.log('Data Source has been initialized!');
 
-    app.listen(process.env.HTTP_PORT, () => {
+    server.listen(process.env.HTTP_PORT, () => {
       console.log(`Server running on port ${process.env.HTTP_PORT}`);
     });
   })
@@ -104,6 +130,38 @@ const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
+
+const createMessageUseCase = new CreateMessageUseCase();
+const createProvinceUseCase = new CreateProvinceUseCase();
+const createWeatherUseCase = new CreateWeatherUseCase();
+const findActivityByIdUseCase = new FindActivityByIdUseCase();
+const findAllCategoryUseCase = new FindAllCategoryUseCase();
+const findAllForumUseCase = new FindAllForumUseCase();
+const findAllPlaceUseCase = new FindAllPlaceUseCase();
+const findAllProvinceUseCase = new FindAllProvinceUseCase();
+const findAllPublicationUseCase = new FindAllPublicationUseCase();
+const findAllReviewUseCase = new FindAllReviewUseCase();
+const findAllUserUseCase = new FindAllUserUseCase();
+const findAllWeatherUseCase = new FindAllWeatherUseCase();
+const findForumByIdUseCase = new FindForumByIdUseCase();
+const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
+const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
+const findItineraryByUserWithParticipantsUseCase = new FindItineraryByUserWithParticipantsUseCase();
+const findItineraryWithParticipantsUseCase = new FindItineraryWithParticipantsUseCase();
+const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
+const findPlaceByProvinceUseCase = new FindPlaceByProvinceUseCase();
+const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
+const findProvinceByNameUseCase = new FindProvinceByNameUseCase();
+const findPublicationByCategoryUseCase = new FindPublicationByCategoryUseCase();
+const findPublicationByIdUseCase = new FindPublicationByIdUseCase();
+const findPublicationByUserLikesUseCase = new FindPublicationByUserLikesUseCase();
+const findPublicationByUserSavesUseCase = new FindPublicationByUserSavesUseCase();
+const findPublicationByUserUseCase = new FindPublicationByUserUseCase();
+const findReviewByGoogleIdUseCase = new FindReviewByGoogleIdUseCase();
+const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
+const findUserByIdUseCase = new FindUserByIdUseCase();
+const findUserByNameUseCase = new FindUserByNameUseCase();
+const updateUserUseCase = new UpdateUserUseCase();
 
 app.get(
   '/auth/google',
@@ -160,8 +218,6 @@ app.post('/weather', async (req: Request, res: Response) => {
   try {
     const createWeatherDto: CreateWeatherDto = req.body;
 
-    const createWeatherUseCase = new CreateWeatherUseCase();
-
     const weather = await createWeatherUseCase.execute(createWeatherDto);
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: weather });
@@ -174,8 +230,6 @@ app.post('/weather', async (req: Request, res: Response) => {
 
 app.get('/weather', async (_req, res) => {
   try {
-    const findAllWeatherUseCase = new FindAllWeatherUseCase();
-
     const weather = await findAllWeatherUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, data: weather });
@@ -190,8 +244,6 @@ app.post('/province', async (req: Request, res: Response) => {
   try {
     const createProvinceDto: CreateProvinceDto = req.body;
 
-    const createProvinceUseCase = new CreateProvinceUseCase();
-
     const province = await createProvinceUseCase.execute(createProvinceDto);
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: province });
@@ -204,8 +256,6 @@ app.post('/province', async (req: Request, res: Response) => {
 
 app.get('/province', async (_req, res) => {
   try {
-    const findAllProvinceUseCase = new FindAllProvinceUseCase();
-
     const provinces = await findAllProvinceUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, data: provinces });
@@ -220,8 +270,6 @@ app.get('/province/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
-
     const province = await findProvinceByIdUseCase.execute(Number(id));
 
     return res.status(status.OK).json({ statusCode: status.OK, data: province });
@@ -234,8 +282,6 @@ app.get('/province/:id', async (req: Request, res: Response) => {
 
 app.get('/place', async (_req, res) => {
   try {
-    const findAllPlaceUseCase = new FindAllPlaceUseCase();
-
     const places = await findAllPlaceUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, data: places });
@@ -250,8 +296,6 @@ app.get('/place/:googleId', async (req: Request, res: Response) => {
   try {
     const { googleId } = req.params;
 
-    const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
-
     const place = await findPlaceByGoogleIdUseCase.execute(googleId);
 
     return res.status(status.OK).json({ statusCode: status.OK, data: place });
@@ -264,8 +308,6 @@ app.get('/place/:googleId', async (req: Request, res: Response) => {
 
 app.get('/review', async (_req, res) => {
   try {
-    const findAllReviewUseCase = new FindAllReviewUseCase();
-
     const reviews = await findAllReviewUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, data: reviews });
@@ -279,8 +321,6 @@ app.get('/review', async (_req, res) => {
 app.get('/review/:googleId', async (req: Request, res: Response) => {
   try {
     const { googleId } = req.params;
-
-    const findReviewByGoogleIdUseCase = new FindReviewByGoogleIdUseCase();
 
     const reviews = await findReviewByGoogleIdUseCase.execute(googleId);
 
@@ -310,8 +350,6 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
-
     const itinerary = await findItineraryByIdUseCase.execute(Number(id));
 
     const activities = await itineraryService.findActivitiesByItineraryId(Number(id));
@@ -326,8 +364,6 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
 app.get('/user-itineraries', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
-
     const itineraries = await findItineraryByUserUseCase.execute(req.user as User);
 
     return res.status(status.OK).json({ statusCode: status.OK, data: itineraries });
@@ -340,8 +376,6 @@ app.get('/user-itineraries', authMiddleware, async (req: Request, res: Response)
 
 app.get('/user-all', (_req: Request, res: Response) => {
   try {
-    const findAllUserUseCase = new FindAllUserUseCase();
-
     const users = findAllUserUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, listUser: users });
@@ -355,8 +389,6 @@ app.get('/user-all', (_req: Request, res: Response) => {
 app.get('/activity/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
-    const findActivityByIdUseCase = new FindActivityByIdUseCase();
 
     const activity = await findActivityByIdUseCase.execute(Number(id));
 
@@ -386,8 +418,6 @@ app.get('/fetch-activities-places/:province', async (req: Request, res: Response
   const provinceName = req.params.province;
 
   try {
-    const findProvinceByNameUseCase = new FindProvinceByNameUseCase();
-
     const province = await findProvinceByNameUseCase.execute(provinceName);
 
     if (!province) {
@@ -396,8 +426,6 @@ app.get('/fetch-activities-places/:province', async (req: Request, res: Response
         message: 'Province not found.',
       });
     }
-
-    const findPlaceByProvinceUseCase = new FindPlaceByProvinceUseCase();
 
     const places = await findPlaceByProvinceUseCase.execute(province.id as number);
 
@@ -415,8 +443,6 @@ app.get('/fetch-activities-places/:province', async (req: Request, res: Response
 
 app.get('/fetch-reviews', async (_req, res) => {
   try {
-    const findAllPlaceUseCase = new FindAllPlaceUseCase();
-
     const places = await findAllPlaceUseCase.execute();
 
     for (const place of places) {
@@ -444,7 +470,7 @@ app.post('/itinerary/add-user', authMiddleware, (req, res) => {
 
 app.delete('/itinerary/remove-user', authMiddleware, async (req, res) => {
   const { itineraryId, participantId } = req.body;
-  //validation in the service
+
   itineraryService
     .removeUserFromItinerary(itineraryId, participantId)
     .then(() => {
@@ -467,8 +493,6 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
   }
 
   try {
-    const findItineraryWithParticipantsUseCase = new FindItineraryWithParticipantsUseCase();
-
     const itineraryParticipants = await findItineraryWithParticipantsUseCase.execute(
       Number(itineraryId),
     );
@@ -522,15 +546,13 @@ app.delete('/itinerary/remove-activity', async (req, res) => {
       .status(200)
       .json({ status: 'success', message: `Activity with ID ${activityId} removed` });
   } catch (error) {
+    console.error('Error removing activity from itinerary:');
     return res.status(500).json({ status: 'error' });
   }
 });
 
 app.get('/itinerary/byUser/:userId', (req, res) => {
   const { userId } = req.params;
-
-  const findItineraryByUserWithParticipantsUseCase =
-    new FindItineraryByUserWithParticipantsUseCase();
 
   findItineraryByUserWithParticipantsUseCase
     .execute(Number(userId))
@@ -551,8 +573,6 @@ app.get('/users/search', authMiddleware, async (req, res) => {
     let excludedIds: number[] = [];
 
     if (itineraryId) {
-      const findItineraryWithParticipantsUseCase = new FindItineraryWithParticipantsUseCase();
-
       const itinerary = await findItineraryWithParticipantsUseCase.execute(Number(itineraryId));
 
       if (itinerary && Array.isArray(itinerary.participants)) {
@@ -560,8 +580,6 @@ app.get('/users/search', authMiddleware, async (req, res) => {
         excludedIds.push(itinerary.user.id);
       }
     }
-
-    const findUserByNameUseCase = new FindUserByNameUseCase();
 
     const users = await findUserByNameUseCase.execute(name as string);
 
@@ -596,8 +614,6 @@ app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
 
 app.get('/publications', async (_req: Request, res: Response) => {
   try {
-    const findAllPublicationUseCase = new FindAllPublicationUseCase();
-
     const publications = await findAllPublicationUseCase.execute();
 
     return res.status(status.OK).json({ statusCode: status.OK, data: publications });
@@ -615,8 +631,6 @@ app.get('/publications/:userID', async (req: Request, res: Response) => {
     let publications;
 
     if (!isNaN(Number(userID))) {
-      const findPublicationByUserUseCase = new FindPublicationByUserUseCase();
-
       publications = await findPublicationByUserUseCase.execute(Number(userID));
     }
 
@@ -637,8 +651,6 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
     let publications;
 
     if (!isNaN(Number(userID))) {
-      const findPublicationByUserLikesUseCase = new FindPublicationByUserLikesUseCase();
-
       publications = await findPublicationByUserLikesUseCase.execute(Number(userID));
     }
 
@@ -659,8 +671,6 @@ app.get('/publications/saved/:userID', async (req: Request, res: Response) => {
     let publications;
 
     if (!isNaN(Number(userID))) {
-      const findPublicationByUserSavesUseCase = new FindPublicationByUserSavesUseCase();
-
       publications = await findPublicationByUserSavesUseCase.execute(Number(userID));
     }
 
@@ -681,8 +691,6 @@ app.get('/publications/categories/:categoryId', async (req: Request, res: Respon
     let publications;
 
     if (!isNaN(Number(categoryId))) {
-      const findPublicationByCategoryUseCase = new FindPublicationByCategoryUseCase();
-
       publications = await findPublicationByCategoryUseCase.execute(Number(categoryId));
     }
 
@@ -698,8 +706,6 @@ app.get('/publications/categories/:categoryId', async (req: Request, res: Respon
 
 app.get('/categories', async (_req: Request, res: Response) => {
   try {
-    const findAllCategoryUseCase = new FindAllCategoryUseCase();
-
     const categories = await findAllCategoryUseCase.execute();
 
     if (!categories) {
@@ -737,8 +743,6 @@ app.get('/reviews/place/:idGoogle', async (req: Request, res: Response) => {
   const { idGoogle } = req.params;
 
   try {
-    const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
-
     const reviews = await findReviewByPlaceIdUseCase.execute(idGoogle);
 
     if (!reviews || reviews.length === 0) {
@@ -755,8 +759,6 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
   const { idGoogle } = req.params;
 
   try {
-    const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
-
     const place = await findPlaceByGoogleIdUseCase.execute(idGoogle);
 
     if (!place) {
@@ -774,8 +776,6 @@ app.put('/editProfile/:userId', async (req: Request, res: Response) => {
   const { description, location, birthdate, profilePicture, coverPicture } = req.body;
 
   try {
-    const findUserByIdUseCase = new FindUserByIdUseCase();
-
     let user = await findUserByIdUseCase.execute(Number(userId));
 
     if (!user) {
@@ -787,8 +787,6 @@ app.put('/editProfile/:userId', async (req: Request, res: Response) => {
     user.birthdate = birthdate ? new Date(birthdate) : user.birthdate;
     user.profilePicture = profilePicture || user.profilePicture;
     user.coverPicture = coverPicture || user.coverPicture;
-
-    const updateUserUseCase = new UpdateUserUseCase();
 
     await updateUserUseCase.execute(user);
 
@@ -819,8 +817,6 @@ app.post('/createPublication', authMiddleware, async (req: Request, res: Respons
 app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res: Response) => {
   const { publicationId } = req.params;
 
-  const findPublicationByIdUseCase = new FindPublicationByIdUseCase();
-
   const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
 
   publicationService
@@ -837,8 +833,6 @@ app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res:
 
 app.post('/handleSaved/:publicationId', authMiddleware, async (req: Request, res: Response) => {
   const { publicationId } = req.params;
-
-  const findPublicationByIdUseCase = new FindPublicationByIdUseCase();
 
   const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
 
@@ -857,8 +851,6 @@ app.post('/handleSaved/:publicationId', authMiddleware, async (req: Request, res
 app.post('/handleReposts/:publicationId', authMiddleware, async (req: Request, res: Response) => {
   const { publicationId } = req.params;
 
-  const findPublicationByIdUseCase = new FindPublicationByIdUseCase();
-
   const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
 
   publicationService
@@ -871,6 +863,73 @@ app.post('/handleReposts/:publicationId', authMiddleware, async (req: Request, r
     .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to reposts' });
     });
+});
+
+app.get('/forums', async (_req: Request, res: Response) => {
+  try {
+    const forums = await findAllForumUseCase.execute();
+
+    if (!forums) {
+      return res.status(404).json({ message: 'No se encontraron los foros' });
+    }
+
+    return res.json(forums);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching forums', error });
+  }
+});
+
+app.get('/forum/:id', async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'ID inválido' });
+    }
+
+    const forum = await findForumByIdUseCase.execute(id);
+
+    if (!forum) {
+      return res.status(404).json({ message: 'No se encontró el foro' });
+    }
+
+    return res.json(forum);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error al obtener el foro', error });
+  }
+});
+
+io.on('connection', (socket) => {
+  socket.on('createMessage', async (data) => {
+    try {
+      const { content, images, forumId, userId } = data;
+
+      const forum = await findForumByIdUseCase.execute(Number(forumId));
+
+      if (!forum) {
+        socket.emit('error', { message: 'Foro no encontrado' });
+        return;
+      }
+
+      const message = new Message();
+
+      message.forum = forum;
+      message.user = await findUserByIdUseCase.execute(userId);
+      message.content = content;
+      message.images = images ? images : [];
+
+      await createMessageUseCase.execute(message);
+
+      io.emit('receiveMessage', {
+        content: message.content,
+        images: message.images,
+        user: message.user,
+        createdAt: message.createdAt,
+      });
+    } catch (error) {
+      socket.emit('error', { message: 'Error al crear el mensaje', error });
+    }
+  });
 });
 
 export default app;

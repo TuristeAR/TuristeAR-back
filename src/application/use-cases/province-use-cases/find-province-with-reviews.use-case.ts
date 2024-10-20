@@ -22,6 +22,7 @@ export class FindProvinceWithReviewsUseCase {
         places: {
           id: true,
           name: true,
+          googleId: true,
           reviews: {
             authorName: true,
             authorPhoto: true,
