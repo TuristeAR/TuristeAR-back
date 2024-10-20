@@ -1,33 +1,40 @@
-import { ItineraryRepository } from '../repositories/itinerary.repository';
 import { ProvinceService } from './province.service';
 import { PlaceService } from './place.service';
 import { Itinerary } from '../entities/itinerary';
-import { CreateItineraryDto } from '../../application/dtos/create-itinerary.dto';
+import { CreateItineraryDto } from '../../infrastructure/dtos/create-itinerary.dto';
 import { ActivityService } from './activity.service';
 import { Place } from '../entities/place';
 import { User } from '../entities/user';
-import { CreateActivityDto } from '../../application/dtos/create-activity.dto';
-import { UserService } from './user.service';
+import { CreateActivityDto } from '../../infrastructure/dtos/create-activity.dto';
+import { CreateActivityUseCase } from '../../application/use-cases/activity-use-cases/create-activity.use-case';
+import { FindUserByIdUseCase } from '../../application/use-cases/user-use-cases/find-user-by.id.use-case';
+import { CreateItineraryUseCase } from '../../application/use-cases/itinerary-use-cases/create-itinerary.use-case';
+import { FindPlaceByProvinceUseCase } from '../../application/use-cases/place-use-cases/find-place-by-province.use-case';
+import { FindItineraryWithActivityUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-activity.use-case';
+import { UpdateItineraryUseCase } from '../../application/use-cases/itinerary-use-cases/update-itinerary.use-case';
+import { FindItineraryWithParticipantsUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-participants.use-case';
 
 export class ItineraryService {
-  private itineraryRepository: ItineraryRepository;
   private provinceService: ProvinceService;
   private placeService: PlaceService;
   private activityService: ActivityService;
-  private userService: UserService;
+  private createActivityUseCase: CreateActivityUseCase;
+  private findUserByIdUseCase: FindUserByIdUseCase;
 
   constructor() {
-    this.itineraryRepository = new ItineraryRepository();
     this.provinceService = new ProvinceService();
     this.placeService = new PlaceService();
     this.activityService = new ActivityService();
-    this.userService = new UserService();
+    this.createActivityUseCase = new CreateActivityUseCase();
+    this.findUserByIdUseCase = new FindUserByIdUseCase();
   }
 
   async create(user: User, createItineraryDto: CreateItineraryDto) {
     const dates = this.getDates(createItineraryDto.fromDate, createItineraryDto.toDate);
 
-    const places = await this.placeService.findManyByProvinceId(createItineraryDto.provinceId);
+    const findPlaceByProvinceUseCase = new FindPlaceByProvinceUseCase();
+
+    const places = await findPlaceByProvinceUseCase.execute(createItineraryDto.provinceId);
 
     const provinceName = await this.provinceService.getProvinceNameFromId(
       createItineraryDto.provinceId,
@@ -41,7 +48,9 @@ export class ItineraryService {
     itinerary.user = user;
     itinerary.activities = [];
 
-    const savedItinerary = await this.itineraryRepository.create(itinerary);
+    const createItineraryUseCase = new CreateItineraryUseCase();
+
+    const savedItinerary = await createItineraryUseCase.execute(itinerary);
 
     let itineraryPlaces: Place[] = [];
 
@@ -67,7 +76,7 @@ export class ItineraryService {
           toDate: activityDates[1],
         };
 
-        const activity = await this.activityService.create(createActivityDto);
+        const activity = await this.createActivityUseCase.execute(createActivityDto);
 
         savedItinerary.activities.push(activity);
       }
@@ -76,23 +85,10 @@ export class ItineraryService {
     return savedItinerary;
   }
 
-  findAll(): Promise<Itinerary[]> {
-    return this.itineraryRepository.findMany({});
-  }
+  async findActivitiesByItineraryId(id: number): Promise<Itinerary | null> {
+    const findItineraryWithActivityUseCase = new FindItineraryWithActivityUseCase();
 
-  findOneById(id: number): Promise<Itinerary | null> {
-    return this.itineraryRepository.findOne({ where: { id } });
-  }
-
-  findAllByUser(user: User): Promise<Itinerary[]> {
-    return this.itineraryRepository.findMany({ where: { user } });
-  }
-
-  async findActivitiesById(id: number): Promise<Itinerary | null> {
-    const itinerary = await this.itineraryRepository.findOne({
-      where: { id },
-      relations: ['activities', 'activities.place'], // Incluyendo 'place' si necesitas esa información
-    });
+    const itinerary = await findItineraryWithActivityUseCase.execute(id);
 
     if (!itinerary) return null;
 
@@ -110,108 +106,117 @@ export class ItineraryService {
     };
   }
 
-  findOneByIdWithParticipants(id: number): Promise<Itinerary | null> {
-    return this.itineraryRepository.findOne({
-      where: { id: id },
-      relations: ['participants', 'user'],
-    });
-  }
-
   async addActivityToItinerary(
     itineraryId: number,
     createActivityDto: CreateActivityDto,
   ): Promise<Itinerary> {
-    const itinerary = await this.itineraryRepository.findOne({
-      where: { id: itineraryId },
-      relations: ['activities'],
-    });
+    const findItineraryWithActivityUseCase = new FindItineraryWithActivityUseCase();
+
+    const itinerary = await findItineraryWithActivityUseCase.execute(itineraryId);
+
     if (!itinerary) {
       throw new Error('Itinerary not found');
     }
-    const activity = await this.activityService.create(createActivityDto);
+
+    const activity = await this.createActivityUseCase.execute(createActivityDto);
+
     if (!activity) {
       throw new Error('Failed to create activity');
     }
 
-    // Verifica si ya existen actividades y agrega la nueva sin perder las anteriores
     if (!itinerary.activities) {
       itinerary.activities = [];
     }
 
-    // Añadir la nueva actividad
     itinerary.activities.push(activity);
 
-    // Guardar el itinerario actualizado
-    return await this.itineraryRepository.save(itinerary);
+    const updateItineraryUseCase = new UpdateItineraryUseCase();
+
+    return updateItineraryUseCase.execute(itinerary);
   }
 
   async addUserToItinerary(itineraryId: number, userId: number): Promise<Itinerary> {
-    let itinerary = await this.findOneByIdWithParticipants(itineraryId);
+    const findItineraryWithParticipantsUseCase = new FindItineraryWithParticipantsUseCase();
+
+    const itinerary = await findItineraryWithParticipantsUseCase.execute(itineraryId);
+
     if (!itinerary) {
       throw new Error('Itinerary not found');
     }
+
     if (itinerary.user.id === userId) {
       throw new Error('Owner cannot be added as a participant');
     }
-    let user = await this.userService.findOneById(userId);
+
+    const user = await this.findUserByIdUseCase.execute(userId);
+
     if (!user) {
       throw new Error('User not found');
     }
+
     if (!itinerary.participants.some((u) => u.id === user.id)) {
       itinerary.participants.push(user);
-      return this.itineraryRepository.save(itinerary);
+
+      const updateItineraryUseCase = new UpdateItineraryUseCase();
+
+      return updateItineraryUseCase.execute(itinerary);
     } else {
       return Promise.resolve(itinerary);
     }
   }
 
   async removeUserFromItinerary(itineraryId: number, participantId: number): Promise<Itinerary> {
-    let itinerary = await this.findOneByIdWithParticipants(itineraryId);
+    const findItineraryWithParticipantsUseCase = new FindItineraryWithParticipantsUseCase();
+
+    const itinerary = await findItineraryWithParticipantsUseCase.execute(itineraryId);
+
     if (!itinerary) {
       throw new Error('Itinerary not found');
     }
+
     if (itinerary.user.id === participantId) {
       throw new Error('The owner cannot be removed by a participant');
     }
-    let user = await this.userService.findOneById(participantId);
+
+    const user = await this.findUserByIdUseCase.execute(participantId);
+
     if (!user) {
       throw new Error('User not found');
     }
+
     const userIndex = itinerary.participants.findIndex((u) => u.id === user.id);
+
     if (userIndex !== -1) {
       itinerary.participants.splice(userIndex, 1);
-      return this.itineraryRepository.save(itinerary);
+
+      const updateItineraryUseCase = new UpdateItineraryUseCase();
+
+      return updateItineraryUseCase.execute(itinerary);
     } else {
       throw new Error('User is not part of the itinerary');
     }
   }
 
-  getItineraryWithParticipants(itineraryId: number): Promise<Itinerary | null> {
-    return this.itineraryRepository.findOne({
-      where: { id: itineraryId },
-      relations: ['participants', 'user'],
-    });
-  }
-
   async removeActivityFromItinerary(itineraryId: number, activityId: number): Promise<Itinerary> {
-    // Buscar el itinerario y sus actividades
-    const itinerary = await this.itineraryRepository.findOne({
-      where: { id: itineraryId },
-      relations: ['activities'],
-    });
+    const findItineraryWithActivityUseCase = new FindItineraryWithActivityUseCase();
+
+    const itinerary = await findItineraryWithActivityUseCase.execute(itineraryId);
+
     if (!itinerary) {
       throw new Error('Itinerary not found');
     }
-    // Buscar la actividad dentro del itinerario
+
     const activityIndex = itinerary.activities.findIndex((activity) => activity.id === activityId);
-    // Verificar si la actividad existe en el itinerario
+
     if (activityIndex === -1) {
       throw new Error('Activity not found in the itinerary');
     }
-    // Eliminar la actividad del itinerario
+
     itinerary.activities.splice(activityIndex, 1);
-    // Guardar el itinerario actualizado
-    return await this.itineraryRepository.save(itinerary);
+
+    const updateItineraryUseCase = new UpdateItineraryUseCase();
+
+    return updateItineraryUseCase.execute(itinerary);
   }
 
   private getDates(fromDate: Date, toDate: Date): Date[] {
@@ -225,12 +230,5 @@ export class ItineraryService {
     }
 
     return dates;
-  }
-
-  getItinerariesWithParticipantsAndUserByUserId(userId: number): Promise<Itinerary[] | null> {
-    return this.itineraryRepository.findMany({
-      where: [{ participants: { id: userId } }, { user: { id: userId } }],
-      relations: ['participants', 'user'],
-    });
   }
 }

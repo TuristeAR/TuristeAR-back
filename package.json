@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "serve": "node dist/application/app.js schema:sync -d src/infrastructure/database/data-source.ts",
-    "start": "ts-node src/application/app.ts schema:sync -d src/infrastructure/database/data-source.ts",
+    "start": "ts-node src/app.ts schema:sync -d src/infrastructure/database/data-source.ts",
     "test": "jest --forceExit"
   },
   "keywords": [],
