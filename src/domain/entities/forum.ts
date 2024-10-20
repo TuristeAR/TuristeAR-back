@@ -16,7 +16,7 @@ export class Forum extends AbstractEntity {
   @Column()
   description: string;
 
-  @OneToMany(()=>Message,(message) => message.id)
+  @OneToMany(()=>Message,(message) => message.forum)
   @JoinColumn({ name: 'messagesId' })
   messages: Message[];
 
