@@ -11,4 +11,7 @@ export class CreateMessageDto {
 
   @IsNumber()
   user: number;
+
+  @IsNumber()
+  forum: number
 }

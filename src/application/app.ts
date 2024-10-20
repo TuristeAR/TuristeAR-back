@@ -22,6 +22,12 @@ import { UserService } from '../domain/services/user.service';
 import { PublicationService } from '../domain/services/publication.service';
 import { CategoryService } from '../domain/services/category.service';
 import { CreatePublicationDTO } from './dtos/create-publication.dto';
+import { ForumService } from '../domain/services/forum.service';
+import { Forum } from '../domain/entities/forum';
+import { Message } from '../domain/entities/message';
+import { MessageService } from '../domain/services/message.service';
+import http from 'http'; // Importamos http para usarlo con socket.io
+import { Server as SocketIOServer } from 'socket.io'; // Importar el servidor de socket.io
 
 dotenv.config();
 
@@ -32,6 +38,26 @@ const getCorsOrigins = () => {
 };
 
 const app = express();
+
+const server = http.createServer(app);
+
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: getCorsOrigins(),
+    credentials: true,
+  },
+});
+
+io.on('connection', (socket) => {
+  socket.on('message', (msg) => {
+    console.log('Mensaje recibido:', msg);
+    io.emit('message', msg);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Cliente desconectado', socket.id);
+  });
+});
 
 app.use(bodyParser.json());
 
@@ -71,7 +97,7 @@ AppDataSource.initialize()
   .then(() => {
     console.log('Data Source has been initialized!');
 
-    app.listen(process.env.HTTP_PORT, () => {
+    server.listen(process.env.HTTP_PORT, () => {
       console.log(`Server running on port ${process.env.HTTP_PORT}`);
     });
   })
@@ -81,6 +107,8 @@ const weatherService = new WeatherService();
 const provinceService = new ProvinceService();
 const placeService = new PlaceService();
 const publicationService = new PublicationService();
+const forumService = new ForumService();
+const messageService = new MessageService();
 const categoryService = new CategoryService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
@@ -784,6 +812,73 @@ app.post('/handleReposts/:publicationId', authMiddleware, async (req: Request, r
       console.error('Error adding user to reposts:', error);
       return res.status(500).json({ status: 'error', message: 'Error adding user to reposts' });
     });
+});
+
+app.get('/forums', async (req : Request, res : Response)=>{
+  try {
+    let forums = await forumService.findAll();
+
+    if (!forums) {
+      return res.status(404).json({ message: 'No se encontraron los foros' });
+    }
+
+    return res.json(forums);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching forums', error });
+  }
+})
+
+app.get('/forum/:id', async (req: Request, res: Response) => {
+  try {
+    let id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'ID inválido' });
+    }
+
+    let forum = await forumService.findById(id);
+
+    if (!forum) {
+      return res.status(404).json({ message: 'No se encontró el foro' });
+    }
+
+    return res.json(forum);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error al obtener el foro', error });
+  }
+});
+
+
+io.on('connection', (socket) => {
+  socket.on('createMessage', async (data) => {
+    try {
+      const { content, images, forumId, userId } = data;
+
+      const forum = await forumService.findById(Number(forumId));
+      if (!forum) {
+        socket.emit('error', { message: 'Foro no encontrado' });
+        return;
+      }
+
+      const message = new Message();
+      message.forum = forum;
+      message.user = await userService.findOneById(userId);
+      message.content = content;
+      message.images = images ? images : [];
+
+      await messageService.createMessage(message);
+
+      io.emit('receiveMessage', {
+        content: message.content,
+        images: message.images,
+        user: message.user,
+        createdAt: message.createdAt,
+      });
+
+    } catch (error) {
+      socket.emit('error', { message: 'Error al crear el mensaje', error });
+    }
+  });
 });
 
 export default app;

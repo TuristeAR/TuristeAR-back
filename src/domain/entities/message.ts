@@ -11,11 +11,15 @@ export class Message extends AbstractEntity {
   @Column()
   content: string;
 
-  @Column()
+  @Column('simple-array', { nullable: false })
   images: string[];
 
   @ManyToOne(() => User)
-  @Column()
-  user: User;
+  @JoinColumn({ name: 'userId' })
+  user: User | null;
+
+  @ManyToOne(() => Forum, (forum) => forum.messages)  // Relación ManyToOne con Forum
+  @JoinColumn({ name: 'forumId' })
+  forum: Forum | null;
 
 }
