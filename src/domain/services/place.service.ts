@@ -229,11 +229,19 @@ export class PlaceService {
 
       const joinedTypes = types.join(',');
 
-      const filteredPlaces = places.filter((place) =>
-        place.types.some((type) => joinedTypes.includes(type)),
-      );
-
-      const limitedReviewImages = filteredPlaces.map((place) => {
+      if (types) {
+        const filteredPlaces = places.filter((place) =>
+          place.types.some((type) => joinedTypes.includes(type)),
+        );
+        const limitedReviewImages = filteredPlaces.map((place) => {
+          const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
+          return {
+            ...place,
+            reviews: firstReview ? [firstReview] : [],
+          };
+        });
+      }
+      const limitedReviewImages = places.map((place) => {
         const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
         return {
           ...place,
