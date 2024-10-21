@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
+import { AbstractEntity } from './abstract.entity';
 import { Itinerary } from './itinerary';
 import { Place } from './place';
 

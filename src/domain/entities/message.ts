@@ -1,13 +1,10 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
-import { Itinerary } from './itinerary';
-import { Place } from './place';
+import { AbstractEntity } from './abstract.entity';
 import { Forum } from './forum';
 import { User } from './user';
 
 @Entity()
 export class Message extends AbstractEntity {
-
   @Column()
   content: string;
 
@@ -18,8 +15,7 @@ export class Message extends AbstractEntity {
   @JoinColumn({ name: 'userId' })
   user: User | null;
 
-  @ManyToOne(() => Forum, (forum) => forum.messages)  // Relación ManyToOne con Forum
+  @ManyToOne(() => Forum, (forum) => forum.messages)
   @JoinColumn({ name: 'forumId' })
   forum: Forum | null;
-
 }

@@ -1,36 +1,18 @@
 import { Place } from '../entities/place';
-import { PlaceRepository } from '../repositories/place.repository';
-import { CreatePlaceDto } from '../../application/dtos/create-place.dto';
-import { ProvinceService } from './province.service';
-import { post } from '../../utils/http.util';
+import { CreatePlaceDto } from '../../infrastructure/dtos/create-place.dto';
+import { post } from '../utils/http.util';
 import { Province } from '../entities/province';
+import { FindPlaceByGoogleIdUseCase } from '../../application/use-cases/place-use-cases/find-place-by-googleId.use-case';
+import { ProvinceService } from './province.service';
+import { FindProvinceByIdUseCase } from '../../application/use-cases/province-use-cases/find-province-by-id.use-case';
+import { CreatePlaceUseCase } from '../../application/use-cases/place-use-cases/create-place.use-case';
+import { FindPlaceByProvinceAndTypesUseCase } from '../../application/use-cases/place-use-cases/find-place-by-province-and-types.use-case';
 
 export class PlaceService {
-  private placeRepository: PlaceRepository;
   private provinceService: ProvinceService;
 
   constructor() {
-    this.placeRepository = new PlaceRepository();
     this.provinceService = new ProvinceService();
-  }
-
-  create(createPlaceDto: CreatePlaceDto): Promise<Place> {
-    return this.placeRepository.create(createPlaceDto);
-  }
-
-  findAll(): Promise<Place[]> {
-    return this.placeRepository.findMany({});
-  }
-
-  findOneByGoogleId(googleId: string): Promise<Place | null> {
-    return this.placeRepository.findOne({ where: { googleId } });
-  }
-
-  findManyByProvinceId(provinceId: number): Promise<Place[]> {
-    return this.placeRepository.findMany({
-      where: { province: { id: provinceId } },
-      relations: ['province'],
-    });
   }
 
   async findOneByDateWithTypesAndProvinceId(
@@ -145,7 +127,9 @@ export class PlaceService {
     }
 
     for (const place of places) {
-      const existingPlace = await this.findOneByGoogleId(place.id);
+      const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
+
+      const existingPlace = await findPlaceByGoogleIdUseCase.execute(place.id);
 
       if (!existingPlace) {
         const provinceId = await this.provinceService.getProvinceIdFromCoordinates(
@@ -153,7 +137,9 @@ export class PlaceService {
           place.location.longitude,
         );
 
-        const province = await this.provinceService.findOneById(provinceId as number);
+        const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
+
+        const province = await findProvinceByIdUseCase.execute(provinceId as number);
 
         const createPlaceDto: CreatePlaceDto = {
           province: province as Province,
@@ -168,21 +154,11 @@ export class PlaceService {
           phoneNumber: place.nationalPhoneNumber ?? null,
         };
 
-        await this.create(createPlaceDto);
+        const createPlaceUseCase = new CreatePlaceUseCase();
+
+        await createPlaceUseCase.execute(createPlaceDto);
       }
     }
-  }
-
-  async fetchPlacesByProvince(provinceName: string) {
-    const province = await this.provinceService.findByName(provinceName);
-
-    if (!province) {
-      throw new Error('Province not found');
-    }
-
-    return await this.placeRepository.find({
-      where: { province: { id: province.id } },
-    });
   }
 
   async findManyByPlaceProvinceReviews(
@@ -210,25 +186,9 @@ export class PlaceService {
     offset: number
   ): Promise<Place[]> {
     try {
-      const places = await this.placeRepository.findMany({
-        where: {
-          province: { id: provinceId },
-        },
-        relations: ['province', 'reviews'],
-        select: {
-          id: true,
-          googleId: true,
-          name: true,
-          types: true,
-          rating: true,
-          address: true,
-          reviews: {
-            photos: true,
-          },
-        },
-        skip: offset,
-        take: count
-      });
+      const findPlaceByProvinceAndTypesUseCase = new FindPlaceByProvinceAndTypesUseCase();
+
+      const places = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
 
       const joinedTypes = types.join(',');
 
@@ -254,19 +214,8 @@ export class PlaceService {
 
       return limitedReviewImages.slice(0, count);
     } catch (error) {
-      console.error('Error fetching places by province and types:', error);
       throw error;
     }
-  }
-
-  async findPlaceByGoogleId(googleId: string): Promise<Place> {
-    const place = await this.placeRepository.findOne({ where: { googleId } });
-
-    if (!place) {
-      throw new Error('Place not found');
-    }
-
-    return place;
   }
 
   private isOpenThisDay(place: Place, date: Date): boolean {
@@ -338,10 +287,14 @@ export class PlaceService {
   }
 
   private async savePlaceInDatabase(place: any, provinceId: number) {
-    const existingPlace = await this.findOneByGoogleId(place.id);
+    const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
+
+    const existingPlace = await findPlaceByGoogleIdUseCase.execute(place.id);
 
     if (!existingPlace) {
-      const province = await this.provinceService.findOneById(provinceId);
+      const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
+
+      const province = await findProvinceByIdUseCase.execute(provinceId);
 
       const createPlaceDto: CreatePlaceDto = {
         province: province as Province,
@@ -356,7 +309,9 @@ export class PlaceService {
         phoneNumber: place.nationalPhoneNumber ?? null,
       };
 
-      return this.create(createPlaceDto);
+      const createPlaceUseCase = new CreatePlaceUseCase();
+
+      return createPlaceUseCase.execute(createPlaceDto);
     }
 
     return existingPlace;

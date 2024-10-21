@@ -1,14 +1,11 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
+import { AbstractEntity } from './abstract.entity';
 import { Place } from './place';
 import { Message } from './message';
+import { Category } from './category';
 
 @Entity()
 export class Forum extends AbstractEntity {
-
-  @ManyToOne(() => Place)
-  @JoinColumn({ name: 'placeId' })
-  place: Place;
 
   @Column()
   name: string;
@@ -16,8 +13,11 @@ export class Forum extends AbstractEntity {
   @Column()
   description: string;
 
-  @OneToMany(()=>Message,(message) => message.forum)
+  @OneToMany(() => Message, (message) => message.forum)
   @JoinColumn({ name: 'messagesId' })
   messages: Message[];
 
+  @ManyToOne(() => Category)
+  @JoinColumn({ name: 'categoryId' })
+  category: Category | null;
 }
