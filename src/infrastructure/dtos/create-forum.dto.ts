@@ -2,9 +2,6 @@ import { IsArray, IsNumber, IsString } from 'class-validator';
 
 export class CreateForumDto {
 
-  @IsNumber()
-  place: number;
-
   @IsString()
   name: string;
 
@@ -14,4 +11,8 @@ export class CreateForumDto {
   @IsArray()
   @IsNumber()
   messages : number[];
+
+  @IsNumber()
+  categoryId : number;
+
 }

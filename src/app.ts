@@ -51,6 +51,10 @@ import { Message } from './domain/entities/message';
 import { CreateMessageUseCase } from './application/use-cases/message-use-cases/create-message.use-case';
 import { FindAllForumUseCase } from './application/use-cases/forum-use-cases/find-all-forum.use-case';
 import { FindForumByIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-id.use-case';
+import { CreateForumDto } from './infrastructure/dtos/create-forum.dto';
+import { CreateForumUseCase } from './application/use-cases/forum-use-cases/create-forum.use-case';
+import { Forum } from './domain/entities/forum';
+import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
 
 dotenv.config();
 
@@ -134,6 +138,7 @@ const itineraryService = new ItineraryService();
 const createMessageUseCase = new CreateMessageUseCase();
 const createProvinceUseCase = new CreateProvinceUseCase();
 const createWeatherUseCase = new CreateWeatherUseCase();
+const createForumUserCase = new CreateForumUseCase();
 const findActivityByIdUseCase = new FindActivityByIdUseCase();
 const findAllCategoryUseCase = new FindAllCategoryUseCase();
 const findAllForumUseCase = new FindAllForumUseCase();
@@ -143,6 +148,7 @@ const findAllPublicationUseCase = new FindAllPublicationUseCase();
 const findAllReviewUseCase = new FindAllReviewUseCase();
 const findAllUserUseCase = new FindAllUserUseCase();
 const findAllWeatherUseCase = new FindAllWeatherUseCase();
+const findCategoryByIdUseCase= new FindCategoryByIdUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
 const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
@@ -771,12 +777,11 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
   }
 });
 
-app.put('/editProfile/:userId', async (req: Request, res: Response) => {
-  const { userId } = req.params;
+app.put('/editProfile', async (req: Request, res: Response) => {
   const { description, location, birthdate, profilePicture, coverPicture } = req.body;
 
   try {
-    let user = await findUserByIdUseCase.execute(Number(userId));
+    let user = req.user as User;
 
     if (!user) {
       return res.status(404).json({ message: 'No se encontró al usuario' });
@@ -813,6 +818,34 @@ app.post('/createPublication', authMiddleware, async (req: Request, res: Respons
     });
   }
 });
+
+app.post('/createForum', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const createForumDTO: CreateForumDto = req.body;
+    const { name, description, categoryId } = createForumDTO;
+
+    const forum = new Forum();
+
+    try{
+      forum.category = await findCategoryByIdUseCase.execute(Number(categoryId));
+      forum.name = name;
+      forum.description = description;
+      forum.messages=[];
+
+      await createForumUserCase.execute(forum)
+    }catch (error){
+      throw new Error(error as string);
+    }
+
+    return res.status(status.CREATED).json({ statusCode: status.CREATED, data: forum });
+  } catch (error) {
+    return res.status(status.INTERNAL_SERVER_ERROR).json({
+      statusCode: status.INTERNAL_SERVER_ERROR,
+      message: error || 'Error creating publication',
+    });
+  }
+});
+
 
 app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res: Response) => {
   const { publicationId } = req.params;
