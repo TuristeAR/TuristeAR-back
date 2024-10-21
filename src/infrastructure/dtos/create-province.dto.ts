@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateProvinceDto {
   @IsString()
@@ -16,4 +16,9 @@ export class CreateProvinceDto {
   @IsString({ each: true })
   @IsArray()
   images: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsNumber()
+  categoryId : number;
 }

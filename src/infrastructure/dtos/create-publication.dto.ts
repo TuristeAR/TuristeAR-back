@@ -14,17 +14,17 @@ export class CreatePublicationDTO {
 
   @IsOptional()
   @IsArray()
-  @IsString({each: true})
+  @IsNumber()
   likes?: number[];
 
   @IsOptional()
   @IsArray()
-  @IsString({each: true})
+  @IsNumber()
   reposts?: number[];
 
   @IsOptional()
   @IsArray()
-  @IsString({each: true})
+  @IsNumber()
   saved?: number[];
 
   @IsNumber()
