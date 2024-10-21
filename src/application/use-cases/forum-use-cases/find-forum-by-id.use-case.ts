@@ -12,7 +12,7 @@ export class FindForumByIdUseCase {
   execute(id: number): Promise<Forum | null> {
     return this.forumRepository.findOne({
       where: { id: id },
-      relations: ['place', 'messages', 'messages.user'],
+      relations: ['category', 'messages', 'messages.user'],
     });
   }
 }

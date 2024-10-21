@@ -12,6 +12,7 @@ export class FindAllForumUseCase {
   execute(): Promise<Forum[]> {
     return this.forumRepository.findMany({
       relations: ['category'],
+      order: { id: 'DESC' },
     });
   }
 }

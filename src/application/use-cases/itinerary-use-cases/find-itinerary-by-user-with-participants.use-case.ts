@@ -13,6 +13,7 @@ export class FindItineraryByUserWithParticipantsUseCase {
     return this.itineraryRepository.findMany({
       where: [{ participants: { id: userId } }, { user: { id: userId } }],
       relations: ['participants', 'user'],
+      order: { id: 'DESC' }
     });
   }
 }
