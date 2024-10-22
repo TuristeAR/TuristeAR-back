@@ -12,7 +12,7 @@ export class FindItineraryByUserWithParticipantsUseCase {
   execute(userId: number): Promise<Itinerary[]> {
     return this.itineraryRepository.findMany({
       where: [{ participants: { id: userId } }, { user: { id: userId } }],
-      relations: ['participants', 'user'],
+      relations: ['participants', 'user', 'activities.place.province.categories'],
       order: { id: 'DESC' }
     });
   }
