@@ -4,10 +4,13 @@ import { User } from '../entities/user';
 import { CreatePublicationUseCase } from '../../application/use-cases/publication-use-cases/create-publication.use-case';
 import { FindCategoryByIdUseCase } from '../../application/use-cases/category-use-cases/find-category-by-id.use-case';
 import { UpdatePublicationUseCase } from '../../application/use-cases/publication-use-cases/update-publication.use-case';
+import {
+  FindItineraryByIdUseCase
+} from '../../application/use-cases/itinerary-use-cases/find-itinerary-by-id.use-case';
 
 export class PublicationService {
   async createPublication(publicationDTO: CreatePublicationDTO, user: User): Promise<Publication> {
-    const { description, images, categoryId } = publicationDTO;
+    const { description, images, itineraryId } = publicationDTO;
 
     const newPublication = new Publication();
 
@@ -19,15 +22,26 @@ export class PublicationService {
     newPublication.creationDate = new Date();
 
     try {
+      const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
+
+      const itinerary = await findItineraryByIdUseCase.execute(itineraryId);
+
+      if (!itinerary) {
+        throw new Error('Itinerario no encontrado');
+      }
+
+      newPublication.itinerary = itinerary;
+
       const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
 
-      const category = await findCategoryByIdUseCase.execute(categoryId);
+      const category = await findCategoryByIdUseCase.execute(Number(itinerary.activities[0].place.province.categories?.[0].id));
 
       if (!category) {
         throw new Error('Categoría no encontrada');
       }
 
       newPublication.category = category;
+
 
       newPublication.user = user;
 

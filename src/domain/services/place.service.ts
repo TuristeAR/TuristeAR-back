@@ -15,27 +15,52 @@ export class PlaceService {
     this.provinceService = new ProvinceService();
   }
 
+  private calculatorDistance(lat1: number | null, lon1: number | null, lat2: number | null, lon2: number | null)  {
+    if(lat1 && lon1 && lat2 && lon2){
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      return R * c < 20;
+    }
+    return null;
+  }
+
   async findOneByDateWithTypesAndProvinceId(
     places: Place[],
     currentPlaces: Place[],
     date: Date,
     types: string[],
     provinceId: number,
+    longitude: number | null,
+    latitude: number | null,
   ): Promise<Place | null> {
+
     const filteredPlaces = this.filterPlacesByTypes(places, currentPlaces, types);
 
     do {
       if (filteredPlaces.length === 0) {
         const place = await this.fetchPlaceByTypesAndProvinceId(currentPlaces, types, provinceId);
-
         filteredPlaces.push(place);
       }
 
       const randomPlace = filteredPlaces[Math.floor(Math.random() * filteredPlaces.length)];
 
-      if (this.isOpenThisDay(randomPlace, date)) {
+      let distance = (latitude) ? this.calculatorDistance(latitude, longitude, randomPlace.latitude, randomPlace.longitude) : true;
+
+      if (this.isOpenThisDay(randomPlace, date) && distance) {
         return randomPlace;
       }
+
 
       filteredPlaces.splice(filteredPlaces.indexOf(randomPlace), 1);
     } while (filteredPlaces.length > 0);

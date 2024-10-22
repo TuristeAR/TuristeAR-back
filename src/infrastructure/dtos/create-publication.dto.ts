@@ -32,4 +32,7 @@ export class CreatePublicationDTO {
 
   @IsNumber()
   userId: number;
+
+  @IsNumber()
+  itineraryId: number;
 }
