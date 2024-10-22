@@ -11,6 +11,6 @@ export class FindItineraryByUserUseCase {
   }
 
   execute(user: User): Promise<Itinerary[]> {
-    return this.itineraryRepository.findMany({ where: { user : {id : user.id} }, relations: ['activities.place.province.categories'], order: { id: 'DESC' } });
+    return this.itineraryRepository.findMany({ where: { user : {id : user.id} }, relations: ['activities.place.province.category'], order: { id: 'DESC' } });
   }
 }
