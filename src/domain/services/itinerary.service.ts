@@ -68,9 +68,6 @@ export class ItineraryService {
         latitude
       );
 
-      console.log('Lugar obtenido del método => '+place)
-      console.log('---------------------------------------------------');
-
       if (place) {
         itineraryPlaces.push(place);
         if(longitude==null){

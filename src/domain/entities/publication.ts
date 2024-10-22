@@ -2,6 +2,7 @@ import { Entity, Column, ManyToMany, ManyToOne, JoinColumn, JoinTable } from 'ty
 import { AbstractEntity } from './abstract.entity';
 import { User } from './user';
 import { Category } from './category';
+import { Itinerary } from './itinerary';
 
 @Entity()
 export class Publication extends AbstractEntity {
@@ -42,4 +43,8 @@ export class Publication extends AbstractEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @ManyToOne(() => Itinerary)
+  @JoinColumn({ name: 'itineraryId' })
+  itinerary: Itinerary;
 }

@@ -10,6 +10,6 @@ export class FindCategoryByIdUseCase {
   }
 
   execute(id: number): Promise<Category | null> {
-    return this.categoryRepository.findOne({ where: { id } });
+    return this.categoryRepository.findOne({ where: { id : id } });
   }
 }
