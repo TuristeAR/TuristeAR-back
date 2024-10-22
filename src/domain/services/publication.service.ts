@@ -24,6 +24,8 @@ export class PublicationService {
     try {
       const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
 
+      console.log(itineraryId)
+
       const itinerary = await findItineraryByIdUseCase.execute(itineraryId);
 
       if (!itinerary) {
@@ -34,7 +36,7 @@ export class PublicationService {
 
       const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
 
-      const category = await findCategoryByIdUseCase.execute(Number(itinerary.activities[0].place.province.categories?.[0].id));
+      const category = await findCategoryByIdUseCase.execute(Number(itinerary.activities[0].place.province.category?.id));
 
       if (!category) {
         throw new Error('Categoría no encontrada');
@@ -49,6 +51,7 @@ export class PublicationService {
 
       return createPublicationUseCase.execute(newPublication);
     } catch (error) {
+      console.log(error)
       throw new Error(error as string);
     }
   }
