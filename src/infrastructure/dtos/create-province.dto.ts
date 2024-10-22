@@ -17,8 +17,6 @@ export class CreateProvinceDto {
   @IsArray()
   images: string[];
 
-  @IsOptional()
-  @IsArray()
   @IsNumber()
   categoryId : number;
 }
