@@ -31,7 +31,7 @@ export class PlaceService {
 
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-      return R * c < 60;
+      return R * c < 20;
     }
     return null;
   }
@@ -41,7 +41,9 @@ export class PlaceService {
     currentPlaces: Place[],
     date: Date,
     types: string[],
-    provinceId: number
+    provinceId: number,
+    longitude: number | null,
+    latitude: number | null,
   ): Promise<Place | null> {
 
     const filteredPlaces = this.filterPlacesByTypes(places, currentPlaces, types);
@@ -54,7 +56,9 @@ export class PlaceService {
 
       const randomPlace = filteredPlaces[Math.floor(Math.random() * filteredPlaces.length)];
 
-      if (this.isOpenThisDay(randomPlace, date)) {
+      let distance = (latitude) ? this.calculatorDistance(latitude, longitude, randomPlace.latitude, randomPlace.longitude) : true;
+
+      if (this.isOpenThisDay(randomPlace, date) && distance) {
         return randomPlace;
       }
 
