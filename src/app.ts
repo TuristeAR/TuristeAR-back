@@ -148,7 +148,7 @@ const findAllPublicationUseCase = new FindAllPublicationUseCase();
 const findAllReviewUseCase = new FindAllReviewUseCase();
 const findAllUserUseCase = new FindAllUserUseCase();
 const findAllWeatherUseCase = new FindAllWeatherUseCase();
-const findCategoryByIdUseCase= new FindCategoryByIdUseCase();
+const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
 const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
@@ -618,6 +618,21 @@ app.get('/provinces/:param/:count?', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/province/places/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const places = await placeService.findManyByPlaceProvinceId(Number(id));
+
+    if (!places) {
+      return res.status(404).json({ message: 'Province not found' });
+    }
+
+    return res.json(places);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching province places', error });
+  }
+});
+
 app.get('/publications', async (_req: Request, res: Response) => {
   try {
     const publications = await findAllPublicationUseCase.execute();
@@ -725,7 +740,7 @@ app.get('/categories', async (_req: Request, res: Response) => {
 });
 
 app.get('/places/province?', async (req: Request, res: Response) => {
-  const { provinceId, types, count = 4 } = req.query;
+  const { provinceId, types, count = 4, offset = 0 } = req.query;
 
   try {
     const typesArray: string[] = Array.isArray(types)
@@ -736,6 +751,7 @@ app.get('/places/province?', async (req: Request, res: Response) => {
       Number(provinceId),
       typesArray,
       Number(count),
+      Number(offset),
     );
     return res.status(status.OK).json({ statusCode: status.OK, data: places });
   } catch (error) {
@@ -826,14 +842,14 @@ app.post('/createForum', authMiddleware, async (req: Request, res: Response) => 
 
     const forum = new Forum();
 
-    try{
+    try {
       forum.category = await findCategoryByIdUseCase.execute(Number(categoryId));
       forum.name = name;
       forum.description = description;
-      forum.messages=[];
+      forum.messages = [];
 
-      await createForumUserCase.execute(forum)
-    }catch (error){
+      await createForumUserCase.execute(forum);
+    } catch (error) {
       throw new Error(error as string);
     }
 
@@ -845,7 +861,6 @@ app.post('/createForum', authMiddleware, async (req: Request, res: Response) => 
     });
   }
 });
-
 
 app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res: Response) => {
   const { publicationId } = req.params;
