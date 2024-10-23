@@ -7,6 +7,7 @@ import { ProvinceService } from './province.service';
 import { FindProvinceByIdUseCase } from '../../application/use-cases/province-use-cases/find-province-by-id.use-case';
 import { CreatePlaceUseCase } from '../../application/use-cases/place-use-cases/create-place.use-case';
 import { FindPlaceByProvinceAndTypesUseCase } from '../../application/use-cases/place-use-cases/find-place-by-province-and-types.use-case';
+import { FindPlaceByProvinceNameUseCase } from '../../application/use-cases/place-use-cases/find-place-by-province-name.use-case';
 
 export class PlaceService {
   private provinceService: ProvinceService;
@@ -183,7 +184,7 @@ export class PlaceService {
     provinceId: number,
     types: string[],
     count: number,
-    offset: number
+    offset: number,
   ): Promise<Place[]> {
     try {
       const findPlaceByProvinceAndTypesUseCase = new FindPlaceByProvinceAndTypesUseCase();
@@ -315,5 +316,12 @@ export class PlaceService {
     }
 
     return existingPlace;
+  }
+  findManyByPlaceProvinceId(provinceId: number) {
+    const findPlaceByProvinceNameUseCase = new FindPlaceByProvinceNameUseCase();
+
+    const places = findPlaceByProvinceNameUseCase.execute(provinceId);
+
+    return places;
   }
 }
