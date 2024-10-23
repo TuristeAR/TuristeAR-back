@@ -41,9 +41,7 @@ export class PlaceService {
     currentPlaces: Place[],
     date: Date,
     types: string[],
-    provinceId: number,
-    longitude: number | null,
-    latitude: number | null,
+    provinceId: number
   ): Promise<Place | null> {
 
     const filteredPlaces = this.filterPlacesByTypes(places, currentPlaces, types);
@@ -56,9 +54,7 @@ export class PlaceService {
 
       const randomPlace = filteredPlaces[Math.floor(Math.random() * filteredPlaces.length)];
 
-      let distance = (latitude) ? this.calculatorDistance(latitude, longitude, randomPlace.latitude, randomPlace.longitude) : true;
-
-      if (this.isOpenThisDay(randomPlace, date) && distance) {
+      if (this.isOpenThisDay(randomPlace, date)) {
         return randomPlace;
       }
 

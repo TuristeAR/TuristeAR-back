@@ -54,26 +54,18 @@ export class ItineraryService {
 
     let itineraryPlaces: Place[] = [];
 
-    let longitude = null;
-    let latitude = null;
-
     for (const date of dates) {
       const place = await this.placeService.findOneByDateWithTypesAndProvinceId(
         places,
         itineraryPlaces,
         date,
         createItineraryDto.types,
-        createItineraryDto.provinceId,
-        longitude,
-        latitude
+        createItineraryDto.provinceId
       );
 
       if (place) {
         itineraryPlaces.push(place);
-        if(longitude==null){
-          longitude = place.longitude;
-          latitude = place.latitude;
-        }
+
         const activityDates = this.activityService.getActivityDates(place.openingHours, date);
 
         const createActivityDto: CreateActivityDto = {
