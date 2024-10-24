@@ -74,6 +74,7 @@ export class ItineraryService {
           longitude = place.longitude;
           latitude = place.latitude;
         }
+
         const activityDates = this.activityService.getActivityDates(place.openingHours, date);
 
         const createActivityDto: CreateActivityDto = {
