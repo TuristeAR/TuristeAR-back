@@ -1,7 +1,8 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
 import { Activity } from './activity';
 import { User } from './user';
+import { Forum } from './forum';
 
 @Entity()
 export class Itinerary extends AbstractEntity {
@@ -27,4 +28,8 @@ export class Itinerary extends AbstractEntity {
     inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
   })
   participants: User[];
+
+  @OneToOne(() => Forum)
+  @JoinColumn({ name: 'forumId' })
+  forum: Forum;
 }
