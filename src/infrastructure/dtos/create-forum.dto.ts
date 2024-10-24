@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsString } from 'class-validator';
 
 export class CreateForumDto {
 
@@ -14,5 +14,12 @@ export class CreateForumDto {
 
   @IsNumber()
   categoryId : number;
+
+  @IsNumber()
+  itineraryId : number;
+
+  @IsBoolean()
+  isPublic : boolean;
+
 
 }
