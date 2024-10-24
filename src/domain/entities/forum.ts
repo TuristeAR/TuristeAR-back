@@ -1,8 +1,9 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
 import { Place } from './place';
 import { Message } from './message';
 import { Category } from './category';
+import { Itinerary } from './itinerary';
 
 @Entity()
 export class Forum extends AbstractEntity {
@@ -20,4 +21,11 @@ export class Forum extends AbstractEntity {
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'categoryId' })
   category: Category | null;
+
+  @OneToOne(() => Itinerary)
+  @JoinColumn({ name: 'itineraryId' })
+  itinerary: Itinerary;
+
+  @Column()
+  isPublic: boolean;
 }

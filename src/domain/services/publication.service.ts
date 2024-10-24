@@ -7,6 +7,9 @@ import { UpdatePublicationUseCase } from '../../application/use-cases/publicatio
 import {
   FindItineraryByIdUseCase
 } from '../../application/use-cases/itinerary-use-cases/find-itinerary-by-id.use-case';
+import {
+  FindItineraryWithProvinceCategory
+} from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-province-category';
 
 export class PublicationService {
   async createPublication(publicationDTO: CreatePublicationDTO, user: User): Promise<Publication> {
@@ -22,11 +25,9 @@ export class PublicationService {
     newPublication.creationDate = new Date();
 
     try {
-      const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
+      const findItineraryWithProvinceCategory = new FindItineraryWithProvinceCategory();
 
-      console.log(itineraryId)
-
-      const itinerary = await findItineraryByIdUseCase.execute(itineraryId);
+      const itinerary = await findItineraryWithProvinceCategory.execute(itineraryId);
 
       if (!itinerary) {
         throw new Error('Itinerario no encontrado');
@@ -43,7 +44,6 @@ export class PublicationService {
       }
 
       newPublication.category = category;
-
 
       newPublication.user = user;
 

@@ -2,7 +2,7 @@ import { ItineraryRepository } from '../../../infrastructure/repositories/itiner
 import { ItineraryRepositoryInterface } from '../../../domain/repositories/itinerary.repository.interface';
 import { Itinerary } from '../../../domain/entities/itinerary';
 
-export class FindItineraryByIdUseCase {
+export class FindItineraryWithProvinceCategory {
   private itineraryRepository: ItineraryRepositoryInterface;
 
   constructor() {
@@ -10,6 +10,6 @@ export class FindItineraryByIdUseCase {
   }
 
   execute(id: number): Promise<Itinerary | null> {
-    return this.itineraryRepository.findOne({ where: { id : id }});
+    return this.itineraryRepository.findOne({ where: { id : id }, relations: ['activities.place.province.category'] });
   }
 }
