@@ -9,7 +9,6 @@ import { CreateActivityDto } from '../../infrastructure/dtos/create-activity.dto
 import { CreateActivityUseCase } from '../../application/use-cases/activity-use-cases/create-activity.use-case';
 import { FindUserByIdUseCase } from '../../application/use-cases/user-use-cases/find-user-by.id.use-case';
 import { CreateItineraryUseCase } from '../../application/use-cases/itinerary-use-cases/create-itinerary.use-case';
-import { FindPlaceByProvinceUseCase } from '../../application/use-cases/place-use-cases/find-place-by-province.use-case';
 import { FindItineraryWithActivityUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-activity.use-case';
 import { UpdateItineraryUseCase } from '../../application/use-cases/itinerary-use-cases/update-itinerary.use-case';
 import { FindItineraryWithParticipantsUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-participants.use-case';
@@ -32,10 +31,6 @@ export class ItineraryService {
   async create(user: User, createItineraryDto: CreateItineraryDto) {
     const dates = this.getDates(createItineraryDto.fromDate, createItineraryDto.toDate);
 
-    const findPlaceByProvinceUseCase = new FindPlaceByProvinceUseCase();
-
-    const places = await findPlaceByProvinceUseCase.execute(createItineraryDto.provinceId);
-
     const provinceName = await this.provinceService.getProvinceNameFromId(
       createItineraryDto.provinceId,
     );
@@ -54,40 +49,35 @@ export class ItineraryService {
 
     let itineraryPlaces: Place[] = [];
 
-    let longitude = null;
-    let latitude = null;
+    for (let i = 0; i < dates.length; i++) {
+      const locality = createItineraryDto.localities[i % createItineraryDto.localities.length];
 
-    for (const date of dates) {
-      const place = await this.placeService.findOneByDateWithTypesAndProvinceId(
-        places,
+      const type = createItineraryDto.types[i % createItineraryDto.types.length];
+
+      const place = await this.placeService.findOneInLocalityByDateWithTypes(
         itineraryPlaces,
-        date,
-        createItineraryDto.types,
+        dates[i],
+        type,
         createItineraryDto.provinceId,
-        longitude,
-        latitude
+        provinceName as string,
+        locality,
       );
 
-      if (place) {
-        itineraryPlaces.push(place);
-        if(longitude==null){
-          longitude = place.longitude;
-          latitude = place.latitude;
-        }
-        const activityDates = this.activityService.getActivityDates(place.openingHours, date);
+      itineraryPlaces.push(place);
 
-        const createActivityDto: CreateActivityDto = {
-          itinerary: savedItinerary,
-          place,
-          name: this.activityService.formatActivityName(place.name, activityDates[0]),
-          fromDate: activityDates[0],
-          toDate: activityDates[1],
-        };
+      const activityDates = this.activityService.getActivityDates(place.openingHours, dates[i]);
 
-        const activity = await this.createActivityUseCase.execute(createActivityDto);
+      const createActivityDto: CreateActivityDto = {
+        itinerary: savedItinerary,
+        place,
+        name: this.activityService.formatActivityName(place.name, activityDates[0]),
+        fromDate: activityDates[0],
+        toDate: activityDates[1],
+      };
 
-        savedItinerary.activities.push(activity);
-      }
+      const activity = await this.createActivityUseCase.execute(createActivityDto);
+
+      savedItinerary.activities.push(activity);
     }
 
     return savedItinerary;

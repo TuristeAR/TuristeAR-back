@@ -6,10 +6,7 @@ export class CreateItineraryDto {
 
   @IsArray()
   @IsString({ each: true })
-  types: string[];
-
-  @IsNumber()
-  weather: number;
+  localities: string[];
 
   @IsDate()
   fromDate: Date;
@@ -17,9 +14,15 @@ export class CreateItineraryDto {
   @IsDate()
   toDate: Date;
 
+  @IsNumber()
+  economy: number;
+
   @IsArray()
-  @IsString({each: true})
-  participants: number;
+  @IsString({ each: true })
+  types: string[];
+
+  @IsNumber()
+  company: number;
 
   @IsNumber()
   forum: number;

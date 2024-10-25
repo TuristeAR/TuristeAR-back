@@ -8,65 +8,40 @@ import { FindProvinceByIdUseCase } from '../../application/use-cases/province-us
 import { CreatePlaceUseCase } from '../../application/use-cases/place-use-cases/create-place.use-case';
 import { FindPlaceByProvinceAndTypesUseCase } from '../../application/use-cases/place-use-cases/find-place-by-province-and-types.use-case';
 import { FindPlaceByProvinceNameUseCase } from '../../application/use-cases/place-use-cases/find-place-by-province-name.use-case';
+import { ReviewService } from './review.service';
 
 export class PlaceService {
   private provinceService: ProvinceService;
+  private reviewService: ReviewService;
 
   constructor() {
     this.provinceService = new ProvinceService();
+    this.reviewService = new ReviewService();
   }
 
-  private calculatorDistance(lat1: number | null, lon1: number | null, lat2: number | null, lon2: number | null)  {
-    if(lat1 && lon1 && lat2 && lon2){
-      const R = 6371;
-      const dLat = ((lat2 - lat1) * Math.PI) / 180;
-      const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-      return R * c < 20;
-    }
-    return null;
-  }
-
-  async findOneByDateWithTypesAndProvinceId(
-    places: Place[],
+  async findOneInLocalityByDateWithTypes(
     currentPlaces: Place[],
     date: Date,
-    types: string[],
+    type: string,
     provinceId: number,
-    longitude: number | null,
-    latitude: number | null,
-  ): Promise<Place | null> {
-
-    const filteredPlaces = this.filterPlacesByTypes(places, currentPlaces, types);
-
+    provinceName: string,
+    locality: string,
+  ): Promise<Place> {
     do {
-      if (filteredPlaces.length === 0) {
-        const place = await this.fetchPlaceByTypesAndProvinceId(currentPlaces, types, provinceId);
-        filteredPlaces.push(place);
+      const place = await this.fetchPlaceInLocalityWithType(
+        provinceName,
+        locality,
+        type,
+        currentPlaces,
+      );
+
+      if (
+        !place.regularOpeningHours ||
+        this.isOpenThisDay(place.regularOpeningHours.weekdayDescriptions, date)
+      ) {
+        return await this.savePlaceInDatabase(place, provinceId);
       }
-
-      const randomPlace = filteredPlaces[Math.floor(Math.random() * filteredPlaces.length)];
-
-      let distance = (latitude) ? this.calculatorDistance(latitude, longitude, randomPlace.latitude, randomPlace.longitude) : true;
-
-      if (this.isOpenThisDay(randomPlace, date) && distance) {
-        return randomPlace;
-      }
-
-
-      filteredPlaces.splice(filteredPlaces.indexOf(randomPlace), 1);
-    } while (filteredPlaces.length > 0);
-
-    return null;
+    } while (true);
   }
 
   async fetchPlaces(province: string) {
@@ -244,14 +219,44 @@ export class PlaceService {
     }
   }
 
-  private isOpenThisDay(place: Place, date: Date): boolean {
-    if (place.openingHours === null) {
+  private calculatorDistance(
+    lat1: number | null,
+    lon1: number | null,
+    lat2: number | null,
+    lon2: number | null,
+  ) {
+    console.log('lat1', lat1);
+    console.log('lon1', lon1);
+    console.log('lat2', lat2);
+    console.log('lon2', lon2);
+
+    if (lat1 && lon1 && lat2 && lon2) {
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      return R * c < 20;
+    }
+    return null;
+  }
+
+  private isOpenThisDay(openingHours: string[], date: Date): boolean {
+    if (openingHours === null) {
       return true;
     }
 
     const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     const dayName = daysOfWeek[date.getDay()];
-    const openingHoursForToday = place.openingHours.find((hours) => hours.startsWith(dayName));
+    const openingHoursForToday = openingHours.find((hours) => hours.startsWith(dayName));
 
     return !(!openingHoursForToday || openingHoursForToday.includes('Cerrado'));
   }
@@ -268,14 +273,17 @@ export class PlaceService {
     );
   }
 
-  private async fetchPlaceByTypesAndProvinceId(
+  private async fetchPlaceInLocalityWithType(
+    province: string,
+    locality: string,
+    type: string,
     currentPlaces: Place[],
-    types: string[],
-    provinceId: number,
   ) {
+    const types = type.split(',');
+
     let results: any[] = [];
 
-    const provinceName = await this.provinceService.getProvinceNameFromId(provinceId);
+    const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
 
     const searchHeaders = {
       'Content-Type': 'application/json',
@@ -283,33 +291,29 @@ export class PlaceService {
       'X-Goog-FieldMask': 'places',
     };
 
-    const splitTypes = types[0].split(',');
+    for (const type of types) {
+      const searchBody = {
+        textQuery: type + ' in ' + locality + ', ' + province,
+        includedType: type,
+        strictTypeFiltering: true,
+        languageCode: 'es',
+        regionCode: 'AR',
+      };
 
-    for (const type of splitTypes) {
-      try {
-        const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
+      const result = await post(searchUrl, searchHeaders, searchBody);
 
-        const searchBody = {
-          textQuery: type + ' in ' + provinceName + ' Province',
-          includedType: type,
-          strictTypeFiltering: true,
-          languageCode: 'es',
-          regionCode: 'AR',
-        };
-
-        const result = await post(searchUrl, searchHeaders, searchBody);
-
-        results.push(...result.places);
-      } catch (error) {
-        results.push(...[]);
-      }
+      results.push(...result.places);
     }
 
-    const places = this.filterPlacesByTypes(results, currentPlaces, types);
+    const places = this.filterPlacesByCurrentPlaces(results, currentPlaces);
 
-    const randomPlace = places[Math.floor(Math.random() * places.length)];
+    return places[Math.floor(Math.random() * places.length)];
+  }
 
-    return this.savePlaceInDatabase(randomPlace, provinceId);
+  private filterPlacesByCurrentPlaces(places: any[], currentPlaces: Place[]) {
+    return places.filter(
+      (place) => !currentPlaces.some((existingPlace) => existingPlace.googleId === place.id),
+    );
   }
 
   private async savePlaceInDatabase(place: any, provinceId: number) {
@@ -337,16 +341,19 @@ export class PlaceService {
 
       const createPlaceUseCase = new CreatePlaceUseCase();
 
-      return createPlaceUseCase.execute(createPlaceDto);
+      const createdPlace = await createPlaceUseCase.execute(createPlaceDto);
+
+      await this.reviewService.fetchReviews(createdPlace.googleId);
+
+      return createdPlace;
     }
 
     return existingPlace;
   }
+
   findManyByPlaceProvinceId(provinceId: number) {
     const findPlaceByProvinceNameUseCase = new FindPlaceByProvinceNameUseCase();
 
-    const places = findPlaceByProvinceNameUseCase.execute(provinceId);
-
-    return places;
+    return findPlaceByProvinceNameUseCase.execute(provinceId);
   }
 }
