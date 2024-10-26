@@ -56,6 +56,10 @@ import { CreateForumUseCase } from './application/use-cases/forum-use-cases/crea
 import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
 
+import {
+  FindForumByItineraryIdUseCase
+} from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
+
 dotenv.config();
 
 const getCorsOrigins = () => {
@@ -150,6 +154,7 @@ const findAllUserUseCase = new FindAllUserUseCase();
 const findAllWeatherUseCase = new FindAllWeatherUseCase();
 const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
+const findForumByItineraryId = new FindForumByItineraryIdUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
 const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
 const findItineraryByUserWithParticipantsUseCase = new FindItineraryByUserWithParticipantsUseCase();

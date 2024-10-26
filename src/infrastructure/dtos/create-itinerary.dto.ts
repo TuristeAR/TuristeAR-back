@@ -20,4 +20,7 @@ export class CreateItineraryDto {
   @IsArray()
   @IsString({each: true})
   participants: number;
+
+  @IsNumber()
+  forum: number;
 }
