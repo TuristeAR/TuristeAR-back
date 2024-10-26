@@ -599,7 +599,7 @@ app.get('/users/search', authMiddleware, async (req, res) => {
     }
 
     const filteredUsers = users.filter((user) => !excludedIds.includes(user.id));
-
+    io.emit('userSearchResults', { status: 'success', data: filteredUsers });
     return res.status(200).json({ status: 'success', data: filteredUsers });
   } catch (error) {
     return res.status(500).json({ status: 'error', message: 'Error searching user' });
