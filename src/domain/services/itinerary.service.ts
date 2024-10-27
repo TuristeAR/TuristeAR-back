@@ -12,6 +12,8 @@ import { CreateItineraryUseCase } from '../../application/use-cases/itinerary-us
 import { FindItineraryWithActivityUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-activity.use-case';
 import { UpdateItineraryUseCase } from '../../application/use-cases/itinerary-use-cases/update-itinerary.use-case';
 import { FindItineraryWithParticipantsUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-participants.use-case';
+import { Forum } from '../entities/forum';
+import { CreateForumUseCase } from '../../application/use-cases/forum-use-cases/create-forum.use-case';
 
 export class ItineraryService {
   private provinceService: ProvinceService;
@@ -46,6 +48,20 @@ export class ItineraryService {
     const createItineraryUseCase = new CreateItineraryUseCase();
 
     const savedItinerary = await createItineraryUseCase.execute(itinerary);
+
+    let forum = new Forum();
+    forum.itinerary = savedItinerary;
+    forum.name = savedItinerary.name;
+    forum.messages = [];
+    forum.isPublic = false;
+
+    const createForumUseCase = new CreateForumUseCase();
+
+    itinerary.forum = await createForumUseCase.execute(forum);
+
+    const updateItinerary=new UpdateItineraryUseCase();
+
+    await updateItinerary.execute(savedItinerary);
 
     let itineraryPlaces: Place[] = [];
 

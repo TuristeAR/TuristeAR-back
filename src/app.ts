@@ -352,7 +352,7 @@ app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) =>
     console.error('Error creating itinerary: ', error);
     return res
       .status(status.INTERNAL_SERVER_ERROR)
-      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error creating itinerary' });
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: `Error creating itinerary: ${error}` });
   }
 });
 
@@ -364,7 +364,9 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const activities = await itineraryService.findActivitiesByItineraryId(Number(id));
 
-    return res.status(status.OK).json({ statusCode: status.OK, data: { itinerary, activities } });
+    const forum = await findForumByItineraryId.execute(Number(id));
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: { itinerary, activities, forum } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
