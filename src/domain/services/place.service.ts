@@ -302,8 +302,6 @@ export class PlaceService {
 
       const result = await post(searchUrl, searchHeaders, searchBody);
 
-      console.log('google place result: ', result);
-
       if (result.places === undefined || result.places === null) {
         results.push(...[]);
       } else {
@@ -337,8 +335,9 @@ export class PlaceService {
 
   private async savePlaceInDatabase(place: any, provinceId: number) {
     const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
-    console.log('place: ', place);
+
     console.log('place.id: ', place.id);
+
     const existingPlace = await findPlaceByGoogleIdUseCase.execute(place.id);
 
     if (!existingPlace) {
