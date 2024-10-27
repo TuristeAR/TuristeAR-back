@@ -557,7 +557,10 @@ app.delete('/itinerary/remove-activity', async (req, res) => {
 
   try {
     await itineraryService.removeActivityFromItinerary(itineraryId, activityId);
-
+    io.emit('activityRemoved', {
+      itineraryId,
+      activityId
+    });
     return res
       .status(200)
       .json({ status: 'success', message: `Activity with ID ${activityId} removed` });
