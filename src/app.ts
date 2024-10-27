@@ -541,6 +541,9 @@ app.post('/itinerary/add-activity', (req, res) => {
   itineraryService
     .addActivityToItinerary(itineraryId, createActivityDto)
     .then((itinerary) => {
+      io.emit('addActivity', {
+        itinerary
+      });
       return res
         .status(200)
         .json({ status: 'success', message: `Activity added to itinerary`, itinerary });
