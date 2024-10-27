@@ -336,8 +336,6 @@ export class PlaceService {
   private async savePlaceInDatabase(place: any, provinceId: number) {
     const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
 
-    console.log('place.id: ', place.id);
-
     const existingPlace = await findPlaceByGoogleIdUseCase.execute(place.id);
 
     if (!existingPlace) {
