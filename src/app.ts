@@ -56,9 +56,7 @@ import { CreateForumUseCase } from './application/use-cases/forum-use-cases/crea
 import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
 
-import {
-  FindForumByItineraryIdUseCase
-} from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
+import { FindForumByItineraryIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
 
 dotenv.config();
 
@@ -351,6 +349,7 @@ app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) =>
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: itinerary });
   } catch (error) {
+    console.error('Error creating itinerary: ', error);
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error creating itinerary' });
@@ -472,7 +471,7 @@ app.post('/itinerary/add-user', authMiddleware, (req, res) => {
   itineraryService
     .addUserToItinerary(itineraryId, participantId)
     .then((updatedItinerary) => {
-      io.emit('usersAdddItinerary',  { updatedItinerary  });
+      io.emit('usersAdddItinerary', { updatedItinerary });
       return res.status(200).json({ status: 'success', data: updatedItinerary });
     })
     .catch(() => {
@@ -526,7 +525,7 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
       return res.status(403).json({ error: 'You are not authorized to access this itinerary.' });
     }
 
-    io.emit('usersUpdated',  { itineraryParticipants });
+    io.emit('usersUpdated', { itineraryParticipants });
 
     return res.status(200).json({ status: 'success', itineraryParticipants });
   } catch (error) {
