@@ -27,12 +27,6 @@ export class PlaceService {
     provinceName: string,
     locality: string,
   ): Promise<Place> {
-    console.log('type: ', type);
-    console.log('price level: ', priceLevel);
-    console.log('province id: ', provinceId);
-    console.log('province name: ', provinceName);
-    console.log('locality: ', locality);
-
     const place = await this.fetchPlaceInLocalityByTypeAndPriceLevel(
       provinceName,
       locality,
@@ -307,6 +301,8 @@ export class PlaceService {
       };
 
       const result = await post(searchUrl, searchHeaders, searchBody);
+
+      console.log('google place result: ', result);
 
       if (result.places === undefined || result.places === null) {
         results.push(...[]);
