@@ -27,6 +27,12 @@ export class PlaceService {
     provinceName: string,
     locality: string,
   ): Promise<Place> {
+    console.log('type: ', type);
+    console.log('price level: ', priceLevel);
+    console.log('province id: ', provinceId);
+    console.log('province name: ', provinceName);
+    console.log('locality: ', locality);
+
     const place = await this.fetchPlaceInLocalityByTypeAndPriceLevel(
       provinceName,
       locality,
