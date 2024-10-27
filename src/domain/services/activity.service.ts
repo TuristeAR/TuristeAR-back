@@ -26,7 +26,7 @@ export class ActivityService {
 
     const activityStart = new Date(date);
 
-    activityStart.setHours(openHour + 2, openMinute, 0, 0);
+    activityStart.setHours(openHour + 5, openMinute, 0, 0);
 
     const activityEnd = new Date(activityStart);
 
@@ -48,10 +48,10 @@ export class ActivityService {
 
   private createStartTimeAndEndTimeBetween9And12(date: Date): Date[] {
     const startTime = new Date(date);
-    startTime.setHours(9, 0, 0, 0);
+    startTime.setHours(12, 0, 0, 0);
 
     const endTime = new Date(date);
-    endTime.setHours(12, 0, 0, 0);
+    endTime.setHours(15, 0, 0, 0);
 
     return [
       new Date(startTime.getTime() - startTime.getTimezoneOffset() * 60000),

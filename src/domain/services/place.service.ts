@@ -8,65 +8,40 @@ import { FindProvinceByIdUseCase } from '../../application/use-cases/province-us
 import { CreatePlaceUseCase } from '../../application/use-cases/place-use-cases/create-place.use-case';
 import { FindPlaceByProvinceAndTypesUseCase } from '../../application/use-cases/place-use-cases/find-place-by-province-and-types.use-case';
 import { FindPlaceByProvinceNameUseCase } from '../../application/use-cases/place-use-cases/find-place-by-province-name.use-case';
+import { ReviewService } from './review.service';
 
 export class PlaceService {
   private provinceService: ProvinceService;
+  private reviewService: ReviewService;
 
   constructor() {
     this.provinceService = new ProvinceService();
+    this.reviewService = new ReviewService();
   }
 
-  private calculatorDistance(lat1: number | null, lon1: number | null, lat2: number | null, lon2: number | null)  {
-    if(lat1 && lon1 && lat2 && lon2){
-      const R = 6371;
-      const dLat = ((lat2 - lat1) * Math.PI) / 180;
-      const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-      return R * c < 20;
-    }
-    return null;
-  }
-
-  async findOneByDateWithTypesAndProvinceId(
-    places: Place[],
+  async findOneInLocalityByTypesAndPriceLevel(
     currentPlaces: Place[],
-    date: Date,
-    types: string[],
+    type: string,
+    priceLevel: string[],
     provinceId: number,
-    longitude: number | null,
-    latitude: number | null,
-  ): Promise<Place | null> {
+    provinceName: string,
+    locality: string,
+  ): Promise<Place> {
+    console.log('type: ', type);
+    console.log('price level: ', priceLevel);
+    console.log('province id: ', provinceId);
+    console.log('province name: ', provinceName);
+    console.log('locality: ', locality);
 
-    const filteredPlaces = this.filterPlacesByTypes(places, currentPlaces, types);
+    const place = await this.fetchPlaceInLocalityByTypeAndPriceLevel(
+      provinceName,
+      locality,
+      type,
+      priceLevel,
+      currentPlaces,
+    );
 
-    do {
-      if (filteredPlaces.length === 0) {
-        const place = await this.fetchPlaceByTypesAndProvinceId(currentPlaces, types, provinceId);
-        filteredPlaces.push(place);
-      }
-
-      const randomPlace = filteredPlaces[Math.floor(Math.random() * filteredPlaces.length)];
-
-      let distance = (latitude) ? this.calculatorDistance(latitude, longitude, randomPlace.latitude, randomPlace.longitude) : true;
-
-      if (this.isOpenThisDay(randomPlace, date) && distance) {
-        return randomPlace;
-      }
-
-
-      filteredPlaces.splice(filteredPlaces.indexOf(randomPlace), 1);
-    } while (filteredPlaces.length > 0);
-
-    return null;
+    return await this.savePlaceInDatabase(place, provinceId);
   }
 
   async fetchPlaces(province: string) {
@@ -244,38 +219,77 @@ export class PlaceService {
     }
   }
 
-  private isOpenThisDay(place: Place, date: Date): boolean {
-    if (place.openingHours === null) {
+  orderByDistance(places: Place[], dates: Date[]): Place[] {
+    if (places.length <= 1) return places;
+
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    const sortedPlaces = places.sort((a, b) => {
+      const distanceA = calculateDistance(
+        places[0].latitude,
+        places[0].longitude,
+        a.latitude,
+        a.longitude,
+      );
+      const distanceB = calculateDistance(
+        places[0].latitude,
+        places[0].longitude,
+        b.latitude,
+        b.longitude,
+      );
+      return distanceA - distanceB;
+    });
+
+    for (let i = 0; i < sortedPlaces.length; i++) {
+      if (!this.isOpenThisDay(sortedPlaces[i].openingHours, dates[i])) {
+        for (let j = i + 1; j < sortedPlaces.length; j++) {
+          if (this.isOpenThisDay(sortedPlaces[j].openingHours, dates[i])) {
+            [sortedPlaces[i], sortedPlaces[j]] = [sortedPlaces[j], sortedPlaces[i]];
+            break;
+          }
+        }
+      }
+    }
+
+    return sortedPlaces;
+  }
+
+  private isOpenThisDay(openingHours: string[], date: Date): boolean {
+    if (openingHours === null) {
       return true;
     }
 
     const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     const dayName = daysOfWeek[date.getDay()];
-    const openingHoursForToday = place.openingHours.find((hours) => hours.startsWith(dayName));
+    const openingHoursForToday = openingHours.find((hours) => hours.startsWith(dayName));
 
     return !(!openingHoursForToday || openingHoursForToday.includes('Cerrado'));
   }
 
-  private filterPlacesByTypes(places: any[], currentPlaces: Place[], types: string[]) {
-    const joinedTypes = types.join(',');
-
-    const filteredPlaces = places.filter((place) =>
-      place.types.some((type: string) => joinedTypes.includes(type)),
-    );
-
-    return filteredPlaces.filter(
-      (place) => !currentPlaces.some((existingPlace) => existingPlace.id === place.id),
-    );
-  }
-
-  private async fetchPlaceByTypesAndProvinceId(
+  private async fetchPlaceInLocalityByTypeAndPriceLevel(
+    province: string,
+    locality: string,
+    type: string,
+    priceLevel: string[],
     currentPlaces: Place[],
-    types: string[],
-    provinceId: number,
   ) {
+    const types = type.split(',');
+
     let results: any[] = [];
 
-    const provinceName = await this.provinceService.getProvinceNameFromId(provinceId);
+    const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
 
     const searchHeaders = {
       'Content-Type': 'application/json',
@@ -283,38 +297,52 @@ export class PlaceService {
       'X-Goog-FieldMask': 'places',
     };
 
-    const splitTypes = types[0].split(',');
+    for (const type of types) {
+      const searchBody = {
+        textQuery: type + ' in ' + locality + ', ' + province,
+        includedType: type,
+        strictTypeFiltering: true,
+        languageCode: 'es',
+        regionCode: 'AR',
+      };
 
-    for (const type of splitTypes) {
-      try {
-        const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
+      const result = await post(searchUrl, searchHeaders, searchBody);
 
-        const searchBody = {
-          textQuery: type + ' in ' + provinceName + ' Province',
-          includedType: type,
-          strictTypeFiltering: true,
-          languageCode: 'es',
-          regionCode: 'AR',
-        };
-
-        const result = await post(searchUrl, searchHeaders, searchBody);
-
-        results.push(...result.places);
-      } catch (error) {
+      if (result.places === undefined || result.places === null) {
         results.push(...[]);
+      } else {
+        results.push(...result.places);
       }
     }
 
-    const places = this.filterPlacesByTypes(results, currentPlaces, types);
+    let places: any[];
 
-    const randomPlace = places[Math.floor(Math.random() * places.length)];
+    places = this.filterPlacesByCurrentPlaces(results, currentPlaces);
 
-    return this.savePlaceInDatabase(randomPlace, provinceId);
+    places = this.filterPlacesByPriceLevel(places, priceLevel);
+
+    return places[Math.floor(Math.random() * places.length)];
+  }
+
+  private filterPlacesByCurrentPlaces(places: any[], currentPlaces: Place[]) {
+    return places.filter(
+      (place) => !currentPlaces.some((existingPlace) => existingPlace.googleId === place.id),
+    );
+  }
+
+  private filterPlacesByPriceLevel(places: any[], priceLevel: string[]) {
+    return places.filter(
+      (place) =>
+        priceLevel.includes(place.priceLevel) ||
+        place.priceLevel === 'PRICE_LEVEL_UNSPECIFIED' ||
+        place.priceLevel === undefined,
+    );
   }
 
   private async savePlaceInDatabase(place: any, provinceId: number) {
     const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
-
+    console.log('place: ', place);
+    console.log('place.id: ', place.id);
     const existingPlace = await findPlaceByGoogleIdUseCase.execute(place.id);
 
     if (!existingPlace) {
@@ -337,16 +365,19 @@ export class PlaceService {
 
       const createPlaceUseCase = new CreatePlaceUseCase();
 
-      return createPlaceUseCase.execute(createPlaceDto);
+      const createdPlace = await createPlaceUseCase.execute(createPlaceDto);
+
+      await this.reviewService.fetchReviews(createdPlace.googleId);
+
+      return createdPlace;
     }
 
     return existingPlace;
   }
+
   findManyByPlaceProvinceId(provinceId: number) {
     const findPlaceByProvinceNameUseCase = new FindPlaceByProvinceNameUseCase();
 
-    const places = findPlaceByProvinceNameUseCase.execute(provinceId);
-
-    return places;
+    return findPlaceByProvinceNameUseCase.execute(provinceId);
   }
 }
