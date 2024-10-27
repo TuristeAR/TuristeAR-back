@@ -472,6 +472,7 @@ app.post('/itinerary/add-user', authMiddleware, (req, res) => {
   itineraryService
     .addUserToItinerary(itineraryId, participantId)
     .then((updatedItinerary) => {
+      io.emit('usersAdddItinerary',  { updatedItinerary  });
       return res.status(200).json({ status: 'success', data: updatedItinerary });
     })
     .catch(() => {
@@ -485,6 +486,7 @@ app.delete('/itinerary/remove-user', authMiddleware, async (req, res) => {
   itineraryService
     .removeUserFromItinerary(itineraryId, participantId)
     .then(() => {
+      io.emit('userRemoved', { participantId });
       return res
         .status(200)
         .json({ status: 'success', message: `User with ID ${participantId} removed` });
@@ -523,7 +525,7 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
     if (!isParticipant && !isOwner) {
       return res.status(403).json({ error: 'You are not authorized to access this itinerary.' });
     }
-    io.emit('itineraryParticipants', { status: 'success', itineraryParticipants });
+    io.emit('usersUpdated',  { itineraryParticipants });
     return res.status(200).json({ status: 'success', itineraryParticipants });
   } catch (error) {
     return res.status(500).json({ status: 'error', message: 'Error fetching itinerary' });
