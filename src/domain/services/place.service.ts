@@ -19,17 +19,19 @@ export class PlaceService {
     this.reviewService = new ReviewService();
   }
 
-  async findOneInLocalityWithTypes(
+  async findOneInLocalityByTypesAndPriceLevel(
     currentPlaces: Place[],
     type: string,
+    priceLevel: string[],
     provinceId: number,
     provinceName: string,
     locality: string,
   ): Promise<Place> {
-    const place = await this.fetchPlaceInLocalityWithType(
+    const place = await this.fetchPlaceInLocalityByTypeAndPriceLevel(
       provinceName,
       locality,
       type,
+      priceLevel,
       currentPlaces,
     );
 
@@ -211,11 +213,11 @@ export class PlaceService {
     }
   }
 
-  orderByDistance(places: Place[]): Place[] {
+  orderByDistance(places: Place[], dates: Date[]): Place[] {
     if (places.length <= 1) return places;
 
     const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-      const R = 6371; // Radius of the Earth in km
+      const R = 6371;
       const dLat = ((lat2 - lat1) * Math.PI) / 180;
       const dLon = ((lon2 - lon1) * Math.PI) / 180;
       const a =
@@ -228,7 +230,7 @@ export class PlaceService {
       return R * c;
     };
 
-    return places.sort((a, b) => {
+    const sortedPlaces = places.sort((a, b) => {
       const distanceA = calculateDistance(
         places[0].latitude,
         places[0].longitude,
@@ -243,6 +245,19 @@ export class PlaceService {
       );
       return distanceA - distanceB;
     });
+
+    for (let i = 0; i < sortedPlaces.length; i++) {
+      if (!this.isOpenThisDay(sortedPlaces[i].openingHours, dates[i])) {
+        for (let j = i + 1; j < sortedPlaces.length; j++) {
+          if (this.isOpenThisDay(sortedPlaces[j].openingHours, dates[i])) {
+            [sortedPlaces[i], sortedPlaces[j]] = [sortedPlaces[j], sortedPlaces[i]];
+            break;
+          }
+        }
+      }
+    }
+
+    return sortedPlaces;
   }
 
   private isOpenThisDay(openingHours: string[], date: Date): boolean {
@@ -257,22 +272,11 @@ export class PlaceService {
     return !(!openingHoursForToday || openingHoursForToday.includes('Cerrado'));
   }
 
-  private filterPlacesByTypes(places: any[], currentPlaces: Place[], types: string[]) {
-    const joinedTypes = types.join(',');
-
-    const filteredPlaces = places.filter((place) =>
-      place.types.some((type: string) => joinedTypes.includes(type)),
-    );
-
-    return filteredPlaces.filter(
-      (place) => !currentPlaces.some((existingPlace) => existingPlace.id === place.id),
-    );
-  }
-
-  private async fetchPlaceInLocalityWithType(
+  private async fetchPlaceInLocalityByTypeAndPriceLevel(
     province: string,
     locality: string,
     type: string,
+    priceLevel: string[],
     currentPlaces: Place[],
   ) {
     const types = type.split(',');
@@ -305,7 +309,11 @@ export class PlaceService {
       }
     }
 
-    const places = this.filterPlacesByCurrentPlaces(results, currentPlaces);
+    let places: any[];
+
+    places = this.filterPlacesByCurrentPlaces(results, currentPlaces);
+
+    places = this.filterPlacesByPriceLevel(places, priceLevel);
 
     return places[Math.floor(Math.random() * places.length)];
   }
@@ -313,6 +321,15 @@ export class PlaceService {
   private filterPlacesByCurrentPlaces(places: any[], currentPlaces: Place[]) {
     return places.filter(
       (place) => !currentPlaces.some((existingPlace) => existingPlace.googleId === place.id),
+    );
+  }
+
+  private filterPlacesByPriceLevel(places: any[], priceLevel: string[]) {
+    return places.filter(
+      (place) =>
+        priceLevel.includes(place.priceLevel) ||
+        place.priceLevel === 'PRICE_LEVEL_UNSPECIFIED' ||
+        place.priceLevel === undefined,
     );
   }
 

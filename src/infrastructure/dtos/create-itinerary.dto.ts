@@ -14,8 +14,9 @@ export class CreateItineraryDto {
   @IsDate()
   toDate: Date;
 
-  @IsNumber()
-  economy: number;
+  @IsArray()
+  @IsString({ each: true })
+  priceLevel: string[];
 
   @IsArray()
   @IsString({ each: true })

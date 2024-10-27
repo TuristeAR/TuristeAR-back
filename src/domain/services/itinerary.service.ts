@@ -54,9 +54,10 @@ export class ItineraryService {
 
       const type = createItineraryDto.types[i % createItineraryDto.types.length];
 
-      const place = await this.placeService.findOneInLocalityWithTypes(
+      const place = await this.placeService.findOneInLocalityByTypesAndPriceLevel(
         itineraryPlaces,
         type,
+        createItineraryDto.priceLevel,
         createItineraryDto.provinceId,
         provinceName as string,
         locality,
@@ -65,7 +66,7 @@ export class ItineraryService {
       itineraryPlaces.push(place);
     }
 
-    itineraryPlaces = this.placeService.orderByDistance(itineraryPlaces);
+    itineraryPlaces = this.placeService.orderByDistance(itineraryPlaces, dates);
 
     for (let i = 0; i < dates.length; i++) {
       const activityDates = this.activityService.getActivityDates(
