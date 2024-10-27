@@ -525,7 +525,9 @@ app.get('/itinerary/participants/:itineraryId', authMiddleware, async (req, res)
     if (!isParticipant && !isOwner) {
       return res.status(403).json({ error: 'You are not authorized to access this itinerary.' });
     }
+
     io.emit('usersUpdated',  { itineraryParticipants });
+
     return res.status(200).json({ status: 'success', itineraryParticipants });
   } catch (error) {
     return res.status(500).json({ status: 'error', message: 'Error fetching itinerary' });
