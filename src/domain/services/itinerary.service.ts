@@ -54,9 +54,8 @@ export class ItineraryService {
 
       const type = createItineraryDto.types[i % createItineraryDto.types.length];
 
-      const place = await this.placeService.findOneInLocalityByDateWithTypes(
+      const place = await this.placeService.findOneInLocalityWithTypes(
         itineraryPlaces,
-        dates[i],
         type,
         createItineraryDto.provinceId,
         provinceName as string,
@@ -64,13 +63,20 @@ export class ItineraryService {
       );
 
       itineraryPlaces.push(place);
+    }
 
-      const activityDates = this.activityService.getActivityDates(place.openingHours, dates[i]);
+    itineraryPlaces = this.placeService.orderByDistance(itineraryPlaces);
+
+    for (let i = 0; i < dates.length; i++) {
+      const activityDates = this.activityService.getActivityDates(
+        itineraryPlaces[i].openingHours,
+        dates[i],
+      );
 
       const createActivityDto: CreateActivityDto = {
         itinerary: savedItinerary,
-        place,
-        name: this.activityService.formatActivityName(place.name, activityDates[0]),
+        place: itineraryPlaces[i],
+        name: this.activityService.formatActivityName(itineraryPlaces[i].name, activityDates[0]),
         fromDate: activityDates[0],
         toDate: activityDates[1],
       };

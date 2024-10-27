@@ -46,14 +46,14 @@ export class ReviewService {
         return acc;
       }, []);
 
-      for (const review of reviews) {
+      for (let i = 0; i < 3; i++) {
         const createReviewDto: CreateReviewDto = {
           googleId: googleId,
-          publishedTime: review.relativePublishTimeDescription,
-          rating: review.rating,
-          text: review.originalText.text,
-          authorName: review.authorAttribution.displayName,
-          authorPhoto: review.authorAttribution.photoUri,
+          publishedTime: reviews[i].relativePublishTimeDescription,
+          rating: reviews[i].rating,
+          text: reviews[i].originalText.text,
+          authorName: reviews[i].authorAttribution.displayName,
+          authorPhoto: reviews[i].authorAttribution.photoUri,
           photos: reviewPhotos.shift() || null,
         };
 

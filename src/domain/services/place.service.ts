@@ -19,29 +19,21 @@ export class PlaceService {
     this.reviewService = new ReviewService();
   }
 
-  async findOneInLocalityByDateWithTypes(
+  async findOneInLocalityWithTypes(
     currentPlaces: Place[],
-    date: Date,
     type: string,
     provinceId: number,
     provinceName: string,
     locality: string,
   ): Promise<Place> {
-    do {
-      const place = await this.fetchPlaceInLocalityWithType(
-        provinceName,
-        locality,
-        type,
-        currentPlaces,
-      );
+    const place = await this.fetchPlaceInLocalityWithType(
+      provinceName,
+      locality,
+      type,
+      currentPlaces,
+    );
 
-      if (
-        !place.regularOpeningHours ||
-        this.isOpenThisDay(place.regularOpeningHours.weekdayDescriptions, date)
-      ) {
-        return await this.savePlaceInDatabase(place, provinceId);
-      }
-    } while (true);
+    return await this.savePlaceInDatabase(place, provinceId);
   }
 
   async fetchPlaces(province: string) {
@@ -219,34 +211,38 @@ export class PlaceService {
     }
   }
 
-  private calculatorDistance(
-    lat1: number | null,
-    lon1: number | null,
-    lat2: number | null,
-    lon2: number | null,
-  ) {
-    console.log('lat1', lat1);
-    console.log('lon1', lon1);
-    console.log('lat2', lat2);
-    console.log('lon2', lon2);
+  orderByDistance(places: Place[]): Place[] {
+    if (places.length <= 1) return places;
 
-    if (lat1 && lon1 && lat2 && lon2) {
-      const R = 6371;
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+      const R = 6371; // Radius of the Earth in km
       const dLat = ((lat2 - lat1) * Math.PI) / 180;
       const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos((lat1 * Math.PI) / 180) *
           Math.cos((lat2 * Math.PI) / 180) *
           Math.sin(dLon / 2) *
           Math.sin(dLon / 2);
-
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
 
-      return R * c < 20;
-    }
-    return null;
+    return places.sort((a, b) => {
+      const distanceA = calculateDistance(
+        places[0].latitude,
+        places[0].longitude,
+        a.latitude,
+        a.longitude,
+      );
+      const distanceB = calculateDistance(
+        places[0].latitude,
+        places[0].longitude,
+        b.latitude,
+        b.longitude,
+      );
+      return distanceA - distanceB;
+    });
   }
 
   private isOpenThisDay(openingHours: string[], date: Date): boolean {
@@ -302,7 +298,11 @@ export class PlaceService {
 
       const result = await post(searchUrl, searchHeaders, searchBody);
 
-      results.push(...result.places);
+      if (result.places === undefined || result.places === null) {
+        results.push(...[]);
+      } else {
+        results.push(...result.places);
+      }
     }
 
     const places = this.filterPlacesByCurrentPlaces(results, currentPlaces);
