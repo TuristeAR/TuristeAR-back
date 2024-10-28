@@ -36,7 +36,7 @@ export const AppDataSource = new DataSource({
     Category,
     Forum,
     Message,
-    Comment
+    Comment,
   ],
   synchronize: true,
   logging: true,
