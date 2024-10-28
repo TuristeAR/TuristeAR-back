@@ -6,6 +6,7 @@ export class ReviewService {
   async fetchReviews(googleId: string) {
     try {
       let reviews: any[] = [];
+
       let reviewPhotos: any[] = [];
 
       const searchUrl = `https://places.googleapis.com/v1/places/${googleId}`;
@@ -17,6 +18,7 @@ export class ReviewService {
       };
 
       const results = await get(searchUrl, searchHeaders);
+
       if (results.reviews) {
         reviews.push(...results.reviews);
 
@@ -44,14 +46,14 @@ export class ReviewService {
         return acc;
       }, []);
 
-      for (const review of reviews) {
+      for (let i = 0; i < 3; i++) {
         const createReviewDto: CreateReviewDto = {
-          googleId: googleId as string,
-          publishedTime: review.relativePublishTimeDescription,
-          rating: review.rating,
-          text: review.originalText.text,
-          authorName: review.authorAttribution.displayName,
-          authorPhoto: review.authorAttribution.photoUri,
+          googleId: googleId,
+          publishedTime: reviews[i].relativePublishTimeDescription,
+          rating: reviews[i].rating,
+          text: reviews[i].originalText.text,
+          authorName: reviews[i].authorAttribution.displayName,
+          authorPhoto: reviews[i].authorAttribution.photoUri,
           photos: reviewPhotos.shift() || null,
         };
 
