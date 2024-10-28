@@ -57,6 +57,7 @@ import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
 import { FindForumByItineraryIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
 import { FindEventByProvinceAndDatesUseCase } from './application/use-cases/event-use-cases/find-event-by-province-and-dates.use-case';
+import { FindEventByProvinceUseCase } from './application/use-cases/event-use-cases/find-event-by-province.use-case';
 
 dotenv.config();
 
@@ -152,6 +153,7 @@ const findAllUserUseCase = new FindAllUserUseCase();
 const findAllWeatherUseCase = new FindAllWeatherUseCase();
 const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
 const findEventByProvinceAndDatesUseCase = new FindEventByProvinceAndDatesUseCase();
+const findEventByProvinceUseCase = new FindEventByProvinceUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
 const findForumByItineraryId = new FindForumByItineraryIdUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
@@ -355,6 +357,20 @@ app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) =>
       statusCode: status.INTERNAL_SERVER_ERROR,
       message: `Error creating itinerary: ${error}`,
     });
+  }
+});
+
+app.get('/events/:provinceId', async (req: Request, res: Response) => {
+  try {
+    const { provinceId } = req.params;
+
+    const events = await findEventByProvinceUseCase.execute(Number(provinceId));
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: events });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching events' });
   }
 });
 
