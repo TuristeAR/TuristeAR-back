@@ -36,8 +36,8 @@ export const AppDataSource = new DataSource({
     Category,
     Forum,
     Message,
+    Comment
   ],
-  entities: [User, Weather, Province, Place, Review, Itinerary, Activity, Publication, Category, Forum, Message, Comment],
   synchronize: true,
   logging: true,
   timezone: '-03:00',
