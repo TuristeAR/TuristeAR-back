@@ -757,6 +757,29 @@ app.get('/publications/categories/:categoryId', async (req: Request, res: Respon
   }
 });
 
+app.get('/publication/:publicationId', async (req: Request, res: Response) => {
+  const { publicationId } = req.params;
+
+  try {
+    let publication;
+
+    if (!isNaN(Number(publicationId))) {
+      publication = await findPublicationByIdUseCase.execute(Number(publicationId));
+    }
+
+    if (!publication) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publication);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching publications', error });
+  }
+});
+
+
+
+
 app.get('/categories', async (_req: Request, res: Response) => {
   try {
     const categories = await findAllCategoryUseCase.execute();
