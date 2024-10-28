@@ -55,8 +55,8 @@ import { CreateForumDto } from './infrastructure/dtos/create-forum.dto';
 import { CreateForumUseCase } from './application/use-cases/forum-use-cases/create-forum.use-case';
 import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
-
 import { FindForumByItineraryIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
+import { FindEventByProvinceAndDatesUseCase } from './application/use-cases/event-use-cases/find-event-by-province-and-dates.use-case';
 
 dotenv.config();
 
@@ -151,6 +151,7 @@ const findAllReviewUseCase = new FindAllReviewUseCase();
 const findAllUserUseCase = new FindAllUserUseCase();
 const findAllWeatherUseCase = new FindAllWeatherUseCase();
 const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
+const findEventByProvinceAndDatesUseCase = new FindEventByProvinceAndDatesUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
 const findForumByItineraryId = new FindForumByItineraryIdUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
@@ -350,9 +351,30 @@ app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) =>
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: itinerary });
   } catch (error) {
     console.error('Error creating itinerary: ', error);
+    return res.status(status.INTERNAL_SERVER_ERROR).json({
+      statusCode: status.INTERNAL_SERVER_ERROR,
+      message: `Error creating itinerary: ${error}`,
+    });
+  }
+});
+
+app.post('/events/:provinceId', async (req: Request, res: Response) => {
+  try {
+    const { provinceId } = req.params;
+
+    const { fromDate, toDate } = req.body;
+
+    const events = await findEventByProvinceAndDatesUseCase.execute(
+      Number(provinceId),
+      fromDate,
+      toDate,
+    );
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: events });
+  } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
-      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: `Error creating itinerary: ${error}` });
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching events' });
   }
 });
 
@@ -366,7 +388,9 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const forum = await findForumByItineraryId.execute(Number(id));
 
-    return res.status(status.OK).json({ statusCode: status.OK, data: { itinerary, activities, forum } });
+    return res
+      .status(status.OK)
+      .json({ statusCode: status.OK, data: { itinerary, activities, forum } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
@@ -542,7 +566,7 @@ app.post('/itinerary/add-activity', (req, res) => {
     .addActivityToItinerary(itineraryId, createActivityDto)
     .then((itinerary) => {
       io.emit('addActivity', {
-        itinerary
+        itinerary,
       });
       return res
         .status(200)
@@ -556,7 +580,7 @@ app.post('/itinerary/add-activity', (req, res) => {
 });
 
 app.put('/itinerary/update-activity', async (req, res) => {
-  const {  activityId, start, end } = req.body;
+  const { activityId, start, end } = req.body;
 
   try {
     await itineraryService.updateDateActivityDates(activityId, new Date(start), new Date(end));
@@ -579,7 +603,7 @@ app.delete('/itinerary/remove-activity', async (req, res) => {
     await itineraryService.removeActivityFromItinerary(itineraryId, activityId);
     io.emit('activityRemoved', {
       itineraryId,
-      activityId
+      activityId,
     });
     return res
       .status(200)
