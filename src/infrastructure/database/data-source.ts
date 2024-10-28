@@ -12,6 +12,7 @@ import { Publication } from '../../domain/entities/publication';
 import { Category } from '../../domain/entities/category';
 import { Message } from '../../domain/entities/message';
 import { Forum } from '../../domain/entities/forum';
+import { Comment } from '../../domain/entities/comment';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ export const AppDataSource = new DataSource({
     Category,
     Forum,
     Message,
+    Comment,
   ],
   synchronize: true,
   logging: true,
