@@ -554,6 +554,23 @@ app.post('/itinerary/add-activity', (req, res) => {
     });
 });
 
+app.put('/itinerary/update-activity', async (req, res) => {
+  const {  activityId, start, end } = req.body;
+
+  try {
+    await itineraryService.updateDateActivityDates(activityId, new Date(start), new Date(end));
+    io.emit('activityUpdated', {
+      activityId,
+      start: new Date(start),
+      end: new Date(end),
+    });
+    return res.status(200).json({ status: 'success', message: `Activity ${activityId} updated` });
+  } catch (error) {
+    console.error('Error updating activity dates:', error);
+    return res.status(500).json({ status: 'error', message: 'Failed to update activity' });
+  }
+});
+
 app.delete('/itinerary/remove-activity', async (req, res) => {
   const { itineraryId, activityId } = req.body;
 

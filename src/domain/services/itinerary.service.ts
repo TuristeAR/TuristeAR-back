@@ -13,6 +13,8 @@ import { FindPlaceByProvinceUseCase } from '../../application/use-cases/place-us
 import { FindItineraryWithActivityUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-activity.use-case';
 import { UpdateItineraryUseCase } from '../../application/use-cases/itinerary-use-cases/update-itinerary.use-case';
 import { FindItineraryWithParticipantsUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-participants.use-case';
+import { UpdateDateActivityIdUseCase } from '../../application/use-cases/activity-use-cases/update-date-activity-id.use-case';
+import { Activity } from '../entities/activity';
 
 export class ItineraryService {
   private provinceService: ProvinceService;
@@ -20,6 +22,7 @@ export class ItineraryService {
   private activityService: ActivityService;
   private createActivityUseCase: CreateActivityUseCase;
   private findUserByIdUseCase: FindUserByIdUseCase;
+  private updateDateActivityUseCase: UpdateDateActivityIdUseCase;
 
   constructor() {
     this.provinceService = new ProvinceService();
@@ -27,6 +30,7 @@ export class ItineraryService {
     this.activityService = new ActivityService();
     this.createActivityUseCase = new CreateActivityUseCase();
     this.findUserByIdUseCase = new FindUserByIdUseCase();
+    this.updateDateActivityUseCase = new  UpdateDateActivityIdUseCase();
   }
 
   async create(user: User, createItineraryDto: CreateItineraryDto) {
@@ -226,6 +230,22 @@ export class ItineraryService {
     const updateItineraryUseCase = new UpdateItineraryUseCase();
 
     return updateItineraryUseCase.execute(itinerary);
+  }
+
+  async updateDateActivityDates(activityId: Number, start: Date, end: Date)  {
+    const updateDateActivityUseCase = new UpdateDateActivityIdUseCase();
+
+    try {
+       await updateDateActivityUseCase.update(activityId as number, {
+        fromDate: new Date(start),
+        toDate: new Date(end),}
+      );
+
+    } catch (error) {
+      console.error('Error updating activity:', error);
+      throw new Error('Could not update activity');
+    }
+
   }
 
   private getDates(fromDate: Date, toDate: Date): Date[] {
