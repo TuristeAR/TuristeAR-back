@@ -57,6 +57,8 @@ import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
 import { FindForumByItineraryIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
 import { FindEventByProvinceAndDatesUseCase } from './application/use-cases/event-use-cases/find-event-by-province-and-dates.use-case';
+import { Comment } from './domain/entities/comment';
+import { CreateCommentUseCase } from './application/use-cases/comment-use-cases/create-comment.use-case';
 
 dotenv.config();
 
@@ -137,6 +139,7 @@ const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
 
+const createCommentUseCase = new CreateCommentUseCase();
 const createMessageUseCase = new CreateMessageUseCase();
 const createProvinceUseCase = new CreateProvinceUseCase();
 const createWeatherUseCase = new CreateWeatherUseCase();
@@ -801,9 +804,6 @@ app.get('/publication/:publicationId', async (req: Request, res: Response) => {
   }
 });
 
-
-
-
 app.get('/categories', async (_req: Request, res: Response) => {
   try {
     const categories = await findAllCategoryUseCase.execute();
@@ -1057,6 +1057,38 @@ io.on('connection', (socket) => {
       socket.emit('error', { message: 'Error al crear el mensaje', error });
     }
   });
+
+  socket.on('createComment', async (data) => {
+    try {
+      const { content, publicationId, userId } = data;
+
+      const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
+
+      if (!publication) {
+        socket.emit('error', { message: 'Publicación no encontrada' });
+        return;
+      }
+
+      const comment = new Comment();
+
+      comment.publication = publication;
+      comment.user = await findUserByIdUseCase.execute(userId);
+      comment.description = content;
+
+      await createCommentUseCase.execute(comment);
+
+      io.emit('receiveComment', {
+        description: comment.description,
+        user: comment.user,
+        createdAt: comment.createdAt,
+      });
+    } catch (error) {
+      socket.emit('error', { message: 'Error al crear el mensaje', error });
+    }
+  });
+
+
 });
+
 
 export default app;
