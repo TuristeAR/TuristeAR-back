@@ -12,7 +12,7 @@ export class FindPublicationByCategoryUseCase {
   execute(categoryId: number): Promise<Publication[]> {
     return this.publicationRepository.findMany({
       where: { category: { id: categoryId } },
-      relations: ['user', 'category', 'likes', 'reposts', 'saved'],
+      relations: ['user', 'category', 'likes', 'reposts', 'saved', 'comments'],
       order: { id: 'DESC' },
     });
   }
