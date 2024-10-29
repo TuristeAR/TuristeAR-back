@@ -12,7 +12,7 @@ export class FindPublicationByIdUseCase {
   execute(id: number): Promise<Publication | null> {
     return this.publicationRepository.findOne({
       where: { id: id },
-      relations: ['user', 'category', 'likes', 'reposts', 'saved'],
+      relations: ['user', 'category', 'likes', 'reposts', 'saved', 'comments.user'],
     });
   }
 }

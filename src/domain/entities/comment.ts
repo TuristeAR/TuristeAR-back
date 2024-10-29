@@ -11,7 +11,7 @@ export class Comment extends AbstractEntity{
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user: User | null;
 
   @ManyToOne(() => Publication)
   @JoinColumn({ name: 'publicationId' })
