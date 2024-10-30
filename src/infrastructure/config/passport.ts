@@ -1,9 +1,11 @@
-import { PassportStatic, Profile } from 'passport';
+import { PassportStatic, Profile, session } from 'passport';
 import { Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { FindUserByGoogleIdUseCase } from '../../application/use-cases/user-use-cases/find-user-by.googleId.use-case';
 import { CreateUserUseCase } from '../../application/use-cases/user-use-cases/create-user.use-case';
 import { FindUserByIdUseCase } from '../../application/use-cases/user-use-cases/find-user-by.id.use-case';
+import { Session } from 'inspector/promises';
+import { request } from 'express';
 
 export const initializePassport = (passport: PassportStatic) => {
   passport.use(
@@ -24,6 +26,7 @@ export const initializePassport = (passport: PassportStatic) => {
             name: profile.displayName,
             profilePicture: profile.photos![0].value,
             googleId: profile.id,
+            locate: request.sessionLocate,
           };
 
           const createUserUseCase = new CreateUserUseCase();

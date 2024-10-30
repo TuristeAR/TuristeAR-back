@@ -60,6 +60,7 @@ import { FindEventByProvinceAndDatesUseCase } from './application/use-cases/even
 import { Comment } from './domain/entities/comment';
 import { CreateCommentUseCase } from './application/use-cases/comment-use-cases/create-comment.use-case';
 import { FindEventByProvinceUseCase } from './application/use-cases/event-use-cases/find-event-by-province.use-case';
+import { UserService } from './domain/services/user.service';
 
 dotenv.config();
 
@@ -139,6 +140,7 @@ const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
+const userService = new UserService(); 
 
 const createCommentUseCase = new CreateCommentUseCase();
 const createMessageUseCase = new CreateMessageUseCase();
@@ -177,6 +179,16 @@ const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
 const findUserByIdUseCase = new FindUserByIdUseCase();
 const findUserByNameUseCase = new FindUserByNameUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
+
+app.post('/auth/google', async (req, res, next) => {
+  const { latitude, longitude } = req.body;
+
+  const province = await userService.getProvinceForCoordinates(latitude, longitude);
+  // se guarda la provincia en la session
+  req.sessionLocate = province;
+
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+});
 
 app.get(
   '/auth/google',
