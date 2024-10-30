@@ -59,6 +59,7 @@ import { FindCategoryByIdUseCase } from './application/use-cases/category-use-ca
 import {
   FindForumByItineraryIdUseCase
 } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
+import { UserService } from './domain/services/user.service';
 
 dotenv.config();
 
@@ -138,6 +139,7 @@ const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
+const userService = new UserService(); 
 
 const createMessageUseCase = new CreateMessageUseCase();
 const createProvinceUseCase = new CreateProvinceUseCase();
@@ -173,6 +175,16 @@ const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
 const findUserByIdUseCase = new FindUserByIdUseCase();
 const findUserByNameUseCase = new FindUserByNameUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
+
+app.post('/auth/google', async (req, res, next) => {
+  const { latitude, longitude } = req.body;
+
+  const province = await userService.getProvinceForCoordinates(latitude, longitude);
+  // se guarda la provincia en la session
+  req.sessionLocate = province;
+
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+});
 
 app.get(
   '/auth/google',
