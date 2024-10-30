@@ -16,6 +16,7 @@ import { UpdateDateActivityIdUseCase } from '../../application/use-cases/activit
 import { Forum } from '../entities/forum';
 import { CreateForumUseCase } from '../../application/use-cases/forum-use-cases/create-forum.use-case';
 import { FindEventByIdUseCase } from '../../application/use-cases/event-use-cases/find-event-by-id.use-case';
+import { FindItineraryWithEventUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-event.use-case';
 
 export class ItineraryService {
   private provinceService: ProvinceService;
@@ -140,6 +141,32 @@ export class ItineraryService {
         toDate: activity.toDate,
         itinerary: activity.itinerary,
         place: activity.place,
+      })),
+    };
+  }
+
+  async findEventsByItineraryId(id: number): Promise<Itinerary | null> {
+    const findItineraryWithEventsUseCase = new FindItineraryWithEventUseCase();
+
+    const itinerary = await findItineraryWithEventsUseCase.execute(id);
+
+    if (!itinerary) return null;
+
+    return {
+      ...itinerary,
+      events: itinerary.events.map((event) => ({
+        id: event.id,
+        createdAt: event.createdAt,
+        fromDate: event.fromDate,
+        toDate: event.toDate,
+        name: event.name,
+        province: event.province,
+        locality: event.locality,
+        description: event.description,
+        latitude: event.latitude,
+        longitude: event.longitude,
+        image: event.image,
+        itinerary: event.itinerary,
       })),
     };
   }
