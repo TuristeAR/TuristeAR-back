@@ -945,6 +945,7 @@ app.post('/createForum', authMiddleware, async (req: Request, res: Response) => 
       forum.name = name;
       forum.description = description;
       forum.messages = [];
+      forum.isPublic = true;
 
       await createForumUserCase.execute(forum);
     } catch (error) {
