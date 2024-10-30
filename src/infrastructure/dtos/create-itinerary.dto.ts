@@ -8,6 +8,10 @@ export class CreateItineraryDto {
   @IsString({ each: true })
   localities: string[];
 
+  @IsArray()
+  @IsNumber({}, { each: true })
+  events: number[];
+
   @IsDate()
   fromDate: Date;
 

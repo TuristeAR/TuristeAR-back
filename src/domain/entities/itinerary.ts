@@ -1,6 +1,16 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
 import { Activity } from './activity';
+import { Event } from './event';
 import { User } from './user';
 import { Forum } from './forum';
 
@@ -8,6 +18,9 @@ import { Forum } from './forum';
 export class Itinerary extends AbstractEntity {
   @OneToMany(() => Activity, (activity) => activity.itinerary)
   activities: Activity[];
+
+  @OneToMany(() => Event, (event) => event.itinerary)
+  events: Event[];
 
   @Column()
   name: string;

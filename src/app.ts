@@ -60,6 +60,8 @@ import { FindEventByProvinceAndDatesUseCase } from './application/use-cases/even
 import { Comment } from './domain/entities/comment';
 import { CreateCommentUseCase } from './application/use-cases/comment-use-cases/create-comment.use-case';
 import { FindEventByProvinceUseCase } from './application/use-cases/event-use-cases/find-event-by-province.use-case';
+import { UserService } from './domain/services/user.service';
+import { ubicationMiddleware } from './infrastructure/middlewares/ubication.middleware';
 
 dotenv.config();
 
@@ -139,6 +141,7 @@ const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
+const userService = new UserService();
 
 const createCommentUseCase = new CreateCommentUseCase();
 const createMessageUseCase = new CreateMessageUseCase();
@@ -177,6 +180,13 @@ const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
 const findUserByIdUseCase = new FindUserByIdUseCase();
 const findUserByNameUseCase = new FindUserByNameUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
+
+app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
+  
+  const { latitude, longitude, province } = req.body;
+
+  passport.authenticate('google', { scope: ['profile', 'email']})(req, res, next);
+});
 
 app.get(
   '/auth/google',
@@ -405,11 +415,13 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const activities = await itineraryService.findActivitiesByItineraryId(Number(id));
 
+    const events = await itineraryService.findEventsByItineraryId(Number(id));
+
     const forum = await findForumByItineraryId.execute(Number(id));
 
     return res
       .status(status.OK)
-      .json({ statusCode: status.OK, data: { itinerary, activities, forum } });
+      .json({ statusCode: status.OK, data: { itinerary, activities, events, forum } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
@@ -820,9 +832,6 @@ app.get('/publication/:publicationId', async (req: Request, res: Response) => {
   }
 });
 
-
-
-
 app.get('/categories', async (_req: Request, res: Response) => {
   try {
     const categories = await findAllCategoryUseCase.execute();
@@ -1106,8 +1115,6 @@ io.on('connection', (socket) => {
       socket.emit('error', { message: 'Error al crear el mensaje', error });
     }
   });
-
-
 });
 
 export default app;
