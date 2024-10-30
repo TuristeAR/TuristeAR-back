@@ -184,8 +184,9 @@ app.post('/auth/google', async (req, res, next) => {
   const { latitude, longitude } = req.body;
 
   const province = await userService.getProvinceForCoordinates(latitude, longitude);
+  
   // se guarda la provincia en la session
-  req.sessionLocate = province;
+  express.request.reqLocation= province;
 
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });
