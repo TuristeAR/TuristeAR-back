@@ -1,10 +1,9 @@
-import { PassportStatic, Profile, session } from 'passport';
+import { PassportStatic, Profile} from 'passport';
 import { Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { FindUserByGoogleIdUseCase } from '../../application/use-cases/user-use-cases/find-user-by.googleId.use-case';
 import { CreateUserUseCase } from '../../application/use-cases/user-use-cases/create-user.use-case';
 import { FindUserByIdUseCase } from '../../application/use-cases/user-use-cases/find-user-by.id.use-case';
-import { Session } from 'inspector/promises';
 import { request } from 'express';
 
 export const initializePassport = (passport: PassportStatic) => {
@@ -18,15 +17,17 @@ export const initializePassport = (passport: PassportStatic) => {
       async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
         const findUserByGoogleIdUseCase = new FindUserByGoogleIdUseCase();
 
-        let user = await findUserByGoogleIdUseCase.execute(profile.id);
+        const reqLocation = request.reqLocation;
 
+        let user = await findUserByGoogleIdUseCase.execute(profile.id);
+        
         if (!user) {
           const createUserDto: CreateUserDto = {
             email: profile.emails![0].value,
             name: profile.displayName,
             profilePicture: profile.photos![0].value,
             googleId: profile.id,
-            location: request.sessionLocate,
+            location: reqLocation,
           };
 
           const createUserUseCase = new CreateUserUseCase();
