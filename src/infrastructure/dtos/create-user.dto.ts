@@ -14,5 +14,5 @@ export class CreateUserDto {
   googleId: string;
 
   @IsString()
-  locate: string;
+  location: string;
 }

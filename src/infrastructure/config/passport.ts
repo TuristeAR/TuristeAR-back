@@ -26,7 +26,7 @@ export const initializePassport = (passport: PassportStatic) => {
             name: profile.displayName,
             profilePicture: profile.photos![0].value,
             googleId: profile.id,
-            locate: request.sessionLocate,
+            location: request.sessionLocate,
           };
 
           const createUserUseCase = new CreateUserUseCase();
