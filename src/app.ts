@@ -140,7 +140,7 @@ const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
-const userService = new UserService(); 
+const userService = new UserService();
 
 const createCommentUseCase = new CreateCommentUseCase();
 const createMessageUseCase = new CreateMessageUseCase();
@@ -418,11 +418,13 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const activities = await itineraryService.findActivitiesByItineraryId(Number(id));
 
+    const events = await itineraryService.findEventsByItineraryId(Number(id));
+
     const forum = await findForumByItineraryId.execute(Number(id));
 
     return res
       .status(status.OK)
-      .json({ statusCode: status.OK, data: { itinerary, activities, forum } });
+      .json({ statusCode: status.OK, data: { itinerary, activities, events, forum } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
@@ -833,9 +835,6 @@ app.get('/publication/:publicationId', async (req: Request, res: Response) => {
   }
 });
 
-
-
-
 app.get('/categories', async (_req: Request, res: Response) => {
   try {
     const categories = await findAllCategoryUseCase.execute();
@@ -1118,8 +1117,6 @@ io.on('connection', (socket) => {
       socket.emit('error', { message: 'Error al crear el mensaje', error });
     }
   });
-
-
 });
 
 export default app;

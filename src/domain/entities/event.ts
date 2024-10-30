@@ -1,6 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
 import { Province } from './province';
+import { Itinerary } from './itinerary';
 
 @Entity()
 export class Event extends AbstractEntity {
@@ -31,4 +32,8 @@ export class Event extends AbstractEntity {
 
   @Column()
   image: string;
+
+  @ManyToOne(() => Itinerary, (itinerary) => itinerary.events)
+  @JoinColumn({ name: 'itineraryId' })
+  itinerary: Itinerary;
 }
