@@ -19,8 +19,6 @@ export const initializePassport = (passport: PassportStatic) => {
         const findUserByGoogleIdUseCase = new FindUserByGoogleIdUseCase();
 
         let user = await findUserByGoogleIdUseCase.execute(profile.id);
-        
-        console.log(request.sessionLocate);
 
         if (!user) {
           const createUserDto: CreateUserDto = {
