@@ -17,8 +17,6 @@ export const initializePassport = (passport: PassportStatic) => {
       async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
         const findUserByGoogleIdUseCase = new FindUserByGoogleIdUseCase();
 
-        const reqLocation = request.reqLocation;
-
         let user = await findUserByGoogleIdUseCase.execute(profile.id);
         
         if (!user) {
@@ -27,7 +25,7 @@ export const initializePassport = (passport: PassportStatic) => {
             name: profile.displayName,
             profilePicture: profile.photos![0].value,
             googleId: profile.id,
-            location: reqLocation,
+            location: request.body.province,
           };
 
           const createUserUseCase = new CreateUserUseCase();
