@@ -27,6 +27,11 @@ export class CreatePublicationDTO {
   @IsNumber()
   saved?: number[];
 
+  @IsOptional()
+  @IsArray()
+  @IsNumber()
+  comments?: number[];
+
   @IsNumber()
   categoryId : number;
 

@@ -9,10 +9,12 @@ import { CreateActivityDto } from '../../infrastructure/dtos/create-activity.dto
 import { CreateActivityUseCase } from '../../application/use-cases/activity-use-cases/create-activity.use-case';
 import { FindUserByIdUseCase } from '../../application/use-cases/user-use-cases/find-user-by.id.use-case';
 import { CreateItineraryUseCase } from '../../application/use-cases/itinerary-use-cases/create-itinerary.use-case';
-import { FindPlaceByProvinceUseCase } from '../../application/use-cases/place-use-cases/find-place-by-province.use-case';
 import { FindItineraryWithActivityUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-activity.use-case';
 import { UpdateItineraryUseCase } from '../../application/use-cases/itinerary-use-cases/update-itinerary.use-case';
 import { FindItineraryWithParticipantsUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-participants.use-case';
+import { UpdateDateActivityIdUseCase } from '../../application/use-cases/activity-use-cases/update-date-activity-id.use-case';
+import { Forum } from '../entities/forum';
+import { CreateForumUseCase } from '../../application/use-cases/forum-use-cases/create-forum.use-case';
 
 export class ItineraryService {
   private provinceService: ProvinceService;
@@ -20,6 +22,7 @@ export class ItineraryService {
   private activityService: ActivityService;
   private createActivityUseCase: CreateActivityUseCase;
   private findUserByIdUseCase: FindUserByIdUseCase;
+  private updateDateActivityUseCase: UpdateDateActivityIdUseCase;
 
   constructor() {
     this.provinceService = new ProvinceService();
@@ -27,14 +30,11 @@ export class ItineraryService {
     this.activityService = new ActivityService();
     this.createActivityUseCase = new CreateActivityUseCase();
     this.findUserByIdUseCase = new FindUserByIdUseCase();
+    this.updateDateActivityUseCase = new  UpdateDateActivityIdUseCase();
   }
 
   async create(user: User, createItineraryDto: CreateItineraryDto) {
     const dates = this.getDates(createItineraryDto.fromDate, createItineraryDto.toDate);
-
-    const findPlaceByProvinceUseCase = new FindPlaceByProvinceUseCase();
-
-    const places = await findPlaceByProvinceUseCase.execute(createItineraryDto.provinceId);
 
     const provinceName = await this.provinceService.getProvinceNameFromId(
       createItineraryDto.provinceId,
@@ -52,43 +52,58 @@ export class ItineraryService {
 
     const savedItinerary = await createItineraryUseCase.execute(itinerary);
 
+    let forum = new Forum();
+    forum.itinerary = savedItinerary;
+    forum.name = savedItinerary.name;
+    forum.messages = [];
+    forum.isPublic = false;
+
+    const createForumUseCase = new CreateForumUseCase();
+
+    itinerary.forum = await createForumUseCase.execute(forum);
+
+    const updateItinerary=new UpdateItineraryUseCase();
+
+    await updateItinerary.execute(savedItinerary);
+
     let itineraryPlaces: Place[] = [];
 
-    let longitude = null;
-    let latitude = null;
+    for (let i = 0; i < dates.length; i++) {
+      const locality = createItineraryDto.localities[i % createItineraryDto.localities.length];
 
-    for (const date of dates) {
-      const place = await this.placeService.findOneByDateWithTypesAndProvinceId(
-        places,
+      const type = createItineraryDto.types[i % createItineraryDto.types.length];
+
+      const place = await this.placeService.findOneInLocalityByTypesAndPriceLevel(
         itineraryPlaces,
-        date,
-        createItineraryDto.types,
+        type,
+        createItineraryDto.priceLevel,
         createItineraryDto.provinceId,
-        longitude,
-        latitude
+        provinceName as string,
+        locality,
       );
 
-      if (place) {
-        itineraryPlaces.push(place);
-        if(longitude==null){
-          longitude = place.longitude;
-          latitude = place.latitude;
-        }
+      itineraryPlaces.push(place);
+    }
 
-        const activityDates = this.activityService.getActivityDates(place.openingHours, date);
+    itineraryPlaces = this.placeService.orderByDistance(itineraryPlaces, dates);
 
-        const createActivityDto: CreateActivityDto = {
-          itinerary: savedItinerary,
-          place,
-          name: this.activityService.formatActivityName(place.name, activityDates[0]),
-          fromDate: activityDates[0],
-          toDate: activityDates[1],
-        };
+    for (let i = 0; i < dates.length; i++) {
+      const activityDates = this.activityService.getActivityDates(
+        itineraryPlaces[i].openingHours,
+        dates[i],
+      );
 
-        const activity = await this.createActivityUseCase.execute(createActivityDto);
+      const createActivityDto: CreateActivityDto = {
+        itinerary: savedItinerary,
+        place: itineraryPlaces[i],
+        name: this.activityService.formatActivityName(itineraryPlaces[i].name, activityDates[0]),
+        fromDate: activityDates[0],
+        toDate: activityDates[1],
+      };
 
-        savedItinerary.activities.push(activity);
-      }
+      const activity = await this.createActivityUseCase.execute(createActivityDto);
+
+      savedItinerary.activities.push(activity);
     }
 
     return savedItinerary;
@@ -226,6 +241,22 @@ export class ItineraryService {
     const updateItineraryUseCase = new UpdateItineraryUseCase();
 
     return updateItineraryUseCase.execute(itinerary);
+  }
+
+  async updateDateActivityDates(activityId: Number, start: Date, end: Date)  {
+    const updateDateActivityUseCase = new UpdateDateActivityIdUseCase();
+
+    try {
+       await updateDateActivityUseCase.update(activityId as number, {
+        fromDate: new Date(start),
+        toDate: new Date(end),}
+      );
+
+    } catch (error) {
+      console.error('Error updating activity:', error);
+      throw new Error('Could not update activity');
+    }
+
   }
 
   private getDates(fromDate: Date, toDate: Date): Date[] {
