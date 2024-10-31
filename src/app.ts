@@ -1062,11 +1062,13 @@ app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Respon
     const user = req.user as User;
     const {activityId, images} = req.body;
 
+    console.log(images)
     const activity= await findActivityByIdUseCase.execute(Number(activityId));
 
     for (const image of images) {
       activity?.images.push(image);
     }
+
 
     if(!activity){
       return res.status(400).json({ message: 'ID inválido' });
@@ -1076,7 +1078,8 @@ app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Respon
 
     return res.json(updatedActivity);
   } catch (error) {
-    return res.status(500).json({ message: 'Error al obtener el foro', error });
+    console.log(error)
+    return res.status(500).json({ message: 'Error al cargar imágenes', error });
   }
 });
 
