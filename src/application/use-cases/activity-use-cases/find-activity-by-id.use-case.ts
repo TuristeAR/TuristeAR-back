@@ -10,6 +10,6 @@ export class FindActivityByIdUseCase {
   }
 
   execute(id: number): Promise<Activity | null> {
-    return this.activityRepository.findOne({ where: { id } });
+    return this.activityRepository.findOne({ where: { id }, relations: ['place.province.category'] });
   }
 }
