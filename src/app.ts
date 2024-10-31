@@ -647,6 +647,24 @@ app.delete('/itinerary/remove-activity', async (req, res) => {
   }
 });
 
+app.delete('/itinerary/remove-event', async (req, res) => {
+  const { itineraryId, eventId } = req.body;
+
+  try {
+    await itineraryService.removeEventFromItinerary(itineraryId, eventId);
+    io.emit('eventRemoved', {
+      itineraryId,
+      eventId,
+    });
+    return res
+      .status(200)
+      .json({ status: 'success', message: `Event with ID ${eventId} removed` });
+  } catch (error) {
+    console.error('Error removing event from itinerary:');
+    return res.status(500).json({ status: 'error' });
+  }
+});
+
 app.get('/itinerary/byUser/:userId', (req, res) => {
   const { userId } = req.params;
 
