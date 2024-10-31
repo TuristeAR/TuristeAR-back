@@ -57,6 +57,11 @@ import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
 
 import { FindForumByItineraryIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
+import { Expense } from './domain/entities/expense';
+import { CreateExpenseUseCase } from './application/use-cases/expense-use-cases/create-expense.use-case';
+import { FindExpensesByItineraryIdUseCases } from './application/use-cases/expense-use-cases/find-expenses-by-itinerary-id.use-case';
+import { DeleteExpensesByIdUseCases } from './application/use-cases/expense-use-cases/delete-expense-by-id.use-case';
+import { CreateExpenseDto } from './infrastructure/dtos/create-expense.dto';
 
 dotenv.config();
 
@@ -171,6 +176,9 @@ const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
 const findUserByIdUseCase = new FindUserByIdUseCase();
 const findUserByNameUseCase = new FindUserByNameUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
+const createExpenseUseCase = new CreateExpenseUseCase();
+const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
+const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
 
 app.get(
   '/auth/google',
@@ -352,7 +360,10 @@ app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) =>
     console.error('Error creating itinerary: ', error);
     return res
       .status(status.INTERNAL_SERVER_ERROR)
-      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: `Error creating itinerary: ${error}` });
+      .json({
+        statusCode: status.INTERNAL_SERVER_ERROR,
+        message: `Error creating itinerary: ${error}`,
+      });
   }
 });
 
@@ -366,7 +377,9 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const forum = await findForumByItineraryId.execute(Number(id));
 
-    return res.status(status.OK).json({ statusCode: status.OK, data: { itinerary, activities, forum } });
+    return res
+      .status(status.OK)
+      .json({ statusCode: status.OK, data: { itinerary, activities, forum } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
@@ -542,7 +555,7 @@ app.post('/itinerary/add-activity', (req, res) => {
     .addActivityToItinerary(itineraryId, createActivityDto)
     .then((itinerary) => {
       io.emit('addActivity', {
-        itinerary
+        itinerary,
       });
       return res
         .status(200)
@@ -556,7 +569,7 @@ app.post('/itinerary/add-activity', (req, res) => {
 });
 
 app.put('/itinerary/update-activity', async (req, res) => {
-  const {  activityId, start, end } = req.body;
+  const { activityId, start, end } = req.body;
 
   try {
     await itineraryService.updateDateActivityDates(activityId, new Date(start), new Date(end));
@@ -579,7 +592,7 @@ app.delete('/itinerary/remove-activity', async (req, res) => {
     await itineraryService.removeActivityFromItinerary(itineraryId, activityId);
     io.emit('activityRemoved', {
       itineraryId,
-      activityId
+      activityId,
     });
     return res
       .status(200)
@@ -976,6 +989,103 @@ app.get('/forum/:id', async (req: Request, res: Response) => {
     return res.json(forum);
   } catch (error) {
     return res.status(500).json({ message: 'Error al obtener el foro', error });
+  }
+});
+
+app.post('/expenses', async (req, res) => {
+  try {
+    const {
+      description,
+      date,
+      payerId,
+      totalAmount,
+      distributionType,
+      participatingUsers,
+      itineraryId,
+      individualAmounts,
+      individualPercentages
+    } = req.body;
+
+    if (!description) {
+      return res.status(400).json({ message: 'Falta el campo description' });
+    }
+
+    if (!date) {
+      return res.status(400).json({ message: 'Falta el campo date' });
+    }
+
+    if (!payerId) {
+      return res.status(400).json({ message: 'Falta el campo payerId' });
+    }
+
+    if (totalAmount == null) {
+      return res.status(400).json({ message: 'Falta el campo totalAmount' });
+    }
+
+    if (!distributionType) {
+      return res.status(400).json({ message: 'Falta el campo distributionType' });
+    }
+
+    if (!itineraryId) {
+      return res.status(400).json({ message: 'Falta el campo itineraryId' });
+    }
+
+    const payer = await findUserByIdUseCase.execute(payerId);
+    const itinerary = await findItineraryByIdUseCase.execute(itineraryId);
+
+    if (!payer || !itinerary) {
+      return res.status(404).json({ message: 'Payer o itinerario no encontrado' });
+    }
+
+    const users = await Promise.all(
+      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId))
+    );
+
+    const validUsers = users.filter((user) => user);
+
+    const expense = new Expense();
+    expense.description = description;
+    expense.date = new Date(date);
+    expense.totalAmount = totalAmount;
+    expense.distributionType = distributionType;
+    expense.payer = payer;
+    expense.itinerary = itinerary;
+    expense.individualAmounts = individualAmounts || {};
+    expense.participatingUsers = validUsers;
+    expense.individualPercentages =individualPercentages || {};
+
+    const response = await createExpenseUseCase.execute(expense);
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Error al crear el gasto:', error); 
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+});
+
+app.get('/expenses/:itineraryId', async (req, res) => {
+  const { itineraryId } = req.params; 
+
+  try {
+    const expenses = await findExpensesByItineraryIdUseCase.execute(Number(itineraryId));
+
+    res.status(200).json(expenses); 
+  } catch (error) {
+    console.error('Error al obtener los gastos:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+});
+
+app.delete('/expenses/:expenseId', async (req, res) => {
+  const { expenseId } = req.params; 
+
+  try {
+    const expenses = await deleteExpensesByIdUseCases.execute(Number(expenseId));
+
+    res.status(200).json(expenses); 
+  } catch (error) {
+    console.error('Error al eliminar un gasto:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 });
 
