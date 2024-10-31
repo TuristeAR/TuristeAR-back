@@ -56,6 +56,11 @@ import { CreateForumUseCase } from './application/use-cases/forum-use-cases/crea
 import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
 import { FindForumByItineraryIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
+import { Expense } from './domain/entities/expense';
+import { CreateExpenseUseCase } from './application/use-cases/expense-use-cases/create-expense.use-case';
+import { FindExpensesByItineraryIdUseCases } from './application/use-cases/expense-use-cases/find-expenses-by-itinerary-id.use-case';
+import { DeleteExpensesByIdUseCases } from './application/use-cases/expense-use-cases/delete-expense-by-id.use-case';
+import { CreateExpenseDto } from './infrastructure/dtos/create-expense.dto';
 import { FindEventByProvinceAndDatesUseCase } from './application/use-cases/event-use-cases/find-event-by-province-and-dates.use-case';
 import { Comment } from './domain/entities/comment';
 import { CreateCommentUseCase } from './application/use-cases/comment-use-cases/create-comment.use-case';
@@ -181,6 +186,10 @@ const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
 const findUserByIdUseCase = new FindUserByIdUseCase();
 const findUserByNameUseCase = new FindUserByNameUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
+const createExpenseUseCase = new CreateExpenseUseCase();
+const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
+const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
+
 const updateActivityUseCase = new UpdateActivityUseCase();
 
 app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
@@ -1075,6 +1084,103 @@ app.get('/forum/:id', async (req: Request, res: Response) => {
   }
 });
 
+app.post('/expenses', async (req, res) => {
+  try {
+    const {
+      description,
+      date,
+      payerId,
+      totalAmount,
+      distributionType,
+      participatingUsers,
+      itineraryId,
+      individualAmounts,
+      individualPercentages
+    } = req.body;
+
+    if (!description) {
+      return res.status(400).json({ message: 'Falta el campo description' });
+    }
+
+    if (!date) {
+      return res.status(400).json({ message: 'Falta el campo date' });
+    }
+
+    if (!payerId) {
+      return res.status(400).json({ message: 'Falta el campo payerId' });
+    }
+
+    if (totalAmount == null) {
+      return res.status(400).json({ message: 'Falta el campo totalAmount' });
+    }
+
+    if (!distributionType) {
+      return res.status(400).json({ message: 'Falta el campo distributionType' });
+    }
+
+    if (!itineraryId) {
+      return res.status(400).json({ message: 'Falta el campo itineraryId' });
+    }
+
+    const payer = await findUserByIdUseCase.execute(payerId);
+    const itinerary = await findItineraryByIdUseCase.execute(itineraryId);
+
+    if (!payer || !itinerary) {
+      return res.status(404).json({ message: 'Payer o itinerario no encontrado' });
+    }
+
+    const users = await Promise.all(
+      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId))
+    );
+
+    const validUsers = users.filter((user) => user);
+
+    const expense = new Expense();
+    expense.description = description;
+    expense.date = new Date(date);
+    expense.totalAmount = totalAmount;
+    expense.distributionType = distributionType;
+    expense.payer = payer;
+    expense.itinerary = itinerary;
+    expense.individualAmounts = individualAmounts || {};
+    expense.participatingUsers = validUsers;
+    expense.individualPercentages =individualPercentages || {};
+
+    const response = await createExpenseUseCase.execute(expense);
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Error al crear el gasto:', error); 
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+});
+
+app.get('/expenses/:itineraryId', async (req, res) => {
+  const { itineraryId } = req.params; 
+
+  try {
+    const expenses = await findExpensesByItineraryIdUseCase.execute(Number(itineraryId));
+
+    res.status(200).json(expenses); 
+  } catch (error) {
+    console.error('Error al obtener los gastos:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+});
+
+app.delete('/expenses/:expenseId', async (req, res) => {
+  const { expenseId } = req.params; 
+
+  try {
+    const expenses = await deleteExpensesByIdUseCases.execute(Number(expenseId));
+
+    res.status(200).json(expenses); 
+  } catch (error) {
+    console.error('Error al eliminar un gasto:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+});
+
 app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = req.user as User;
@@ -1100,9 +1206,6 @@ app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Respon
     return res.status(500).json({ message: 'Error al cargar imágenes', error });
   }
 });
-
-
-
 
 io.on('connection', (socket) => {
   socket.on('createMessage', async (data) => {

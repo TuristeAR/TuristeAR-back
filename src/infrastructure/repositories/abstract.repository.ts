@@ -22,8 +22,8 @@ export abstract class AbstractRepository<T extends ObjectLiteral> {
     return this.repository.findOne(options);
   }
 
-  findMany(options: FindManyOptions<T>): Promise<T[]> {
-    return this.repository.find(options);
+  findMany(options: FindManyOptions<T>, limit?: number): Promise<T[]> {
+    return this.repository.find({ ...options, ...(limit && { take: limit }) });
   }
 
   update(id: number, data: QueryDeepPartialEntity<T>): Promise<UpdateResult> {
