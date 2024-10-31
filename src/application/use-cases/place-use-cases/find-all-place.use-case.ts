@@ -10,6 +10,6 @@ export class FindAllPlaceUseCase {
   }
 
   execute(): Promise<Place[]> {
-    return this.placeRepository.findMany({});
+    return this.placeRepository.findMany({}, 50);
   }
 }

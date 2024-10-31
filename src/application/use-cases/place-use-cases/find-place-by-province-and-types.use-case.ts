@@ -10,22 +10,25 @@ export class FindPlaceByProvinceAndTypesUseCase {
   }
 
   execute(provinceId: number): Promise<Place[]> {
-    return this.placeRepository.findMany({
-      where: {
-        province: { id: provinceId },
-      },
-      relations: ['province', 'reviews'],
-      select: {
-        id: true,
-        googleId: true,
-        name: true,
-        types: true,
-        rating: true,
-        address: true,
-        reviews: {
-          photos: true,
+    return this.placeRepository.findMany(
+      {
+        where: {
+          province: { id: provinceId },
+        },
+        relations: ['province', 'reviews'],
+        select: {
+          id: true,
+          googleId: true,
+          name: true,
+          types: true,
+          rating: true,
+          address: true,
+          reviews: {
+            photos: true,
+          },
         },
       },
-    });
+      50,
+    );
   }
 }
