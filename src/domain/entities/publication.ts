@@ -1,8 +1,9 @@
-import { Entity, Column, ManyToMany, ManyToOne, JoinColumn, JoinTable } from 'typeorm';
+import { Entity, Column, ManyToMany, ManyToOne, JoinColumn, JoinTable, OneToMany } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
 import { User } from './user';
 import { Category } from './category';
 import { Itinerary } from './itinerary';
+import { Comment } from './comment';
 
 @Entity()
 export class Publication extends AbstractEntity {
@@ -47,4 +48,8 @@ export class Publication extends AbstractEntity {
   @ManyToOne(() => Itinerary)
   @JoinColumn({ name: 'itineraryId' })
   itinerary: Itinerary;
+
+  @OneToMany(()=> Comment, (comment) => comment.publication)
+  comments: Comment[];
+
 }

@@ -15,6 +15,8 @@ import { FindItineraryWithParticipantsUseCase } from '../../application/use-case
 import { UpdateDateActivityIdUseCase } from '../../application/use-cases/activity-use-cases/update-date-activity-id.use-case';
 import { Forum } from '../entities/forum';
 import { CreateForumUseCase } from '../../application/use-cases/forum-use-cases/create-forum.use-case';
+import { FindEventByIdUseCase } from '../../application/use-cases/event-use-cases/find-event-by-id.use-case';
+import { FindItineraryWithEventUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-event.use-case';
 
 export class ItineraryService {
   private provinceService: ProvinceService;
@@ -23,6 +25,7 @@ export class ItineraryService {
   private createActivityUseCase: CreateActivityUseCase;
   private findUserByIdUseCase: FindUserByIdUseCase;
   private updateDateActivityUseCase: UpdateDateActivityIdUseCase;
+  private findEventByIdUseCase: FindEventByIdUseCase;
 
   constructor() {
     this.provinceService = new ProvinceService();
@@ -30,7 +33,8 @@ export class ItineraryService {
     this.activityService = new ActivityService();
     this.createActivityUseCase = new CreateActivityUseCase();
     this.findUserByIdUseCase = new FindUserByIdUseCase();
-    this.updateDateActivityUseCase = new  UpdateDateActivityIdUseCase();
+    this.updateDateActivityUseCase = new UpdateDateActivityIdUseCase();
+    this.findEventByIdUseCase = new FindEventByIdUseCase();
   }
 
   async create(user: User, createItineraryDto: CreateItineraryDto) {
@@ -47,6 +51,17 @@ export class ItineraryService {
     itinerary.toDate = createItineraryDto.toDate;
     itinerary.user = user;
     itinerary.activities = [];
+    itinerary.events = [];
+
+    for (const eventId of createItineraryDto.events) {
+      const event = await this.findEventByIdUseCase.execute(eventId);
+
+      if (!event) {
+        throw new Error('Event not found');
+      }
+
+      itinerary.events.push(event);
+    }
 
     const createItineraryUseCase = new CreateItineraryUseCase();
 
@@ -62,7 +77,7 @@ export class ItineraryService {
 
     itinerary.forum = await createForumUseCase.execute(forum);
 
-    const updateItinerary=new UpdateItineraryUseCase();
+    const updateItinerary = new UpdateItineraryUseCase();
 
     await updateItinerary.execute(savedItinerary);
 
@@ -99,6 +114,7 @@ export class ItineraryService {
         name: this.activityService.formatActivityName(itineraryPlaces[i].name, activityDates[0]),
         fromDate: activityDates[0],
         toDate: activityDates[1],
+        images: []
       };
 
       const activity = await this.createActivityUseCase.execute(createActivityDto);
@@ -126,6 +142,33 @@ export class ItineraryService {
         toDate: activity.toDate,
         itinerary: activity.itinerary,
         place: activity.place,
+        images: activity.images
+      })),
+    };
+  }
+
+  async findEventsByItineraryId(id: number): Promise<Itinerary | null> {
+    const findItineraryWithEventsUseCase = new FindItineraryWithEventUseCase();
+
+    const itinerary = await findItineraryWithEventsUseCase.execute(id);
+
+    if (!itinerary) return null;
+
+    return {
+      ...itinerary,
+      events: itinerary.events.map((event) => ({
+        id: event.id,
+        createdAt: event.createdAt,
+        fromDate: event.fromDate,
+        toDate: event.toDate,
+        name: event.name,
+        province: event.province,
+        locality: event.locality,
+        description: event.description,
+        latitude: event.latitude,
+        longitude: event.longitude,
+        image: event.image,
+        itinerary: event.itinerary,
       })),
     };
   }
@@ -243,20 +286,18 @@ export class ItineraryService {
     return updateItineraryUseCase.execute(itinerary);
   }
 
-  async updateDateActivityDates(activityId: Number, start: Date, end: Date)  {
+  async updateDateActivityDates(activityId: Number, start: Date, end: Date) {
     const updateDateActivityUseCase = new UpdateDateActivityIdUseCase();
 
     try {
-       await updateDateActivityUseCase.update(activityId as number, {
+      await updateDateActivityUseCase.update(activityId as number, {
         fromDate: new Date(start),
-        toDate: new Date(end),}
-      );
-
+        toDate: new Date(end),
+      });
     } catch (error) {
       console.error('Error updating activity:', error);
       throw new Error('Could not update activity');
     }
-
   }
 
   private getDates(fromDate: Date, toDate: Date): Date[] {

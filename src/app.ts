@@ -55,13 +55,19 @@ import { CreateForumDto } from './infrastructure/dtos/create-forum.dto';
 import { CreateForumUseCase } from './application/use-cases/forum-use-cases/create-forum.use-case';
 import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
-
 import { FindForumByItineraryIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
 import { Expense } from './domain/entities/expense';
 import { CreateExpenseUseCase } from './application/use-cases/expense-use-cases/create-expense.use-case';
 import { FindExpensesByItineraryIdUseCases } from './application/use-cases/expense-use-cases/find-expenses-by-itinerary-id.use-case';
 import { DeleteExpensesByIdUseCases } from './application/use-cases/expense-use-cases/delete-expense-by-id.use-case';
 import { CreateExpenseDto } from './infrastructure/dtos/create-expense.dto';
+import { FindEventByProvinceAndDatesUseCase } from './application/use-cases/event-use-cases/find-event-by-province-and-dates.use-case';
+import { Comment } from './domain/entities/comment';
+import { CreateCommentUseCase } from './application/use-cases/comment-use-cases/create-comment.use-case';
+import { FindEventByProvinceUseCase } from './application/use-cases/event-use-cases/find-event-by-province.use-case';
+import { UserService } from './domain/services/user.service';
+import { ubicationMiddleware } from './infrastructure/middlewares/ubication.middleware';
+import { UpdateActivityUseCase } from './application/use-cases/activity-use-cases/update-activity.use-case';
 
 dotenv.config();
 
@@ -141,7 +147,9 @@ const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
+const userService = new UserService();
 
+const createCommentUseCase = new CreateCommentUseCase();
 const createMessageUseCase = new CreateMessageUseCase();
 const createProvinceUseCase = new CreateProvinceUseCase();
 const createWeatherUseCase = new CreateWeatherUseCase();
@@ -156,6 +164,8 @@ const findAllReviewUseCase = new FindAllReviewUseCase();
 const findAllUserUseCase = new FindAllUserUseCase();
 const findAllWeatherUseCase = new FindAllWeatherUseCase();
 const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
+const findEventByProvinceAndDatesUseCase = new FindEventByProvinceAndDatesUseCase();
+const findEventByProvinceUseCase = new FindEventByProvinceUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
 const findForumByItineraryId = new FindForumByItineraryIdUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
@@ -179,6 +189,15 @@ const updateUserUseCase = new UpdateUserUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
+
+const updateActivityUseCase = new UpdateActivityUseCase();
+
+app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
+  
+  const { latitude, longitude, province } = req.body;
+
+  passport.authenticate('google', { scope: ['profile', 'email']})(req, res, next);
+});
 
 app.get(
   '/auth/google',
@@ -358,12 +377,44 @@ app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) =>
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: itinerary });
   } catch (error) {
     console.error('Error creating itinerary: ', error);
+    return res.status(status.INTERNAL_SERVER_ERROR).json({
+      statusCode: status.INTERNAL_SERVER_ERROR,
+      message: `Error creating itinerary: ${error}`,
+    });
+  }
+});
+
+app.get('/events/:provinceId', async (req: Request, res: Response) => {
+  try {
+    const { provinceId } = req.params;
+
+    const events = await findEventByProvinceUseCase.execute(Number(provinceId));
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: events });
+  } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
-      .json({
-        statusCode: status.INTERNAL_SERVER_ERROR,
-        message: `Error creating itinerary: ${error}`,
-      });
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching events' });
+  }
+});
+
+app.post('/events/:provinceId', async (req: Request, res: Response) => {
+  try {
+    const { provinceId } = req.params;
+
+    const { fromDate, toDate } = req.body;
+
+    const events = await findEventByProvinceAndDatesUseCase.execute(
+      Number(provinceId),
+      fromDate,
+      toDate,
+    );
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: events });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching events' });
   }
 });
 
@@ -375,11 +426,13 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const activities = await itineraryService.findActivitiesByItineraryId(Number(id));
 
+    const events = await itineraryService.findEventsByItineraryId(Number(id));
+
     const forum = await findForumByItineraryId.execute(Number(id));
 
     return res
       .status(status.OK)
-      .json({ statusCode: status.OK, data: { itinerary, activities, forum } });
+      .json({ statusCode: status.OK, data: { itinerary, activities, events, forum } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
@@ -770,6 +823,26 @@ app.get('/publications/categories/:categoryId', async (req: Request, res: Respon
   }
 });
 
+app.get('/publication/:publicationId', async (req: Request, res: Response) => {
+  const { publicationId } = req.params;
+
+  try {
+    let publication;
+
+    if (!isNaN(Number(publicationId))) {
+      publication = await findPublicationByIdUseCase.execute(Number(publicationId));
+    }
+
+    if (!publication) {
+      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+    }
+
+    return res.json(publication);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching publications', error });
+  }
+});
+
 app.get('/categories', async (_req: Request, res: Response) => {
   try {
     const categories = await findAllCategoryUseCase.execute();
@@ -892,6 +965,7 @@ app.post('/createForum', authMiddleware, async (req: Request, res: Response) => 
       forum.name = name;
       forum.description = description;
       forum.messages = [];
+      forum.isPublic = true;
 
       await createForumUserCase.execute(forum);
     } catch (error) {
@@ -1089,6 +1163,32 @@ app.delete('/expenses/:expenseId', async (req, res) => {
   }
 });
 
+app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = req.user as User;
+    const {activityId, images} = req.body;
+
+    console.log(images)
+    const activity= await findActivityByIdUseCase.execute(Number(activityId));
+
+    for (const image of images) {
+      activity?.images.push(image);
+    }
+
+
+    if(!activity){
+      return res.status(400).json({ message: 'ID inválido' });
+    }
+
+    const updatedActivity = await updateActivityUseCase.execute(activity);
+
+    return res.json(updatedActivity);
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: 'Error al cargar imágenes', error });
+  }
+});
+
 io.on('connection', (socket) => {
   socket.on('createMessage', async (data) => {
     try {
@@ -1115,6 +1215,35 @@ io.on('connection', (socket) => {
         images: message.images,
         user: message.user,
         createdAt: message.createdAt,
+      });
+    } catch (error) {
+      socket.emit('error', { message: 'Error al crear el mensaje', error });
+    }
+  });
+
+  socket.on('createComment', async (data) => {
+    try {
+      const { content, publicationId, userId } = data;
+
+      const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
+
+      if (!publication) {
+        socket.emit('error', { message: 'Publicación no encontrada' });
+        return;
+      }
+
+      const comment = new Comment();
+
+      comment.publication = publication;
+      comment.user = await findUserByIdUseCase.execute(userId);
+      comment.description = content;
+
+      await createCommentUseCase.execute(comment);
+
+      io.emit('receiveComment', {
+        description: comment.description,
+        user: comment.user,
+        createdAt: comment.createdAt,
       });
     } catch (error) {
       socket.emit('error', { message: 'Error al crear el mensaje', error });

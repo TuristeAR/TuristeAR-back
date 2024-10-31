@@ -1,16 +1,18 @@
 import { ItineraryRepository } from '../../../infrastructure/repositories/itinerary.repository';
 import { ItineraryRepositoryInterface } from '../../../domain/repositories/itinerary.repository.interface';
 import { Itinerary } from '../../../domain/entities/itinerary';
-import { User } from '../../../domain/entities/user';
 
-export class FindItineraryByUserUseCase {
+export class FindItineraryWithEventUseCase {
   private itineraryRepository: ItineraryRepositoryInterface;
 
   constructor() {
     this.itineraryRepository = new ItineraryRepository();
   }
 
-  execute(user: User): Promise<Itinerary[]> {
-    return this.itineraryRepository.findMany({ where: { user : {id : user.id} }, relations: ['activities.place.province.category','activities.itinerary'], order: { id: 'DESC' } });
+  execute(id: number): Promise<Itinerary | null> {
+    return this.itineraryRepository.findOne({
+      where: { id },
+      relations: ['events'],
+    });
   }
 }

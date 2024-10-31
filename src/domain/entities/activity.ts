@@ -21,4 +21,7 @@ export class Activity extends AbstractEntity {
 
   @Column()
   toDate: Date;
+
+  @Column('simple-array', { nullable: false })
+  images: string[];
 }

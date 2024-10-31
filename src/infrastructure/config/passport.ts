@@ -1,9 +1,10 @@
-import { PassportStatic, Profile } from 'passport';
+import { PassportStatic, Profile} from 'passport';
 import { Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { FindUserByGoogleIdUseCase } from '../../application/use-cases/user-use-cases/find-user-by.googleId.use-case';
 import { CreateUserUseCase } from '../../application/use-cases/user-use-cases/create-user.use-case';
 import { FindUserByIdUseCase } from '../../application/use-cases/user-use-cases/find-user-by.id.use-case';
+import { request } from 'express';
 
 export const initializePassport = (passport: PassportStatic) => {
   passport.use(
@@ -17,13 +18,14 @@ export const initializePassport = (passport: PassportStatic) => {
         const findUserByGoogleIdUseCase = new FindUserByGoogleIdUseCase();
 
         let user = await findUserByGoogleIdUseCase.execute(profile.id);
-
+        
         if (!user) {
           const createUserDto: CreateUserDto = {
             email: profile.emails![0].value,
             name: profile.displayName,
             profilePicture: profile.photos![0].value,
             googleId: profile.id,
+            location: request.body.province,
           };
 
           const createUserUseCase = new CreateUserUseCase();
