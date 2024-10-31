@@ -142,7 +142,7 @@ export class ItineraryService {
         toDate: activity.toDate,
         itinerary: activity.itinerary,
         place: activity.place,
-        images: []
+        images: activity.images
       })),
     };
   }
