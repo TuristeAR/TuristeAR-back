@@ -114,6 +114,7 @@ export class ItineraryService {
         name: this.activityService.formatActivityName(itineraryPlaces[i].name, activityDates[0]),
         fromDate: activityDates[0],
         toDate: activityDates[1],
+        images: []
       };
 
       const activity = await this.createActivityUseCase.execute(createActivityDto);
@@ -141,6 +142,7 @@ export class ItineraryService {
         toDate: activity.toDate,
         itinerary: activity.itinerary,
         place: activity.place,
+        images: []
       })),
     };
   }
