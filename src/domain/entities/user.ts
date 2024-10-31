@@ -11,9 +11,6 @@ export class User extends AbstractEntity {
   name: string;
 
   @Column()
-  username: string;
-
-  @Column()
   profilePicture: string;
 
   @Column()
