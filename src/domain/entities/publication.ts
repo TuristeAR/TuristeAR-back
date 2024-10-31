@@ -2,19 +2,13 @@ import { Entity, Column, ManyToMany, ManyToOne, JoinColumn, JoinTable, OneToMany
 import { AbstractEntity } from './abstract.entity';
 import { User } from './user';
 import { Category } from './category';
-import { Itinerary } from './itinerary';
 import { Comment } from './comment';
+import { Activity } from './activity';
 
 @Entity()
 export class Publication extends AbstractEntity {
   @Column()
   description: string;
-
-  @Column('simple-array', { nullable: false })
-  images: string[];
-
-  @Column()
-  creationDate: Date;
 
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'categoryId' })
@@ -45,11 +39,13 @@ export class Publication extends AbstractEntity {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @ManyToOne(() => Itinerary)
-  @JoinColumn({ name: 'itineraryId' })
-  itinerary: Itinerary;
+  @ManyToMany(() => Activity)
+  @JoinTable({
+    joinColumn: { name: 'publicationId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'activityId', referencedColumnName: 'id' },
+  })
+  activities: Activity[];
 
   @OneToMany(()=> Comment, (comment) => comment.publication)
   comments: Comment[];
-
 }

@@ -5,13 +5,6 @@ export class CreatePublicationDTO {
   @IsString()
   description: string;
 
-  @IsArray()
-  @IsString({ each: true })
-  images: string[];
-
-  @IsString()
-  creationDate: string;
-
   @IsOptional()
   @IsArray()
   @IsNumber()
@@ -38,6 +31,8 @@ export class CreatePublicationDTO {
   @IsNumber()
   userId: number;
 
+  @IsOptional()
+  @IsArray()
   @IsNumber()
-  itineraryId: number;
+  activities?: number[];
 }
