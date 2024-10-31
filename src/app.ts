@@ -62,6 +62,7 @@ import { CreateCommentUseCase } from './application/use-cases/comment-use-cases/
 import { FindEventByProvinceUseCase } from './application/use-cases/event-use-cases/find-event-by-province.use-case';
 import { UserService } from './domain/services/user.service';
 import { ubicationMiddleware } from './infrastructure/middlewares/ubication.middleware';
+import { UpdateActivityUseCase } from './application/use-cases/activity-use-cases/update-activity.use-case';
 
 dotenv.config();
 
@@ -180,6 +181,7 @@ const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
 const findUserByIdUseCase = new FindUserByIdUseCase();
 const findUserByNameUseCase = new FindUserByNameUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
+const updateActivityUseCase = new UpdateActivityUseCase();
 
 app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
   
@@ -1054,6 +1056,32 @@ app.get('/forum/:id', async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error al obtener el foro', error });
   }
 });
+
+app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = req.user as User;
+    const {activityId, images} = req.body;
+
+    const activity= await findActivityByIdUseCase.execute(Number(activityId));
+
+    for (const image of images) {
+      activity?.images.push(image);
+    }
+
+    if(!activity){
+      return res.status(400).json({ message: 'ID inválido' });
+    }
+
+    const updatedActivity = await updateActivityUseCase.execute(activity);
+
+    return res.json(updatedActivity);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error al obtener el foro', error });
+  }
+});
+
+
+
 
 io.on('connection', (socket) => {
   socket.on('createMessage', async (data) => {
