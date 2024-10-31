@@ -286,6 +286,28 @@ export class ItineraryService {
     return updateItineraryUseCase.execute(itinerary);
   }
 
+  async removeEventFromItinerary(itineraryId: number, eventId: number): Promise<Itinerary> {
+    const findItineraryWithEventUseCase = new FindItineraryWithEventUseCase();
+
+    const itinerary = await findItineraryWithEventUseCase.execute(itineraryId);
+
+    if (!itinerary) {
+      throw new Error('Itinerary not found');
+    }
+
+    const eventIndex = itinerary.events.findIndex((event) => event.id === eventId);
+
+    if (eventIndex === -1) {
+      throw new Error('Event not found in the itinerary');
+    }
+
+    itinerary.events.splice(eventIndex, 1);
+
+    const updateItineraryUseCase = new UpdateItineraryUseCase();
+
+    return updateItineraryUseCase.execute(itinerary);
+  }
+
   async updateDateActivityDates(activityId: Number, start: Date, end: Date) {
     const updateDateActivityUseCase = new UpdateDateActivityIdUseCase();
 
