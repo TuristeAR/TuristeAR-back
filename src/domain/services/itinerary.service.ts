@@ -301,7 +301,7 @@ export class ItineraryService {
       throw new Error('Event not found in the itinerary');
     }
 
-    itinerary.activities.splice(eventIndex, 1);
+    itinerary.events.splice(eventIndex, 1);
 
     const updateItineraryUseCase = new UpdateItineraryUseCase();
 
