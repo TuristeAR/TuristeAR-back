@@ -964,6 +964,7 @@ app.post('/createPublication', authMiddleware, async (req: Request, res: Respons
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: publication });
   } catch (error) {
+    console.log(error)
     return res.status(status.INTERNAL_SERVER_ERROR).json({
       statusCode: status.INTERNAL_SERVER_ERROR,
       message: error || 'Error creating publication',
