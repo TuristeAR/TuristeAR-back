@@ -674,8 +674,8 @@ app.delete('/itinerary/remove-event', async (req, res) => {
   }
 });
 
-app.get('/itinerary/own', authMiddleware, (req, res) => {
-  const user = req.user as User;
+app.get('/itinerary/byUser/:userId', authMiddleware, (req, res) => {
+  let user = req.user as User;
 
   findItineraryByUserWithParticipantsUseCase
     .execute(Number(user.id))
@@ -801,7 +801,7 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/publications/saved', authMiddleware, async (req: Request, res: Response) => {
+app.get('/publications/saved/:userId', authMiddleware, async (req: Request, res: Response) => {
   const user = req.user as User;
 
   try {
