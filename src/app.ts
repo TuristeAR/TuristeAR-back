@@ -674,11 +674,11 @@ app.delete('/itinerary/remove-event', async (req, res) => {
   }
 });
 
-app.get('/itinerary/byUser/:userId', (req, res) => {
-  const { userId } = req.params;
+app.get('/itinerary/own', authMiddleware, (req, res) => {
+  const user = req.user as User;
 
   findItineraryByUserWithParticipantsUseCase
-    .execute(Number(userId))
+    .execute(Number(user.id))
     .then((participants) => {
       return res.status(200).json({ status: 'success', participants });
     })
@@ -801,14 +801,14 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/publications/saved/:userID', async (req: Request, res: Response) => {
-  const { userID } = req.params;
+app.get('/publications/saved', authMiddleware, async (req: Request, res: Response) => {
+  const user = req.user as User;
 
   try {
     let publications;
 
-    if (!isNaN(Number(userID))) {
-      publications = await findPublicationByUserSavesUseCase.execute(Number(userID));
+    if (!isNaN(Number(user.id))) {
+      publications = await findPublicationByUserSavesUseCase.execute(Number(user.id));
     }
 
     if (!publications) {
