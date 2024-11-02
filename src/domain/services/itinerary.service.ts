@@ -106,7 +106,7 @@ export class ItineraryService {
       for (let j = 0; j < 2; j++) {
         const activityDates = this.activityService.getActivityDates(
           itineraryPlaces[i].openingHours,
-          dates[i],
+          dates[Math.floor(i/2)],
         );
 
         const createActivityDto: CreateActivityDto = {
