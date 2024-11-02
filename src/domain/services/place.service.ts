@@ -191,6 +191,7 @@ export class PlaceService {
         const filteredPlaces = places.filter((place) =>
           place.types.some((type) => joinedTypes.includes(type)),
         );
+
         const limitedReviewImages = filteredPlaces.map((place) => {
           const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
           return {
@@ -199,6 +200,7 @@ export class PlaceService {
           };
         });
       }
+
       const limitedReviewImages = places.map((place) => {
         const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
         return {

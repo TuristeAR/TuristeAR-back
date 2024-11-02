@@ -4,37 +4,40 @@ import { User } from '../entities/user';
 import { CreatePublicationUseCase } from '../../application/use-cases/publication-use-cases/create-publication.use-case';
 import { FindCategoryByIdUseCase } from '../../application/use-cases/category-use-cases/find-category-by-id.use-case';
 import { UpdatePublicationUseCase } from '../../application/use-cases/publication-use-cases/update-publication.use-case';
-import { FindItineraryByIdUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-by-id.use-case';
-import { FindItineraryWithProvinceCategory } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-province-category';
+import { FindActivityByIdUseCase } from '../../application/use-cases/activity-use-cases/find-activity-by-id.use-case';
+import { Activity } from '../entities/activity';
 
 export class PublicationService {
   async createPublication(publicationDTO: CreatePublicationDTO, user: User): Promise<Publication> {
-    const { description, images, itineraryId } = publicationDTO;
+    const { description, activities } = publicationDTO;
 
+    console.log(description, activities)
     const newPublication = new Publication();
 
     newPublication.description = description;
-    newPublication.images = images;
     newPublication.likes = [];
     newPublication.reposts = [];
     newPublication.saved = [];
-    newPublication.creationDate = new Date();
 
     try {
-      const findItineraryWithProvinceCategory = new FindItineraryWithProvinceCategory();
+      const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
+      const findActivityByIdUseCase = new FindActivityByIdUseCase();
 
-      const itinerary = await findItineraryWithProvinceCategory.execute(itineraryId);
-
-      if (!itinerary) {
-        throw new Error('Itinerario no encontrado');
+      if(!activities) {
+        throw new Error('Categoría no encontrada');
       }
 
-      newPublication.itinerary = itinerary;
+      const activityEntities = [] as Activity[];
 
-      const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
+      for (const activity of activities) {
+        const activityEntity = await findActivityByIdUseCase.execute(activity);
+        if (activityEntity instanceof Activity) {
+          activityEntities.push(activityEntity);
+        }
+      }
 
       const category = await findCategoryByIdUseCase.execute(
-        Number(itinerary.activities[0].place.province.category?.id),
+        Number(activityEntities[0].place.province.category?.id),
       );
 
       if (!category) {
@@ -42,7 +45,7 @@ export class PublicationService {
       }
 
       newPublication.category = category;
-
+      newPublication.activities=activityEntities;
       newPublication.user = user;
 
       const createPublicationUseCase = new CreatePublicationUseCase();

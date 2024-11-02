@@ -12,7 +12,7 @@ export class FindPublicationByUserSavesUseCase {
   execute(userId: number): Promise<Publication[]> {
     return this.publicationRepository.findMany({
       where: { saved: { id: userId } },
-      relations: ['user', 'category', 'likes', 'reposts', 'saved', 'comments'],
+      relations: ['user', 'category', 'likes', 'reposts', 'saved', 'comments', 'activities.place'],
       order: { id: 'DESC' },
     });
   }

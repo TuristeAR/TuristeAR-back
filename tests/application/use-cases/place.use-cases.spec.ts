@@ -133,7 +133,7 @@ describe('PlaceUseCases', () => {
     const result = await findAllPlaceUseCase.execute();
 
     expect(result).toEqual(places);
-    expect(placeRepository.findMany).toHaveBeenCalledWith({});
+    expect(placeRepository.findMany).toHaveBeenCalledWith({}, 50);
   });
 
   it('should return an empty list if no places are found', async () => {
@@ -142,14 +142,14 @@ describe('PlaceUseCases', () => {
     const result = await findAllPlaceUseCase.execute();
 
     expect(result).toEqual([]);
-    expect(placeRepository.findMany).toHaveBeenCalledWith({});
+    expect(placeRepository.findMany).toHaveBeenCalledWith({}, 50);
   });
 
   it('should throw an error if repository throws an error', async () => {
     placeRepository.findMany.mockRejectedValue(new Error('Repository error'));
 
     await expect(findAllPlaceUseCase.execute()).rejects.toThrow('Repository error');
-    expect(placeRepository.findMany).toHaveBeenCalledWith({});
+    expect(placeRepository.findMany).toHaveBeenCalledWith({}, 50);
   });
 
   it('returns a place when a valid googleId is provided', async () => {
@@ -181,10 +181,13 @@ describe('PlaceUseCases', () => {
     const result = await findPlaceByProvinceUseCase.execute(provinceId);
 
     expect(result).toEqual(places);
-    expect(placeRepository.findMany).toHaveBeenCalledWith({
-      where: { province: { id: provinceId } },
-      relations: ['province'],
-    });
+    expect(placeRepository.findMany).toHaveBeenCalledWith(
+      {
+        where: { province: { id: provinceId } },
+        relations: ['province'],
+      },
+      50,
+    );
   });
 
   it('returns an empty list when no places are found for the provided provinceId', async () => {
@@ -194,10 +197,13 @@ describe('PlaceUseCases', () => {
     const result = await findPlaceByProvinceUseCase.execute(provinceId);
 
     expect(result).toEqual([]);
-    expect(placeRepository.findMany).toHaveBeenCalledWith({
-      where: { province: { id: provinceId } },
-      relations: ['province'],
-    });
+    expect(placeRepository.findMany).toHaveBeenCalledWith(
+      {
+        where: { province: { id: provinceId } },
+        relations: ['province'],
+      },
+      50,
+    );
   });
 
   it('returns a list of places for a valid provinceId', async () => {
@@ -208,21 +214,24 @@ describe('PlaceUseCases', () => {
     const result = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
 
     expect(result).toEqual(places);
-    expect(placeRepository.findMany).toHaveBeenCalledWith({
-      where: { province: { id: provinceId } },
-      relations: ['province', 'reviews'],
-      select: {
-        id: true,
-        googleId: true,
-        name: true,
-        types: true,
-        rating: true,
-        address: true,
-        reviews: {
-          photos: true,
+    expect(placeRepository.findMany).toHaveBeenCalledWith(
+      {
+        where: { province: { id: provinceId } },
+        relations: ['province', 'reviews'],
+        select: {
+          id: true,
+          googleId: true,
+          name: true,
+          types: true,
+          rating: true,
+          address: true,
+          reviews: {
+            photos: true,
+          },
         },
       },
-    });
+      50,
+    );
   });
 
   it('returns an empty list when no places are found for the provided provinceId', async () => {
@@ -232,20 +241,23 @@ describe('PlaceUseCases', () => {
     const result = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
 
     expect(result).toEqual([]);
-    expect(placeRepository.findMany).toHaveBeenCalledWith({
-      where: { province: { id: provinceId } },
-      relations: ['province', 'reviews'],
-      select: {
-        id: true,
-        googleId: true,
-        name: true,
-        types: true,
-        rating: true,
-        address: true,
-        reviews: {
-          photos: true,
+    expect(placeRepository.findMany).toHaveBeenCalledWith(
+      {
+        where: { province: { id: provinceId } },
+        relations: ['province', 'reviews'],
+        select: {
+          id: true,
+          googleId: true,
+          name: true,
+          types: true,
+          rating: true,
+          address: true,
+          reviews: {
+            photos: true,
+          },
         },
       },
-    });
+      50,
+    );
   });
 });
