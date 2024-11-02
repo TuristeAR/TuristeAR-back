@@ -68,6 +68,13 @@ import { FindEventByProvinceUseCase } from './application/use-cases/event-use-ca
 import { UserService } from './domain/services/user.service';
 import { ubicationMiddleware } from './infrastructure/middlewares/ubication.middleware';
 import { UpdateActivityUseCase } from './application/use-cases/activity-use-cases/update-activity.use-case';
+import { SaveExpenseUseCase } from './application/use-cases/expense-use-cases/save-expense.use-case';
+import { FindExpenseByIdUseCase } from './application/use-cases/expense-use-cases/find-expense-by-id.use-case';
+import { DeletePublicationUseCase } from './application/use-cases/publication-use-cases/delete-publication.use-case';
+import {
+  FindCommentsByPublicationIdUserCase
+} from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
+import { DeleteCommentsUseCase } from './application/use-cases/comment-use-cases/delete-comments.use-case';
 
 dotenv.config();
 
@@ -164,6 +171,7 @@ const findAllReviewUseCase = new FindAllReviewUseCase();
 const findAllUserUseCase = new FindAllUserUseCase();
 const findAllWeatherUseCase = new FindAllWeatherUseCase();
 const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
+const findCommentsByPublicationIdUserCase = new FindCommentsByPublicationIdUserCase();
 const findEventByProvinceAndDatesUseCase = new FindEventByProvinceAndDatesUseCase();
 const findEventByProvinceUseCase = new FindEventByProvinceUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
@@ -189,6 +197,10 @@ const updateUserUseCase = new UpdateUserUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
+const saveExpenseUseCase = new SaveExpenseUseCase();
+const findExpenseByIdUseCase = new FindExpenseByIdUseCase();
+const deletePublicationUseCase = new DeletePublicationUseCase();
+const deleteCommentsUseCase = new DeleteCommentsUseCase();
 
 const updateActivityUseCase = new UpdateActivityUseCase();
 
@@ -1156,6 +1168,69 @@ app.post('/expenses', async (req, res) => {
   }
 });
 
+app.put('/expenses/:idExpense', async (req, res) => {
+  const { idExpense } = req.params;
+
+  try {
+    const {
+      description,
+      date,
+      payerId,
+      totalAmount,
+      distributionType,
+      participatingUsers,
+      itineraryId,
+      individualAmounts,
+      individualPercentages
+    } = req.body;
+
+    if (!description) return res.status(400).json({ message: 'Falta el campo description' });
+    if (!date) return res.status(400).json({ message: 'Falta el campo date' });
+    if (!payerId) return res.status(400).json({ message: 'Falta el campo payerId' });
+    if (totalAmount == null) return res.status(400).json({ message: 'Falta el campo totalAmount' });
+    if (!distributionType) return res.status(400).json({ message: 'Falta el campo distributionType' });
+    if (!itineraryId) return res.status(400).json({ message: 'Falta el campo itineraryId' });
+
+    const payer = await findUserByIdUseCase.execute(payerId);
+    const itinerary = await findItineraryByIdUseCase.execute(itineraryId);
+    if (!payer || !itinerary) {
+      return res.status(404).json({ message: 'Payer o itinerario no encontrado' });
+    }
+
+    const existingExpense = await findExpenseByIdUseCase.execute(Number(idExpense));
+    if (!existingExpense) {
+      return res.status(404).json({ message: 'Gasto no encontrado' });
+    }
+
+    // Obtener las instancias de los usuarios participantes
+    const users = await Promise.all(
+      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId))
+    );
+    const validUsers = users.filter((user) => user);
+
+    // Actualizar propiedades del gasto existente
+    existingExpense.description = description;
+    existingExpense.date = new Date(date);
+    existingExpense.totalAmount = totalAmount;
+    existingExpense.distributionType = distributionType;
+    existingExpense.payer = payer;
+    existingExpense.itinerary = itinerary;
+    existingExpense.individualAmounts = individualAmounts || {};
+    existingExpense.individualPercentages = individualPercentages || {};
+
+    // Actualizar la relación many-to-many
+    existingExpense.participatingUsers = validUsers;
+
+    // Guardar la actualización
+    const response = await saveExpenseUseCase.execute(existingExpense);
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Error al editar el gasto:', error); 
+    res.status(500).json({ message: 'Error interno del servidor', error });
+  }
+});
+
 app.get('/expenses/:itineraryId', async (req, res) => {
   const { itineraryId } = req.params; 
 
@@ -1263,6 +1338,38 @@ io.on('connection', (socket) => {
         description: comment.description,
         user: comment.user,
         createdAt: comment.createdAt,
+      });
+    } catch (error) {
+      socket.emit('error', { message: 'Error al crear el mensaje', error });
+    }
+  });
+
+  socket.on('deletePublication', async (data) => {
+    try {
+      const { publicationId, userId } = data;
+
+      const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
+
+      if (!publication) {
+        socket.emit('error', { message: 'Publicación no encontrada' });
+        return;
+      }
+
+      if(publication.user.id !== userId) {
+        socket.emit('error', { message: 'La publicación no le pertenece' });
+        return;
+      }
+
+      if(publication.comments.length > 0) {
+        const comments= await findCommentsByPublicationIdUserCase.execute(Number(publicationId))
+        await deleteCommentsUseCase.execute(comments)
+
+      }
+
+      await deletePublicationUseCase.execute(publication);
+
+      io.emit('receiveDelete', {
+
       });
     } catch (error) {
       socket.emit('error', { message: 'Error al crear el mensaje', error });
