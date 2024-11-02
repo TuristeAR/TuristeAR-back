@@ -40,6 +40,11 @@ export class ItineraryService {
   async create(user: User, createItineraryDto: CreateItineraryDto) {
     const dates = this.getDates(createItineraryDto.fromDate, createItineraryDto.toDate);
 
+    const typesByCompany = this.filterTypesByCompany(
+      createItineraryDto.types,
+      createItineraryDto.company,
+    );
+
     const provinceName = await this.provinceService.getProvinceNameFromId(
       createItineraryDto.provinceId,
     );
@@ -86,7 +91,9 @@ export class ItineraryService {
     for (let i = 0; i < dates.length; i++) {
       const locality = createItineraryDto.localities[i % createItineraryDto.localities.length];
 
-      const type = createItineraryDto.types[i % createItineraryDto.types.length];
+      const types = typesByCompany[i % createItineraryDto.types.length].split(',');
+
+      const type = types[i % types.length];
 
       const place = await this.placeService.findOneInLocalityByTypesAndPriceLevel(
         itineraryPlaces,
@@ -114,7 +121,7 @@ export class ItineraryService {
         name: this.activityService.formatActivityName(itineraryPlaces[i].name, activityDates[0]),
         fromDate: activityDates[0],
         toDate: activityDates[1],
-        images: []
+        images: [],
       };
 
       const activity = await this.createActivityUseCase.execute(createActivityDto);
@@ -142,7 +149,7 @@ export class ItineraryService {
         toDate: activity.toDate,
         itinerary: activity.itinerary,
         place: activity.place,
-        images: activity.images
+        images: activity.images,
       })),
     };
   }
@@ -333,5 +340,151 @@ export class ItineraryService {
     }
 
     return dates;
+  }
+
+  private filterTypesByCompany(types: string[], company: number): string[] {
+    if (company < 1 || company > 4) {
+      throw new Error('Invalid company');
+    }
+
+    const typesByCompany: Record<number, string[]> = {
+      1: [
+        'bar',
+        'tourist_attraction',
+        'landmark',
+        'scenic_viewpoint',
+        'natural_feature',
+        'historical_landmark',
+        'cafe',
+        'coffee_shop',
+        'library',
+        'museum',
+        'political',
+        'art_gallery',
+        'theater',
+        'city_hall',
+        'park',
+        'botanical_garden',
+        'national_park',
+        'campground',
+        'hiking_area',
+        'scenic_point',
+        'ski_resort',
+        'sports_complex',
+        'surf_spot',
+        'mountain',
+        'wilderness_area',
+        'climbing_area',
+        'nature_reserve',
+        'wildlife_reserve',
+      ],
+      2: [
+        'bar',
+        'restaurant',
+        'cafe',
+        'coffee_shop',
+        'food_court',
+        'bakery',
+        'tourist_attraction',
+        'landmark',
+        'scenic_viewpoint',
+        'natural_feature',
+        'movie_theater',
+        'concert_hall',
+        'museum',
+        'art_gallery',
+        'theater',
+        'city_hall',
+        'church',
+        'place_of_worship',
+        'sports_complex',
+        'ice_skating_rink',
+        'mountain',
+        'national_forest',
+        'wilderness_area',
+        'beach',
+        'lake',
+        'forest',
+        'nature_reserve',
+        'waterfall',
+        'wildlife_reserve',
+      ],
+      3: [
+        'bar',
+        'night_club',
+        'music_venue',
+        'dance_club',
+        'cocktail_bar',
+        'event_venue',
+        'beer_hall',
+        'food',
+        'pub',
+        'karaoke',
+        'stadium',
+        'sports_complex',
+        'skate_park',
+        'escape_room',
+        'amusement_park',
+        'bowling_alley',
+        'pool_hall',
+        'casino',
+        'park',
+        'beach',
+        'lake',
+        'mountain',
+        'trailhead',
+        'national_forest',
+        'wilderness_area',
+        'climbing_area',
+        'nature_reserve',
+        'wildlife_reserve',
+      ],
+      4: [
+        'park',
+        'zoo',
+        'aquarium',
+        'amusement_park',
+        'museum',
+        'political',
+        'restaurant',
+        'food_court',
+        'water_park',
+        'movie_theater',
+        'botanical_garden',
+        'national_park',
+        'library',
+        'cultural_center',
+        'theater',
+        'church',
+        'place_of_worship',
+        'embassy',
+        'stadium',
+        'sports_complex',
+        'karaoke',
+        'nature_reserve',
+        'wildlife_reserve',
+        'beach',
+        'lake',
+        'forest',
+        'waterfall',
+        'mountain',
+        'campground',
+        'trailhead',
+        'national_forest',
+        'wilderness_area',
+        'climbing_area',
+      ],
+    };
+
+    const allowedTypes = typesByCompany[company];
+
+    return types.map((typeString) => {
+      const filteredTypes = typeString
+        .split(',')
+        .filter((type) => allowedTypes.includes(type))
+        .join(',');
+
+      return filteredTypes || typeString;
+    });
   }
 }

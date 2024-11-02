@@ -14,6 +14,7 @@ import { Message } from '../../domain/entities/message';
 import { Forum } from '../../domain/entities/forum';
 import { Expense } from '../../domain/entities/expense';
 import { Comment } from '../../domain/entities/comment';
+import { Notification } from '../../domain/entities/notification';
 
 dotenv.config();
 
@@ -38,7 +39,8 @@ export const AppDataSource = new DataSource({
     Forum,
     Message,
     Comment,
-    Expense
+    Expense,
+    Notification
   ],
   synchronize: true,
   logging: true,
