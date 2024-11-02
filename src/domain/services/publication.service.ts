@@ -11,7 +11,6 @@ export class PublicationService {
   async createPublication(publicationDTO: CreatePublicationDTO, user: User): Promise<Publication> {
     const { description, activities } = publicationDTO;
 
-    console.log(description, activities)
     const newPublication = new Publication();
 
     newPublication.description = description;
@@ -24,7 +23,7 @@ export class PublicationService {
       const findActivityByIdUseCase = new FindActivityByIdUseCase();
 
       if(!activities) {
-        throw new Error('Categoría no encontrada');
+        throw new Error('Actividades vacías');
       }
 
       const activityEntities = [] as Activity[];
@@ -45,7 +44,7 @@ export class PublicationService {
       }
 
       newPublication.category = category;
-      newPublication.activities=activityEntities;
+      newPublication.activities = activityEntities;
       newPublication.user = user;
 
       const createPublicationUseCase = new CreatePublicationUseCase();

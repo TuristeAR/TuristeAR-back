@@ -12,6 +12,10 @@ export class CreateItineraryDto {
   @IsNumber({}, { each: true })
   events: number[];
 
+  @IsArray()
+  @IsNumber({}, { each: true })
+  expenses: number[];
+
   @IsDate()
   fromDate: Date;
 
