@@ -183,7 +183,7 @@ export class PlaceService {
     try {
       const findPlaceByProvinceAndTypesUseCase = new FindPlaceByProvinceAndTypesUseCase();
 
-      const places = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
+      const places = await findPlaceByProvinceAndTypesUseCase.execute(provinceId,types);
 
       const joinedTypes = types.join(',');
 
