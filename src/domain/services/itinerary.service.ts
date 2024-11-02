@@ -91,7 +91,9 @@ export class ItineraryService {
     for (let i = 0; i < dates.length; i++) {
       const locality = createItineraryDto.localities[i % createItineraryDto.localities.length];
 
-      const type = typesByCompany[i % typesByCompany.length];
+      const types = typesByCompany[i % createItineraryDto.types.length].split(',');
+
+      const type = types[i % types.length];
 
       const place = await this.placeService.findOneInLocalityByTypesAndPriceLevel(
         itineraryPlaces,
@@ -340,16 +342,15 @@ export class ItineraryService {
     return dates;
   }
 
-  private filterTypesByCompany(types: string[], company: number) {
+  private filterTypesByCompany(types: string[], company: number): string[] {
     if (company < 1 || company > 4) {
       throw new Error('Invalid company');
     }
 
-    const typesByCompany: any = {
+    const typesByCompany: Record<number, string[]> = {
       1: [
         'bar',
         'tourist_attraction',
-        'point_of_interest',
         'landmark',
         'scenic_viewpoint',
         'natural_feature',
@@ -376,7 +377,7 @@ export class ItineraryService {
         'climbing_area',
         'nature_reserve',
         'wildlife_reserve',
-      ], // Persona sola
+      ],
       2: [
         'bar',
         'restaurant',
@@ -385,7 +386,6 @@ export class ItineraryService {
         'food_court',
         'bakery',
         'tourist_attraction',
-        'point_of_interest',
         'landmark',
         'scenic_viewpoint',
         'natural_feature',
@@ -408,7 +408,7 @@ export class ItineraryService {
         'nature_reserve',
         'waterfall',
         'wildlife_reserve',
-      ], // Pareja
+      ],
       3: [
         'bar',
         'night_club',
@@ -438,7 +438,7 @@ export class ItineraryService {
         'climbing_area',
         'nature_reserve',
         'wildlife_reserve',
-      ], // Grupo de amigos
+      ],
       4: [
         'park',
         'zoo',
@@ -473,13 +473,18 @@ export class ItineraryService {
         'national_forest',
         'wilderness_area',
         'climbing_area',
-      ], // Familia
+      ],
     };
 
     const allowedTypes = typesByCompany[company];
 
-    const userTypes = types.flatMap((typeString) => typeString.split(','));
+    return types.map((typeString) => {
+      const filteredTypes = typeString
+        .split(',')
+        .filter((type) => allowedTypes.includes(type))
+        .join(',');
 
-    return userTypes.filter((type) => allowedTypes.includes(type));
+      return filteredTypes || typeString;
+    });
   }
 }
