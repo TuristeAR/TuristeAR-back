@@ -83,11 +83,11 @@ export class ItineraryService {
 
     let itineraryPlaces: Place[] = [];
 
-    for (let i = 0; i < dates.length; i++) {
+    for (let i = 0; i < dates.length * 2; i++) {
       const locality = createItineraryDto.localities[i % createItineraryDto.localities.length];
 
       const type = createItineraryDto.types[i % createItineraryDto.types.length];
-
+      
       const place = await this.placeService.findOneInLocalityByTypesAndPriceLevel(
         itineraryPlaces,
         type,
