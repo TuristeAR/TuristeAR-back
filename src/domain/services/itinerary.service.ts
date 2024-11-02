@@ -83,11 +83,11 @@ export class ItineraryService {
 
     let itineraryPlaces: Place[] = [];
 
-    for (let i = 0; i < dates.length * 2; i++) {
+    for (let i = 0; i < dates.length; i++) {
       const locality = createItineraryDto.localities[i % createItineraryDto.localities.length];
 
       const type = createItineraryDto.types[i % createItineraryDto.types.length];
-      
+
       const place = await this.placeService.findOneInLocalityByTypesAndPriceLevel(
         itineraryPlaces,
         type,
@@ -102,26 +102,24 @@ export class ItineraryService {
 
     itineraryPlaces = this.placeService.orderByDistance(itineraryPlaces, dates);
 
-    for (let i = 0; i < itineraryPlaces.length; i++) {
-      for (let j = 0; j < 2; j++) {
-        const activityDates = this.activityService.getActivityDates(
-          itineraryPlaces[i].openingHours,
-          dates[0],
-        );
+    for (let i = 0; i < dates.length; i++) {
+      const activityDates = this.activityService.getActivityDates(
+        itineraryPlaces[i].openingHours,
+        dates[i],
+      );
 
-        const createActivityDto: CreateActivityDto = {
-          itinerary: savedItinerary,
-          place: itineraryPlaces[i],
-          name: this.activityService.formatActivityName(itineraryPlaces[i].name, activityDates[0]),
-          fromDate: activityDates[0],
-          toDate: activityDates[1],
-          images: []
-        };
+      const createActivityDto: CreateActivityDto = {
+        itinerary: savedItinerary,
+        place: itineraryPlaces[i],
+        name: this.activityService.formatActivityName(itineraryPlaces[i].name, activityDates[0]),
+        fromDate: activityDates[0],
+        toDate: activityDates[1],
+        images: []
+      };
 
-        const activity = await this.createActivityUseCase.execute(createActivityDto);
+      const activity = await this.createActivityUseCase.execute(createActivityDto);
 
-        savedItinerary.activities.push(activity);
-      }
+      savedItinerary.activities.push(activity);
     }
 
     return savedItinerary;
