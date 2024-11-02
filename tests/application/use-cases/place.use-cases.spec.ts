@@ -211,7 +211,7 @@ describe('PlaceUseCases', () => {
     const places: Place[] = [new Place(), new Place()];
     placeRepository.findMany.mockResolvedValue(places);
 
-    const result = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
+    const result = await findPlaceByProvinceAndTypesUseCase.execute(provinceId,[]);
 
     expect(result).toEqual(places);
     expect(placeRepository.findMany).toHaveBeenCalledWith(
@@ -238,7 +238,7 @@ describe('PlaceUseCases', () => {
     const provinceId = 2;
     placeRepository.findMany.mockResolvedValue([]);
 
-    const result = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
+    const result = await findPlaceByProvinceAndTypesUseCase.execute(provinceId,[]);
 
     expect(result).toEqual([]);
     expect(placeRepository.findMany).toHaveBeenCalledWith(
