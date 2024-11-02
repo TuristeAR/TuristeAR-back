@@ -102,11 +102,11 @@ export class ItineraryService {
 
     itineraryPlaces = this.placeService.orderByDistance(itineraryPlaces, dates);
 
-    for (let i = 0; i < dates.length * 2; i++) {
+    for (let i = 0; i < itineraryPlaces.length; i++) {
       for (let j = 0; j < 2; j++) {
         const activityDates = this.activityService.getActivityDates(
           itineraryPlaces[i].openingHours,
-          dates[Math.floor(i/2)],
+          dates[0],
         );
 
         const createActivityDto: CreateActivityDto = {
