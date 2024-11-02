@@ -1,34 +1,24 @@
-import { PublicationRepository } from '../repositories/user.repository';
-import { User } from '../entities/user';
-import { CreateUserDto } from '../../application/dtos/create-user.dto';
-import { Like } from 'typeorm';
+import axios from 'axios';
 
 export class UserService {
-  private userRepository: PublicationRepository;
+    
+    async getProvinceForCoordinates(latitude: number, longitude: number) {
+        try {
+            const response = await axios.get(
+                `https://apis.datos.gob.ar/georef/api/ubicacion?lat=${latitude}&lon=${longitude}`
+            );
 
-  constructor() {
-    this.userRepository = new PublicationRepository();
-  }
+            const province = response.data.ubicacion?.provincia?.nombre;
 
-  create(createUserDto: CreateUserDto): Promise<User> {
-    return this.userRepository.create(createUserDto);
-  }
-
-  findOneById(id: number): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id } });
-  }
-
-  findOneByGoogleId(googleId: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { googleId } });
-  }
-  
-  searchByName(name: string, offset: number): Promise<User[]> {
-    return this.userRepository.findMany({
-      where: {
-        name: Like(`%${name}%`),
-      },
-      take: 10,
-      skip: offset,
-    });
-  }
+            if (province) {
+                return province;
+            } else {
+                console.warn('Provincia no encontrada en los datos de ubicación');
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching location data:', error);
+            // throw error; // para manejar el error en otro lugar
+        }
+    }
 }

@@ -1,11 +1,12 @@
 import { Entity, Column, JoinColumn, OneToMany, ManyToOne } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
+import { AbstractEntity } from './abstract.entity';
 import { Province } from './province';
 import { Review } from './review';
 import { Activity } from './activity';
 
 @Entity()
 export class Place extends AbstractEntity {
+
   @ManyToOne(() => Province, (province) => province.places)
   @JoinColumn({ name: 'provinceId' })
   province: Province;

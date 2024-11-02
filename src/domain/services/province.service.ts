@@ -1,59 +1,16 @@
 import { Province } from '../entities/province';
-import { ProvinceRepository } from '../repositories/province.repository';
-import { CreateProvinceDto } from '../../application/dtos/create-province.dto';
-import { get } from '../../utils/http.util';
+import { get } from '../utils/http.util';
+import { FindProvinceByIdUseCase } from '../../application/use-cases/province-use-cases/find-province-by-id.use-case';
+import { FindProvinceByNameUseCase } from '../../application/use-cases/province-use-cases/find-province-by-name.use-case';
+import { FindProvinceWithReviewsUseCase } from '../../application/use-cases/province-use-cases/find-province-with-reviews.use-case';
 
 export class ProvinceService {
-  private provinceRepository: ProvinceRepository;
-
-  constructor() {
-    this.provinceRepository = new ProvinceRepository();
-  }
-
-  create(createProvinceDto: CreateProvinceDto): Promise<Province> {
-    return this.provinceRepository.create(createProvinceDto);
-  }
-
-  findAll(): Promise<Province[]> {
-    return this.provinceRepository.findMany({});
-  }
-
-  findOneById(id: number): Promise<Province | null> {
-    return this.provinceRepository.findOne({ where: { id } });
-  }
-
-  async findOneByIdWithPlaceReviews(id: number): Promise<Province | null> {
-    const province = await this.provinceRepository.findOne({
-      where: { id },
-      relations: ['places', 'places.reviews'],
-    });
-  
-    if (!province) {
-      return null; 
-    }
-  
-    province.places = province.places
-      .map((place) => {
-        if (place.reviews) {
-          place.reviews = place.reviews.filter((review) => review.rating >= 4);
-        }
-  
-        return place;
-      })
-      .filter((place) => place.reviews.length > 0) 
-      .slice(0, 4); 
-  
-    return province;
-  }
-
   async getProvinceNameFromId(id: number): Promise<string | null> {
-    const province = await this.provinceRepository.findOne({ where: { id } });
+    const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
 
-    if (!province) {
-      throw new Error('Province not found');
-    }
+    const province = await findProvinceByIdUseCase.execute(id);
 
-    return province.name;
+    return province?.name || null;
   }
 
   async getProvinceIdFromCoordinates(latitude: number, longitude: number) {
@@ -68,32 +25,39 @@ export class ProvinceService {
 
     const provinceName = response.ubicacion.provincia.nombre;
 
-    const province = await this.provinceRepository.findOne({ where: { name: provinceName } });
+    const findProvinceByNameUseCase = new FindProvinceByNameUseCase();
 
-    return province?.id;
+    const province = await findProvinceByNameUseCase.execute(provinceName);
+
+    return province?.id || null;
   }
 
-  async findOneByNameWithPlaceReviews(name: string) {
-    const province = await this.provinceRepository.findOne({
-      where: { name },
-      relations: ['places', 'places.reviews'],
-    });
-  
+  async findOneWithProvinceReviews(
+    identifier: string | number,
+    slice: number,
+  ): Promise<Province | null> {
+    const idNumber = typeof identifier === 'number' ? identifier : Number(identifier);
+
+    const isId = !isNaN(idNumber);
+
+    const findProvinceWithReviewsUseCase = new FindProvinceWithReviewsUseCase();
+
+    const province = await findProvinceWithReviewsUseCase.execute(isId, idNumber, identifier);
+
     if (!province) {
-      return null; 
+      return null;
     }
-  
+
     province.places = province.places
       .map((place) => {
         if (place.reviews) {
           place.reviews = place.reviews.filter((review) => review.rating >= 4);
         }
-  
         return place;
       })
-      .filter((place) => place.reviews.length > 0) 
-      .slice(0, 4); 
-  
+      .filter((place) => place.reviews.length > 0)
+      .slice(0, slice);
+
     return province;
   }
 }

@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
+import { AbstractEntity } from './abstract.entity';
 import { Place } from './place';
 
 @Entity()
@@ -9,12 +9,15 @@ export class Review extends AbstractEntity {
   place: Place;
 
   @Column()
+  googleId: string;
+
+  @Column()
   publishedTime: string;
 
   @Column()
   rating: number;
 
-  @Column()
+  @Column({ nullable: true })
   text: string;
 
   @Column()
@@ -23,6 +26,6 @@ export class Review extends AbstractEntity {
   @Column()
   authorPhoto: string;
 
-  @Column('simple-json')
-  photos: string[];
+  @Column('simple-json', { nullable: true })
+  photos: string[] | null;
 }

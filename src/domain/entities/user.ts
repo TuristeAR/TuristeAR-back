@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToMany } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
+import { AbstractEntity } from './abstract.entity';
 import { Itinerary } from './itinerary';
 
 @Entity()
@@ -11,22 +11,19 @@ export class User extends AbstractEntity {
   name: string;
 
   @Column()
-  username: string;
-
-  @Column()
   profilePicture: string;
 
   @Column()
-  description : string;
+  description: string;
 
   @Column()
-  coverPicture : string;
+  coverPicture: string;
 
   @Column()
-  location : string;
+  location: string;
 
   @Column()
-  birthdate : Date;
+  birthdate: Date;
 
   @Column({ unique: true })
   googleId: string;
@@ -35,5 +32,5 @@ export class User extends AbstractEntity {
   ownedItineraries: Itinerary[];
 
   @ManyToMany(() => Itinerary, (itinerary) => itinerary.participants)
-  joinedItineraries: Itinerary[]; 
+  joinedItineraries: Itinerary[];
 }

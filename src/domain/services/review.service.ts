@@ -1,35 +1,12 @@
-import { Review } from '../entities/review';
-import { ReviewRepository } from '../repositories/review.repository';
-import { CreateReviewDto } from '../../application/dtos/create-review.dto';
-import { get, getWithoutJson } from '../../utils/http.util';
+import { CreateReviewDto } from '../../infrastructure/dtos/create-review.dto';
+import { get, getWithoutJson } from '../utils/http.util';
+import { CreateReviewUseCase } from '../../application/use-cases/review-use-cases/create-review.use-case';
 
 export class ReviewService {
-  private reviewRepository: ReviewRepository;
-
-  constructor() {
-    this.reviewRepository = new ReviewRepository();
-  }
-
-  create(createReviewDto: CreateReviewDto): Promise<Review> {
-    return this.reviewRepository.create(createReviewDto);
-  }
-
-  findAll(): Promise<Review[]> {
-    return this.reviewRepository.findMany({});
-  }
-
-  findOneByGoogleId(googleId: string): Promise<Review | null> {
-    return this.reviewRepository.findOne({
-      where: {
-        place: { googleId },
-      },
-      relations: ['place'],
-    });
-  }
-
   async fetchReviews(googleId: string) {
     try {
       let reviews: any[] = [];
+
       let reviewPhotos: any[] = [];
 
       const searchUrl = `https://places.googleapis.com/v1/places/${googleId}`;
@@ -69,18 +46,20 @@ export class ReviewService {
         return acc;
       }, []);
 
-      for (const review of reviews) {
+      for (let i = 0; i < 3; i++) {
         const createReviewDto: CreateReviewDto = {
-          googleId: googleId as string,
-          publishedTime: review.relativePublishTimeDescription,
-          rating: review.rating,
-          text: review.originalText.text,
-          authorName: review.authorAttribution.displayName,
-          authorPhoto: review.authorAttribution.photoUri,
+          googleId: googleId,
+          publishedTime: reviews[i].relativePublishTimeDescription,
+          rating: reviews[i].rating,
+          text: reviews[i].originalText.text,
+          authorName: reviews[i].authorAttribution.displayName,
+          authorPhoto: reviews[i].authorAttribution.photoUri,
           photos: reviewPhotos.shift() || null,
         };
 
-        await this.create(createReviewDto);
+        const createReviewUseCase = new CreateReviewUseCase();
+
+        await createReviewUseCase.execute(createReviewDto);
       }
     } catch (error) {
       console.error('Error fetching reviews', error);

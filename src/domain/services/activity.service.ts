@@ -1,22 +1,4 @@
-import { Activity } from '../entities/activity';
-import { ActivityRepository } from '../repositories/activity.repository';
-import { CreateActivityDto } from '../../application/dtos/create-activity.dto';
-
 export class ActivityService {
-  private activityRepository: ActivityRepository;
-
-  constructor() {
-    this.activityRepository = new ActivityRepository();
-  }
-
-  create(createActivityDto: CreateActivityDto): Promise<Activity> {
-    return this.activityRepository.create(createActivityDto);
-  }
-
-  findOneById(id: number): Promise<Activity | null> {
-    return this.activityRepository.findOne({ where: { id } });
-  }
-
   getActivityDates(openingHours: string[] | null, date: Date): Date[] {
     if (openingHours === null) {
       return this.createStartTimeAndEndTimeBetween9And12(date);
@@ -44,7 +26,7 @@ export class ActivityService {
 
     const activityStart = new Date(date);
 
-    activityStart.setHours(openHour + 2, openMinute, 0, 0);
+    activityStart.setHours(openHour + 5, openMinute, 0, 0);
 
     const activityEnd = new Date(activityStart);
 
@@ -66,10 +48,10 @@ export class ActivityService {
 
   private createStartTimeAndEndTimeBetween9And12(date: Date): Date[] {
     const startTime = new Date(date);
-    startTime.setHours(9, 0, 0, 0);
+    startTime.setHours(12, 0, 0, 0);
 
     const endTime = new Date(date);
-    endTime.setHours(12, 0, 0, 0);
+    endTime.setHours(15, 0, 0, 0);
 
     return [
       new Date(startTime.getTime() - startTime.getTimezoneOffset() * 60000),

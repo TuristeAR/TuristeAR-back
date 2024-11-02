@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { AbstractEntity } from '../../utils/abstract.entity';
+import { AbstractEntity } from './abstract.entity';
 import { Itinerary } from './itinerary';
 import { Place } from './place';
 
@@ -21,4 +21,7 @@ export class Activity extends AbstractEntity {
 
   @Column()
   toDate: Date;
+
+  @Column('simple-array', { nullable: false })
+  images: string[];
 }
