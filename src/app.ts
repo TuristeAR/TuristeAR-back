@@ -70,6 +70,11 @@ import { ubicationMiddleware } from './infrastructure/middlewares/ubication.midd
 import { UpdateActivityUseCase } from './application/use-cases/activity-use-cases/update-activity.use-case';
 import { SaveExpenseUseCase } from './application/use-cases/expense-use-cases/save-expense.use-case';
 import { FindExpenseByIdUseCase } from './application/use-cases/expense-use-cases/find-expense-by-id.use-case';
+import { DeletePublicationUseCase } from './application/use-cases/publication-use-cases/delete-publication.use-case';
+import {
+  FindCommentsByPublicationIdUserCase
+} from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
+import { DeleteCommentsUseCase } from './application/use-cases/comment-use-cases/delete-comments.use-case';
 
 dotenv.config();
 
@@ -166,6 +171,7 @@ const findAllReviewUseCase = new FindAllReviewUseCase();
 const findAllUserUseCase = new FindAllUserUseCase();
 const findAllWeatherUseCase = new FindAllWeatherUseCase();
 const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
+const findCommentsByPublicationIdUserCase = new FindCommentsByPublicationIdUserCase();
 const findEventByProvinceAndDatesUseCase = new FindEventByProvinceAndDatesUseCase();
 const findEventByProvinceUseCase = new FindEventByProvinceUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
@@ -193,6 +199,8 @@ const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases()
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
 const saveExpenseUseCase = new SaveExpenseUseCase();
 const findExpenseByIdUseCase = new FindExpenseByIdUseCase();
+const deletePublicationUseCase = new DeletePublicationUseCase();
+const deleteCommentsUseCase = new DeleteCommentsUseCase();
 
 const updateActivityUseCase = new UpdateActivityUseCase();
 
@@ -1330,6 +1338,38 @@ io.on('connection', (socket) => {
         description: comment.description,
         user: comment.user,
         createdAt: comment.createdAt,
+      });
+    } catch (error) {
+      socket.emit('error', { message: 'Error al crear el mensaje', error });
+    }
+  });
+
+  socket.on('deletePublication', async (data) => {
+    try {
+      const { publicationId, userId } = data;
+
+      const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
+
+      if (!publication) {
+        socket.emit('error', { message: 'Publicación no encontrada' });
+        return;
+      }
+
+      if(publication.user.id !== userId) {
+        socket.emit('error', { message: 'La publicación no le pertenece' });
+        return;
+      }
+
+      if(publication.comments.length > 0) {
+        const comments= await findCommentsByPublicationIdUserCase.execute(Number(publicationId))
+        await deleteCommentsUseCase.execute(comments)
+
+      }
+
+      await deletePublicationUseCase.execute(publication);
+
+      io.emit('receiveDelete', {
+
       });
     } catch (error) {
       socket.emit('error', { message: 'Error al crear el mensaje', error });
