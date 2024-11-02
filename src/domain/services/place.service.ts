@@ -281,8 +281,6 @@ export class PlaceService {
     priceLevel: string[],
     currentPlaces: Place[],
   ) {
-    const types = type.split(',');
-
     let results: any[] = [];
 
     const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
@@ -293,22 +291,18 @@ export class PlaceService {
       'X-Goog-FieldMask': 'places',
     };
 
-    for (const type of types) {
-      const searchBody = {
-        textQuery: type + ' in ' + locality + ', ' + province,
-        includedType: type,
-        strictTypeFiltering: true,
-        languageCode: 'es',
-        regionCode: 'AR',
-      };
+    const searchBody = {
+      textQuery: type + ' in ' + locality + ', ' + province,
+      languageCode: 'es',
+      regionCode: 'AR',
+    };
 
-      const result = await post(searchUrl, searchHeaders, searchBody);
+    const result = await post(searchUrl, searchHeaders, searchBody);
 
-      if (result.places === undefined || result.places === null) {
-        results.push(...[]);
-      } else {
-        results.push(...result.places);
-      }
+    if (result.places === undefined || result.places === null) {
+      results.push(...[]);
+    } else {
+      results.push(...result.places);
     }
 
     let places: any[];
