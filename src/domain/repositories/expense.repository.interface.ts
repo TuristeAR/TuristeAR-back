@@ -9,4 +9,6 @@ export interface ExpenseRepositoryInterface {
   save(expense: Expense): Promise<Expense>;
   deleteOne(id: number): Promise<DeleteResult>;
   update(id: number, data: QueryDeepPartialEntity<Expense>): Promise<UpdateResult>;
+
+  deleteMany(ids: number[]): Promise<DeleteResult>;
 }

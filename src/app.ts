@@ -75,6 +75,23 @@ import {
   FindCommentsByPublicationIdUserCase
 } from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
 import { DeleteCommentsUseCase } from './application/use-cases/comment-use-cases/delete-comments.use-case';
+import {
+  FindItineraryByIdForDeleteUseCase
+} from './application/use-cases/itinerary-use-cases/find-itinerary-by-id-for-delete.use-case';
+import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
+import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/delete-forum.use-case';
+import { DeleteActivitiesUseCase } from './application/use-cases/activity-use-cases/delete-activities.use-case';
+import { DeleteEventsUseCase } from './application/use-cases/event-use-cases/delete-events.use-case';
+import {
+  DeleteExpensesByItineraryIdUseCase
+} from './application/use-cases/expense-use-cases/delete-expenses-by-itinerary-id.use-case';
+import {
+  DeleteItineraryByIdUseCase
+} from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
+import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary.use-case';
+import {
+  FindForumByIdForDeleteUseCase
+} from './application/use-cases/forum-use-cases/find-forum-by-id-for-delete.use-case';
 
 dotenv.config();
 
@@ -175,8 +192,10 @@ const findCommentsByPublicationIdUserCase = new FindCommentsByPublicationIdUserC
 const findEventByProvinceAndDatesUseCase = new FindEventByProvinceAndDatesUseCase();
 const findEventByProvinceUseCase = new FindEventByProvinceUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
-const findForumByItineraryId = new FindForumByItineraryIdUseCase();
+const findForumByItineraryIdUseCase = new FindForumByItineraryIdUseCase();
+const findForumByItineraryIdForDeleteUseCase = new FindForumByIdForDeleteUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
+const findItineraryByIdForDeleteUseCase = new FindItineraryByIdForDeleteUseCase();
 const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
 const findItineraryByUserWithParticipantsUseCase = new FindItineraryByUserWithParticipantsUseCase();
 const findItineraryWithParticipantsUseCase = new FindItineraryWithParticipantsUseCase();
@@ -194,13 +213,20 @@ const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
 const findUserByIdUseCase = new FindUserByIdUseCase();
 const findUserByNameUseCase = new FindUserByNameUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
+const updateItineraryUseCase = new UpdateItineraryUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
 const saveExpenseUseCase = new SaveExpenseUseCase();
 const findExpenseByIdUseCase = new FindExpenseByIdUseCase();
-const deletePublicationUseCase = new DeletePublicationUseCase();
+const deleteActivitiesUseCase = new DeleteActivitiesUseCase();
 const deleteCommentsUseCase = new DeleteCommentsUseCase();
+const deleteEventsUseCase = new DeleteEventsUseCase();
+const deleteExpensesByItineraryIdUseCase = new DeleteExpensesByItineraryIdUseCase();
+const deleteForumUseCase = new DeleteForumUseCase();
+const deleteItineraryByIdUseCase = new DeleteItineraryByIdUseCase();
+const deleteMessagesUseCase = new DeleteMessageUseCase();
+const deletePublicationUseCase = new DeletePublicationUseCase();
 
 const updateActivityUseCase = new UpdateActivityUseCase();
 
@@ -440,7 +466,7 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const events = await itineraryService.findEventsByItineraryId(Number(id));
 
-    const forum = await findForumByItineraryId.execute(Number(id));
+    const forum = await findForumByItineraryIdUseCase.execute(Number(id));
 
     return res
       .status(status.OK)
@@ -1371,6 +1397,58 @@ io.on('connection', (socket) => {
 
       });
     } catch (error) {
+      socket.emit('error', { message: 'Error al crear el mensaje', error });
+    }
+  });
+
+  socket.on('deleteItinerary', async (data) => {
+    try {
+      const { itineraryId, userId } = data;
+
+      const itinerary = await findItineraryByIdForDeleteUseCase.execute(Number(itineraryId));
+
+      if (!itinerary || itinerary.user.id != userId) {
+        console.log('Error')
+        return;
+      }
+
+      if(itinerary.activities.length > 0){
+        await deleteActivitiesUseCase.execute(itinerary.activities);
+      }
+
+      if(itinerary.events.length > 0){
+        await deleteEventsUseCase.execute(itinerary.events);
+      }
+
+      if(itinerary.events.length > 0){
+        await deleteEventsUseCase.execute(itinerary.events);
+      }
+
+      if(itinerary.expenses.length > 0){
+        await deleteExpensesByItineraryIdUseCase.execute(itinerary.expenses);
+      }
+
+      if (itinerary.forum != null && itinerary.forum.messages.length > 0) {
+        await deleteMessagesUseCase.execute(itinerary.forum.messages);
+      }
+
+      itinerary.forum = null;
+
+      const savedItinerary = await updateItineraryUseCase.execute(itinerary);
+
+      const forum = await findForumByItineraryIdForDeleteUseCase.execute(itineraryId)
+
+      if(forum != null){
+        await deleteForumUseCase.execute(forum);
+      }
+
+      await deleteItineraryByIdUseCase.execute(savedItinerary);
+
+      io.emit('receiveDelete', {
+
+      });
+    } catch (error) {
+      console.log(error);
       socket.emit('error', { message: 'Error al crear el mensaje', error });
     }
   });
