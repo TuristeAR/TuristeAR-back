@@ -11,7 +11,8 @@ export class FindForumByIdForDeleteUseCase {
 
   execute(id: number): Promise<Forum | null> {
     return this.forumRepository.findOne({
-      where: { id: id },
+      where: { itinerary: { id: id } },
+      relations: ['messages'],
     });
   }
 }
