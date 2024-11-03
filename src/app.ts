@@ -243,6 +243,23 @@ app.get(
   }),
 );
 
+app.post('/itinerary/add-event', (req, res) => {
+  const { itineraryId, eventId } = req.body;
+
+  const addedEvent = itineraryService.addEventToItinerary(itineraryId, eventId);
+
+  if (addedEvent) {
+    return res.status(200).json({
+      status: 'success',
+      message: 'Event added to itinerary',
+      event: addedEvent,
+    });
+  } else {
+    return res.status(400).json({ status: 'error', message: 'Error adding event to itinerary' });
+  }
+});
+
+
 app.get('/auth/google/callback', (req, res, next) => {
   passport.authenticate('google', (err: any, user: User) => {
     if (err || !user) {

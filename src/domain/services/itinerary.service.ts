@@ -132,6 +132,34 @@ export class ItineraryService {
     return savedItinerary;
   }
 
+  async addEventToItinerary(itineraryId: number, eventId: number): Promise<Itinerary> {
+    const findItineraryWithEventUseCase = new FindItineraryWithEventUseCase();
+    const itinerary = await findItineraryWithEventUseCase.execute(itineraryId);
+
+    if (!itinerary) {
+      throw new Error('Itinerary not found');
+    }
+
+    const event = await this.findEventByIdUseCase.execute(eventId);
+
+    if (!event) {
+      throw new Error('Event not found');
+    }
+
+    if (!itinerary.events) {
+      itinerary.events = [];
+    }
+    if (Object.keys(event).length > 0) {
+      itinerary.events.push(event);
+    } else {
+      console.warn('Trying to add an empty event to the itinerary');
+    }
+
+    const updateItineraryUseCase = new UpdateItineraryUseCase();
+
+    return updateItineraryUseCase.execute(itinerary);
+  }
+  
   async findActivitiesByItineraryId(id: number): Promise<Itinerary | null> {
     const findItineraryWithActivityUseCase = new FindItineraryWithActivityUseCase();
 
