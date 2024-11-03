@@ -149,8 +149,6 @@ export class ItineraryService {
     if (!itinerary.events) {
       itinerary.events = [];
     }
-
-    // Asegúrate de que el evento no esté vacío
     if (Object.keys(event).length > 0) {
       itinerary.events.push(event);
     } else {
@@ -161,6 +159,7 @@ export class ItineraryService {
 
     return updateItineraryUseCase.execute(itinerary);
   }
+  
   async findActivitiesByItineraryId(id: number): Promise<Itinerary | null> {
     const findItineraryWithActivityUseCase = new FindItineraryWithActivityUseCase();
 
