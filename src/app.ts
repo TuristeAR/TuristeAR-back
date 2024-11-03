@@ -675,6 +675,26 @@ app.post('/itinerary/add-activity', (req, res) => {
     });
 });
 
+app.post('/itinerary/add-event', (req, res) => {
+  const { itineraryId, eventId } = req.body;
+  itineraryService
+    .addEventToItinerary(itineraryId, eventId)
+    .then((addedEvent) => {
+      if (addedEvent && Object.keys(addedEvent).length > 0) {
+        return res.status(200).json({
+          status: 'success',
+          message: 'Event added to itinerary',
+          event: addedEvent,
+        });
+      } else {
+        return res.status(400).json({ status: 'error', message: 'Event not found or invalid' });
+      }
+    })
+    .catch(() => {
+      return res.status(500).json({ status: 'error', message: 'Error adding event to itinerary' });
+    });
+});
+
 app.put('/itinerary/update-activity', async (req, res) => {
   const { activityId, start, end } = req.body;
 

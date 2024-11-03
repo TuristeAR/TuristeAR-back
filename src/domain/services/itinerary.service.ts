@@ -132,7 +132,7 @@ export class ItineraryService {
     return savedItinerary;
   }
 
-  async addEventToItinerary(itineraryId: number, eventId: number): Promise<Itinerary> {
+  async addEventToItinerary(itineraryId: number, eventId: number): Promise<Event | null> {
     const findItineraryWithEventUseCase = new FindItineraryWithEventUseCase();
     const itinerary = await findItineraryWithEventUseCase.execute(itineraryId);
 
@@ -149,17 +149,19 @@ export class ItineraryService {
     if (!itinerary.events) {
       itinerary.events = [];
     }
-    if (Object.keys(event).length > 0) {
+
+    const eventExists = itinerary.events.some(existingEvent => existingEvent.id === event.id);
+    if (!eventExists) {
       itinerary.events.push(event);
+      const updateItineraryUseCase = new UpdateItineraryUseCase();
+      await updateItineraryUseCase.execute(itinerary); 
+      return event as unknown as Event;
     } else {
-      console.warn('Trying to add an empty event to the itinerary');
+      console.warn('Event already added to the itinerary');
+      return null;
     }
+}
 
-    const updateItineraryUseCase = new UpdateItineraryUseCase();
-
-    return updateItineraryUseCase.execute(itinerary);
-  }
-  
   async findActivitiesByItineraryId(id: number): Promise<Itinerary | null> {
     const findItineraryWithActivityUseCase = new FindItineraryWithActivityUseCase();
 
