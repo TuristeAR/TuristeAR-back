@@ -1432,21 +1432,19 @@ io.on('connection', (socket) => {
         await deleteExpensesByItineraryIdUseCase.execute(itinerary.expenses);
       }
 
-      if (itinerary.forum != null && itinerary.forum.messages.length > 0) {
-        await deleteMessagesUseCase.execute(itinerary.forum.messages);
+      const forum = await findForumByItineraryIdForDeleteUseCase.execute(itineraryId)
+
+      if (forum != null && forum.messages.length > 0) {
+        await deleteMessagesUseCase.execute(forum.messages);
       }
 
       itinerary.forum = null;
-
-      const savedItinerary = await updateItineraryUseCase.execute(itinerary);
-
-      const forum = await findForumByItineraryIdForDeleteUseCase.execute(itineraryId)
 
       if(forum != null){
         await deleteForumUseCase.execute(forum);
       }
 
-      await deleteItineraryByIdUseCase.execute(savedItinerary);
+      await deleteItineraryByIdUseCase.execute(itinerary);
 
       io.emit('receiveDelete', {
 
