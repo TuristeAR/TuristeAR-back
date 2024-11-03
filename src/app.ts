@@ -92,6 +92,9 @@ import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-ca
 import {
   FindForumByIdForDeleteUseCase
 } from './application/use-cases/forum-use-cases/find-forum-by-id-for-delete.use-case';
+import {
+  FindActivitiesByItineraryIdUseCase
+} from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
 
 dotenv.config();
 
@@ -179,6 +182,7 @@ const createProvinceUseCase = new CreateProvinceUseCase();
 const createWeatherUseCase = new CreateWeatherUseCase();
 const createForumUserCase = new CreateForumUseCase();
 const findActivityByIdUseCase = new FindActivityByIdUseCase();
+const findActivitiesByItineraryIdUseCase = new FindActivitiesByItineraryIdUseCase();
 const findAllCategoryUseCase = new FindAllCategoryUseCase();
 const findAllForumUseCase = new FindAllForumUseCase();
 const findAllPlaceUseCase = new FindAllPlaceUseCase();
@@ -462,7 +466,7 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const itinerary = await findItineraryByIdUseCase.execute(Number(id));
 
-    const activities = await itineraryService.findActivitiesByItineraryId(Number(id));
+    const activities = await findActivitiesByItineraryIdUseCase.execute(Number(id));
 
     const events = await itineraryService.findEventsByItineraryId(Number(id));
 
