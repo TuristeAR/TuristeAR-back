@@ -10,6 +10,6 @@ export class FindItineraryByIdUseCase {
   }
 
   execute(id: number): Promise<Itinerary | null> {
-    return this.itineraryRepository.findOne({ where: { id : id }});
+    return this.itineraryRepository.findOne({ where: { id : id }, relations: ['user']});
   }
 }
