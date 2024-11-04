@@ -464,15 +464,9 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const itinerary = await findItineraryByIdUseCase.execute(Number(id));
 
-    const activities = await findActivitiesByItineraryIdUseCase.execute(Number(id));
-
-    const events = await itineraryService.findEventsByItineraryId(Number(id));
-
-    const forum = await findForumByItineraryIdUseCase.execute(Number(id));
-
     return res
       .status(status.OK)
-      .json({ statusCode: status.OK, data: { itinerary, activities, events, forum } });
+      .json({ statusCode: status.OK, data: { itinerary } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
