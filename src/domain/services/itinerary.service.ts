@@ -89,35 +89,42 @@ export class ItineraryService {
 
     let usedPlaces: Place[] = [];
 
-    for (const currentDate of dates) {
+    for (let i = 0; i < dates.length; i++) {
       const eventForDay = itinerary.events.find((event) =>
-        this.isInDate(event.fromDate, event.toDate, currentDate),
+        this.isInDate(event.fromDate, event.toDate, dates[i]),
       );
 
       let activitiesForDay = [];
 
       if (eventForDay) {
+        const localityForDay = eventForDay.locality;
+
+        const previousPlaceType =
+          usedPlaces.length > 0 ? usedPlaces[usedPlaces.length - 1].types : null;
+
+        const randomType =
+          createItineraryDto.types[Math.floor(Math.random() * createItineraryDto.types.length)];
+
+        const placeType = previousPlaceType ? previousPlaceType : randomType.split(',');
+
         const place = await this.findNextPlace(
           itineraryPlaces,
           usedPlaces[usedPlaces.length - 1] || {
-            types:
-              createItineraryDto.types[Math.floor(Math.random() * createItineraryDto.types.length)],
+            types: placeType,
           },
           createItineraryDto,
           provinceName as string,
+          localityForDay as string,
           typesByCompany,
           usedPlaces,
-          currentDate,
+          dates[i],
         );
 
         usedPlaces.push(place);
 
         usedPlaces = this.placeService.orderByDistance(usedPlaces, dates);
 
-        const activityDates = this.activityService.getActivityDates(
-          place.openingHours,
-          currentDate,
-        );
+        const activityDates = this.activityService.getActivityDates(place.openingHours, dates[i]);
 
         const createActivityDto: CreateActivityDto = {
           itinerary: savedItinerary,
@@ -132,20 +139,29 @@ export class ItineraryService {
 
         activitiesForDay.push(activity);
       } else {
+        const localityForDay =
+          createItineraryDto.localities[i % createItineraryDto.localities.length];
+
         for (let j = 0; j < 2; j++) {
+          const previousPlaceType =
+            usedPlaces.length > 0 ? usedPlaces[usedPlaces.length - 1].types : null;
+
+          const randomType =
+            createItineraryDto.types[Math.floor(Math.random() * createItineraryDto.types.length)];
+
+          const placeType = previousPlaceType ? previousPlaceType : randomType.split(',');
+
           const place = await this.findNextPlace(
             itineraryPlaces,
             usedPlaces[usedPlaces.length - 1] || {
-              types:
-                createItineraryDto.types[
-                  Math.floor(Math.random() * createItineraryDto.types.length)
-                ],
+              types: placeType,
             },
             createItineraryDto,
             provinceName as string,
+            localityForDay as string,
             typesByCompany,
             usedPlaces,
-            currentDate,
+            dates[i],
           );
 
           usedPlaces.push(place);
@@ -154,7 +170,7 @@ export class ItineraryService {
 
           const [startDate, endDate] =
             j === 0
-              ? this.activityService.getActivityDates(place.openingHours, currentDate)
+              ? this.activityService.getActivityDates(place.openingHours, dates[i])
               : this.getNextActivityDates(place, activitiesForDay[0].toDate);
 
           const createActivityDto: CreateActivityDto = {
@@ -567,11 +583,13 @@ export class ItineraryService {
     currentPlace: Place,
     createItineraryDto: CreateItineraryDto,
     provinceName: string,
+    locality: string,
     typesByCompany: string[],
     usedPlaces: Place[],
     date: Date,
   ): Promise<Place> {
     const usedTypes = currentPlace.types;
+
     const availableTypes = typesByCompany.filter((type) => !usedTypes.includes(type));
 
     for (const types of availableTypes) {
@@ -584,7 +602,7 @@ export class ItineraryService {
         createItineraryDto.priceLevel,
         createItineraryDto.provinceId,
         provinceName,
-        createItineraryDto.localities[0],
+        locality,
         date,
       );
 
