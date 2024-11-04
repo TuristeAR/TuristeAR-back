@@ -82,10 +82,6 @@ export class ItineraryService {
 
     itinerary.forum = await createForumUseCase.execute(forum);
 
-    const updateItinerary = new UpdateItineraryUseCase();
-
-    await updateItinerary.execute(savedItinerary);
-
     let itineraryPlaces: Place[] = [];
 
     for (let i = 0; i < dates.length; i++) {
