@@ -123,6 +123,8 @@ app.options('*', (req: Request, res: Response) => {
   res.sendStatus(status.OK);
 });
 
+app.set('trust proxy', true);
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET as string,
