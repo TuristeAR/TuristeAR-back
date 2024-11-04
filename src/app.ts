@@ -19,6 +19,7 @@ import { authMiddleware } from './infrastructure/middlewares/auth.middleware';
 import { ItineraryService } from './domain/services/itinerary.service';
 import { PublicationService } from './domain/services/publication.service';
 import { CreatePublicationDTO } from './infrastructure/dtos/create-publication.dto';
+import { CreateEventDTO } from './infrastructure/dtos/create-event.dto';
 import { FindActivityByIdUseCase } from './application/use-cases/activity-use-cases/find-activity-by-id.use-case';
 import { FindAllCategoryUseCase } from './application/use-cases/category-use-cases/find-all-category.use-case';
 import { CreateWeatherUseCase } from './application/use-cases/weather-use-cases/create-weather.use-case';
@@ -75,6 +76,7 @@ import {
   FindCommentsByPublicationIdUserCase
 } from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
 import { DeleteCommentsUseCase } from './application/use-cases/comment-use-cases/delete-comments.use-case';
+import { EventTempService } from './domain/services/event_temp.service';
 
 dotenv.config();
 
@@ -155,6 +157,7 @@ const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
 const userService = new UserService();
+const eventTempService = new EventTempService();
 
 const createCommentUseCase = new CreateCommentUseCase();
 const createMessageUseCase = new CreateMessageUseCase();
@@ -980,6 +983,25 @@ app.post('/createPublication', authMiddleware, async (req: Request, res: Respons
     return res.status(status.INTERNAL_SERVER_ERROR).json({
       statusCode: status.INTERNAL_SERVER_ERROR,
       message: error || 'Error creating publication',
+    });
+  }
+});
+
+app.post('/createEventTemp', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const CreateEventDTO: CreateEventDTO = req.body;
+
+    const event = await eventTempService.createEventTemp(
+      CreateEventDTO,
+      req.user as User,
+    );
+
+    return res.status(status.CREATED).json({ statusCode: status.CREATED, data: event });
+  } catch (error) {
+    console.log(error)
+    return res.status(status.INTERNAL_SERVER_ERROR).json({
+      statusCode: status.INTERNAL_SERVER_ERROR,
+      message: error || 'Error creating event',
     });
   }
 });
