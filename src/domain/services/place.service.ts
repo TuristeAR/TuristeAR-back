@@ -187,10 +187,10 @@ export class PlaceService {
 
       let filteredPlaces = places;
 
-    // Si hay tipos en el arreglo `types`, realiza el filtrado
+    // realiza el filtrado de typos
     if (types.length > 0) {
         filteredPlaces = places.filter((place) =>
-            place.types.some((type) => types.includes(type)) // Verifica si algún tipo coincide
+            place.types.some((type) => types.includes(type)) // Verifica si coinciden
         );
     }
 
@@ -203,8 +203,9 @@ export class PlaceService {
         };
     });
 
-    // Limita el resultado a `count` lugares y lo devuelve
+    // Limita el resultado a `count` lugares 
     return limitedReviewImages.slice(0, count);
+
     } catch (error) {
       throw error;
     }
