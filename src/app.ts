@@ -69,29 +69,17 @@ import { UpdateActivityUseCase } from './application/use-cases/activity-use-case
 import { SaveExpenseUseCase } from './application/use-cases/expense-use-cases/save-expense.use-case';
 import { FindExpenseByIdUseCase } from './application/use-cases/expense-use-cases/find-expense-by-id.use-case';
 import { DeletePublicationUseCase } from './application/use-cases/publication-use-cases/delete-publication.use-case';
-import {
-  FindCommentsByPublicationIdUserCase
-} from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
+import { FindCommentsByPublicationIdUserCase } from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
 import { DeleteCommentsUseCase } from './application/use-cases/comment-use-cases/delete-comments.use-case';
-import {
-  FindItineraryByIdForDeleteUseCase
-} from './application/use-cases/itinerary-use-cases/find-itinerary-by-id-for-delete.use-case';
+import { FindItineraryByIdForDeleteUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-id-for-delete.use-case';
 import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
 import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/delete-forum.use-case';
 import { DeleteActivitiesUseCase } from './application/use-cases/activity-use-cases/delete-activities.use-case';
 import { DeleteEventsUseCase } from './application/use-cases/event-use-cases/delete-events.use-case';
-import {
-  DeleteExpensesByItineraryIdUseCase
-} from './application/use-cases/expense-use-cases/delete-expenses-by-itinerary-id.use-case';
-import {
-  DeleteItineraryByIdUseCase
-} from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
-import {
-  FindForumByIdForDeleteUseCase
-} from './application/use-cases/forum-use-cases/find-forum-by-id-for-delete.use-case';
-import {
-  FindActivitiesByItineraryIdUseCase
-} from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
+import { DeleteExpensesByItineraryIdUseCase } from './application/use-cases/expense-use-cases/delete-expenses-by-itinerary-id.use-case';
+import { DeleteItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
+import { FindForumByIdForDeleteUseCase } from './application/use-cases/forum-use-cases/find-forum-by-id-for-delete.use-case';
+import { FindActivitiesByItineraryIdUseCase } from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
 
 dotenv.config();
 
@@ -230,10 +218,9 @@ const deletePublicationUseCase = new DeletePublicationUseCase();
 const updateActivityUseCase = new UpdateActivityUseCase();
 
 app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
-
   const { latitude, longitude, province } = req.body;
 
-  passport.authenticate('google', { scope: ['profile', 'email']})(req, res, next);
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });
 
 app.get(
@@ -258,7 +245,6 @@ app.post('/itinerary/add-event', (req, res) => {
     return res.status(400).json({ status: 'error', message: 'Error adding event to itinerary' });
   }
 });
-
 
 app.get('/auth/google/callback', (req, res, next) => {
   passport.authenticate('google', (err: any, user: User) => {
@@ -719,9 +705,7 @@ app.delete('/itinerary/remove-event', async (req, res) => {
       itineraryId,
       eventId,
     });
-    return res
-      .status(200)
-      .json({ status: 'success', message: `Event with ID ${eventId} removed` });
+    return res.status(200).json({ status: 'success', message: `Event with ID ${eventId} removed` });
   } catch (error) {
     console.error('Error removing event from itinerary:');
     return res.status(500).json({ status: 'error' });
@@ -936,7 +920,7 @@ app.get('/places/province?', async (req: Request, res: Response) => {
     const typesArray: string[] = Array.isArray(types)
       ? types.map((type) => String(type))
       : [String(types)];
-      console.log(typesArray);
+    console.log(typesArray);
     const places = await placeService.findPlaceByProvinceAndTypes(
       Number(provinceId),
       typesArray,
@@ -1149,7 +1133,7 @@ app.post('/expenses', async (req, res) => {
       participatingUsers,
       itineraryId,
       individualAmounts,
-      individualPercentages
+      individualPercentages,
     } = req.body;
 
     if (!description) {
@@ -1184,7 +1168,7 @@ app.post('/expenses', async (req, res) => {
     }
 
     const users = await Promise.all(
-      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId))
+      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId)),
     );
 
     const validUsers = users.filter((user) => user);
@@ -1198,7 +1182,7 @@ app.post('/expenses', async (req, res) => {
     expense.itinerary = itinerary;
     expense.individualAmounts = individualAmounts || {};
     expense.participatingUsers = validUsers;
-    expense.individualPercentages =individualPercentages || {};
+    expense.individualPercentages = individualPercentages || {};
 
     const response = await createExpenseUseCase.execute(expense);
 
@@ -1222,14 +1206,16 @@ app.put('/expenses/:idExpense', async (req, res) => {
       participatingUsers,
       itineraryId,
       individualAmounts,
-      individualPercentages
+      individualPercentages,
     } = req.body;
 
     if (!description) return res.status(400).json({ message: 'Description field is missing' });
     if (!date) return res.status(400).json({ message: 'Date field is missing' });
     if (!payerId) return res.status(400).json({ message: 'Payer field is missing' });
-    if (totalAmount == null) return res.status(400).json({ message: 'TotalAmount field is missing' });
-    if (!distributionType) return res.status(400).json({ message: 'DistributionType field is missing' });
+    if (totalAmount == null)
+      return res.status(400).json({ message: 'TotalAmount field is missing' });
+    if (!distributionType)
+      return res.status(400).json({ message: 'DistributionType field is missing' });
     if (!itineraryId) return res.status(400).json({ message: 'ItineraryId field is missing' });
 
     const payer = await findUserByIdUseCase.execute(payerId);
@@ -1245,7 +1231,7 @@ app.put('/expenses/:idExpense', async (req, res) => {
 
     // Get the instances of participating users
     const users = await Promise.all(
-      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId))
+      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId)),
     );
     const validUsers = users.filter((user) => user);
 
@@ -1273,12 +1259,12 @@ app.put('/expenses/:idExpense', async (req, res) => {
 });
 
 app.get('/expenses/:itineraryId', async (req, res) => {
-  const { itineraryId } = req.params; 
+  const { itineraryId } = req.params;
 
   try {
     const expenses = await findExpensesByItineraryIdUseCase.execute(Number(itineraryId));
 
-    res.status(200).json(expenses); 
+    res.status(200).json(expenses);
   } catch (error) {
     console.error('Error obtaining expenses:', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -1286,12 +1272,12 @@ app.get('/expenses/:itineraryId', async (req, res) => {
 });
 
 app.delete('/expenses/:expenseId', async (req, res) => {
-  const { expenseId } = req.params; 
+  const { expenseId } = req.params;
 
   try {
     const expenses = await deleteExpensesByIdUseCases.execute(Number(expenseId));
 
-    res.status(200).json(expenses); 
+    res.status(200).json(expenses);
   } catch (error) {
     console.error('Error deleting an expense:', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -1301,17 +1287,16 @@ app.delete('/expenses/:expenseId', async (req, res) => {
 app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = req.user as User;
-    const {activityId, images} = req.body;
+    const { activityId, images } = req.body;
 
-    console.log(images)
-    const activity= await findActivityByIdUseCase.execute(Number(activityId));
+    console.log(images);
+    const activity = await findActivityByIdUseCase.execute(Number(activityId));
 
     for (const image of images) {
       activity?.images.push(image);
     }
 
-
-    if(!activity){
+    if (!activity) {
       return res.status(400).json({ message: 'Invalid ID' });
     }
 
@@ -1319,7 +1304,7 @@ app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Respon
 
     return res.json(updatedActivity);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json({ message: 'Error loading images', error });
   }
 });
@@ -1396,22 +1381,19 @@ io.on('connection', (socket) => {
         return;
       }
 
-      if(publication.user.id !== userId) {
+      if (publication.user.id !== userId) {
         socket.emit('error', { message: 'The publication does not belong to you' });
         return;
       }
 
-      if(publication.comments.length > 0) {
-        const comments= await findCommentsByPublicationIdUserCase.execute(Number(publicationId))
-        await deleteCommentsUseCase.execute(comments)
-
+      if (publication.comments.length > 0) {
+        const comments = await findCommentsByPublicationIdUserCase.execute(Number(publicationId));
+        await deleteCommentsUseCase.execute(comments);
       }
 
       await deletePublicationUseCase.execute(publication);
 
-      io.emit('receiveDelete', {
-
-      });
+      io.emit('receiveDelete', {});
     } catch (error) {
       socket.emit('error', { message: 'Error deleting publication', error });
     }
@@ -1424,27 +1406,27 @@ io.on('connection', (socket) => {
       const itinerary = await findItineraryByIdForDeleteUseCase.execute(Number(itineraryId));
 
       if (!itinerary || itinerary.user.id != userId) {
-        console.log('The itinerary belongs to another user')
+        console.log('The itinerary belongs to another user');
         return;
       }
 
-      if(itinerary.activities.length > 0){
+      if (itinerary.activities.length > 0) {
         await deleteActivitiesUseCase.execute(itinerary.activities);
       }
 
-      if(itinerary.events.length > 0){
+      if (itinerary.events.length > 0) {
         await deleteEventsUseCase.execute(itinerary.events);
       }
 
-      if(itinerary.events.length > 0){
+      if (itinerary.events.length > 0) {
         await deleteEventsUseCase.execute(itinerary.events);
       }
 
-      if(itinerary.expenses.length > 0){
+      if (itinerary.expenses.length > 0) {
         await deleteExpensesByItineraryIdUseCase.execute(itinerary.expenses);
       }
 
-      const forum = await findForumByItineraryIdForDeleteUseCase.execute(itineraryId)
+      const forum = await findForumByItineraryIdForDeleteUseCase.execute(itineraryId);
 
       if (forum != null && forum.messages.length > 0) {
         await deleteMessagesUseCase.execute(forum.messages);
@@ -1452,15 +1434,13 @@ io.on('connection', (socket) => {
 
       itinerary.forum = null;
 
-      if(forum != null){
+      if (forum != null) {
         await deleteForumUseCase.execute(forum);
       }
 
       await deleteItineraryByIdUseCase.execute(itinerary);
 
-      io.emit('receiveDelete', {
-
-      });
+      io.emit('receiveDelete', {});
     } catch (error) {
       console.log(error);
       socket.emit('error', { message: 'Error deleting itinerary', error });
