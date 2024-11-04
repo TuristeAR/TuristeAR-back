@@ -24,7 +24,6 @@ export class ItineraryService {
   private activityService: ActivityService;
   private createActivityUseCase: CreateActivityUseCase;
   private findUserByIdUseCase: FindUserByIdUseCase;
-  private updateDateActivityUseCase: UpdateDateActivityIdUseCase;
   private findEventByIdUseCase: FindEventByIdUseCase;
 
   constructor() {
@@ -33,7 +32,6 @@ export class ItineraryService {
     this.activityService = new ActivityService();
     this.createActivityUseCase = new CreateActivityUseCase();
     this.findUserByIdUseCase = new FindUserByIdUseCase();
-    this.updateDateActivityUseCase = new UpdateDateActivityIdUseCase();
     this.findEventByIdUseCase = new FindEventByIdUseCase();
   }
 
@@ -73,6 +71,7 @@ export class ItineraryService {
     const savedItinerary = await createItineraryUseCase.execute(itinerary);
 
     let forum = new Forum();
+
     forum.itinerary = savedItinerary;
     forum.name = savedItinerary.name;
     forum.messages = [];
@@ -84,45 +83,108 @@ export class ItineraryService {
 
     let itineraryPlaces: Place[] = [];
 
-    for (let i = 0; i < dates.length; i++) {
-      const locality = createItineraryDto.localities[i % createItineraryDto.localities.length];
-
-      const types = typesByCompany[i % createItineraryDto.types.length].split(',');
-
-      const type = types[i % types.length];
-
-      const place = await this.placeService.findOneInLocalityByTypesAndPriceLevel(
-        itineraryPlaces,
-        type,
-        createItineraryDto.priceLevel,
-        createItineraryDto.provinceId,
-        provinceName as string,
-        locality,
-      );
-
-      itineraryPlaces.push(place);
-    }
-
-    itineraryPlaces = this.placeService.orderByDistance(itineraryPlaces, dates);
+    let usedPlaces: Place[] = [];
 
     for (let i = 0; i < dates.length; i++) {
-      const activityDates = this.activityService.getActivityDates(
-        itineraryPlaces[i].openingHours,
-        dates[i],
+      const eventForDay = itinerary.events.find((event) =>
+        this.isInDate(event.fromDate, event.toDate, dates[i]),
       );
 
-      const createActivityDto: CreateActivityDto = {
-        itinerary: savedItinerary,
-        place: itineraryPlaces[i],
-        name: this.activityService.formatActivityName(itineraryPlaces[i].name, activityDates[0]),
-        fromDate: activityDates[0],
-        toDate: activityDates[1],
-        images: [],
-      };
+      let activitiesForDay = [];
 
-      const activity = await this.createActivityUseCase.execute(createActivityDto);
+      if (eventForDay) {
+        const localityForDay = eventForDay.locality;
 
-      savedItinerary.activities.push(activity);
+        const previousPlaceType =
+          usedPlaces.length > 0 ? usedPlaces[usedPlaces.length - 1].types : null;
+
+        const randomType =
+          createItineraryDto.types[Math.floor(Math.random() * createItineraryDto.types.length)];
+
+        const placeType = previousPlaceType ? previousPlaceType : randomType.split(',');
+
+        const place = await this.findNextPlace(
+          itineraryPlaces,
+          usedPlaces[usedPlaces.length - 1] || {
+            types: placeType,
+          },
+          createItineraryDto,
+          provinceName as string,
+          localityForDay as string,
+          typesByCompany,
+          usedPlaces,
+          dates[i],
+        );
+
+        usedPlaces.push(place);
+
+        usedPlaces = this.placeService.orderByDistance(usedPlaces, dates);
+
+        const activityDates = this.activityService.getActivityDates(place.openingHours, dates[i]);
+
+        const createActivityDto: CreateActivityDto = {
+          itinerary: savedItinerary,
+          place,
+          name: this.activityService.formatActivityName(place.name, activityDates[0]),
+          fromDate: activityDates[0],
+          toDate: activityDates[1],
+          images: [],
+        };
+
+        const activity = await this.createActivityUseCase.execute(createActivityDto);
+
+        activitiesForDay.push(activity);
+      } else {
+        const localityForDay =
+          createItineraryDto.localities[i % createItineraryDto.localities.length];
+
+        for (let j = 0; j < 2; j++) {
+          const previousPlaceType =
+            usedPlaces.length > 0 ? usedPlaces[usedPlaces.length - 1].types : null;
+
+          const randomType =
+            createItineraryDto.types[Math.floor(Math.random() * createItineraryDto.types.length)];
+
+          const placeType = previousPlaceType ? previousPlaceType : randomType.split(',');
+
+          const place = await this.findNextPlace(
+            itineraryPlaces,
+            usedPlaces[usedPlaces.length - 1] || {
+              types: placeType,
+            },
+            createItineraryDto,
+            provinceName as string,
+            localityForDay as string,
+            typesByCompany,
+            usedPlaces,
+            dates[i],
+          );
+
+          usedPlaces.push(place);
+
+          usedPlaces = this.placeService.orderByDistance(usedPlaces, dates);
+
+          const [startDate, endDate] =
+            j === 0
+              ? this.activityService.getActivityDates(place.openingHours, dates[i])
+              : this.getNextActivityDates(place, activitiesForDay[0].toDate);
+
+          const createActivityDto: CreateActivityDto = {
+            itinerary: savedItinerary,
+            place,
+            name: this.activityService.formatActivityName(place.name, startDate),
+            fromDate: startDate,
+            toDate: endDate,
+            images: [],
+          };
+
+          const activity = await this.createActivityUseCase.execute(createActivityDto);
+
+          activitiesForDay.push(activity);
+        }
+      }
+
+      savedItinerary.activities.push(...activitiesForDay);
     }
 
     return savedItinerary;
@@ -155,7 +217,7 @@ export class ItineraryService {
 
     return updateItineraryUseCase.execute(itinerary);
   }
-  
+
   async findActivitiesByItineraryId(id: number): Promise<Itinerary | null> {
     const findItineraryWithActivityUseCase = new FindItineraryWithActivityUseCase();
 
@@ -510,5 +572,53 @@ export class ItineraryService {
 
       return filteredTypes || typeString;
     });
+  }
+
+  private async findNextPlace(
+    itineraryPlaces: Place[],
+    currentPlace: Place,
+    createItineraryDto: CreateItineraryDto,
+    provinceName: string,
+    locality: string,
+    typesByCompany: string[],
+    usedPlaces: Place[],
+    date: Date,
+  ): Promise<Place> {
+    const usedTypes = currentPlace.types;
+
+    const availableTypes = typesByCompany.filter((type) => !usedTypes.includes(type));
+
+    for (const types of availableTypes) {
+      const typesArray = types.split(',');
+      const randomType = typesArray[Math.floor(Math.random() * typesArray.length)];
+
+      const place = await this.placeService.findOneInLocalityByTypesAndPriceLevelWithDate(
+        itineraryPlaces,
+        randomType,
+        createItineraryDto.priceLevel,
+        createItineraryDto.provinceId,
+        provinceName,
+        locality,
+        date,
+      );
+
+      if (place && !usedPlaces.some((usedPlace) => usedPlace.id === place.id)) {
+        return place;
+      }
+    }
+
+    throw new Error('No available place found for the next activity');
+  }
+
+  private isInDate(eventFromDate: Date, eventToDate: Date, date: Date): boolean {
+    return date >= eventFromDate && date <= eventToDate;
+  }
+
+  private getNextActivityDates(place: Place, endDate: Date) {
+    const nextStartDate = endDate;
+
+    nextStartDate.setHours(nextStartDate.getHours() + 4);
+
+    return this.activityService.getActivityDates(place.openingHours, nextStartDate, true);
   }
 }

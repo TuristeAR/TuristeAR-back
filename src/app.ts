@@ -512,20 +512,6 @@ app.get('/activity/:id', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/fetch-places', async (req: Request, res: Response) => {
-  try {
-    const province = (req.query.province as string) + ' Province';
-
-    await placeService.fetchPlaces(province);
-
-    return res.status(status.OK).json({ statusCode: status.OK, message: 'Places fetched' });
-  } catch (error) {
-    return res
-      .status(status.INTERNAL_SERVER_ERROR)
-      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching places' });
-  }
-});
-
 app.get('/fetch-activities-places/:province', async (req: Request, res: Response) => {
   const provinceName = req.params.province;
 

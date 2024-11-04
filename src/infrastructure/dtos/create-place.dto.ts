@@ -17,6 +17,9 @@ export class CreatePlaceDto {
   @IsString()
   address: string;
 
+  @IsString()
+  locality: string;
+
   @IsNumber()
   latitude: number;
 
@@ -28,6 +31,9 @@ export class CreatePlaceDto {
 
   @IsString({ each: true })
   openingHours: string[];
+
+  @IsString()
+  priceLevel: string;
 
   @IsString()
   phoneNumber: string;
