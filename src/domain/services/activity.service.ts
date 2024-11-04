@@ -1,7 +1,9 @@
 export class ActivityService {
-  getActivityDates(openingHours: string[] | null, date: Date): Date[] {
+  getActivityDates(openingHours: string[] | null, date: Date, isSecondActivity?: boolean): Date[] {
     if (openingHours === null) {
-      return this.createStartTimeAndEndTimeBetween9And12(date);
+      return isSecondActivity
+        ? this.createStartTimeAndEndTimeBetween18And21(date)
+        : this.createStartTimeAndEndTimeBetween9And12(date);
     }
 
     const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -12,13 +14,15 @@ export class ActivityService {
       .map((dayHours) => dayHours.trim())
       .find((hours) => hours.startsWith(dayName));
 
-    if (!hoursForDay) {
-      return this.createStartTimeAndEndTimeBetween9And12(date);
-    }
+    if (!hoursForDay)
+      return isSecondActivity
+        ? this.createStartTimeAndEndTimeBetween18And21(date)
+        : this.createStartTimeAndEndTimeBetween9And12(date);
 
-    if (hoursForDay.includes('Abierto 24 horas')) {
-      return this.createStartTimeAndEndTimeBetween9And12(date);
-    }
+    if (hoursForDay.includes('Abierto 24 horas'))
+      return isSecondActivity
+        ? this.createStartTimeAndEndTimeBetween18And21(date)
+        : this.createStartTimeAndEndTimeBetween9And12(date);
 
     const [openTime] = hoursForDay.split(': ')[1].split('–');
 
@@ -52,6 +56,19 @@ export class ActivityService {
 
     const endTime = new Date(date);
     endTime.setHours(15, 0, 0, 0);
+
+    return [
+      new Date(startTime.getTime() - startTime.getTimezoneOffset() * 60000),
+      new Date(endTime.getTime() - endTime.getTimezoneOffset() * 60000),
+    ];
+  }
+
+  private createStartTimeAndEndTimeBetween18And21(date: Date): Date[] {
+    const startTime = new Date(date);
+    startTime.setHours(21, 0, 0, 0);
+
+    const endTime = new Date(date);
+    endTime.setHours(0, 0, 0, 0);
 
     return [
       new Date(startTime.getTime() - startTime.getTimezoneOffset() * 60000),

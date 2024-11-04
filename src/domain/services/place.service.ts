@@ -19,23 +19,32 @@ export class PlaceService {
     this.reviewService = new ReviewService();
   }
 
-  async findOneInLocalityByTypesAndPriceLevel(
+  async findOneInLocalityByTypesAndPriceLevelWithDate(
     currentPlaces: Place[],
     type: string,
     priceLevel: string[],
     provinceId: number,
     provinceName: string,
     locality: string,
-  ): Promise<Place> {
-    const place = await this.fetchPlaceInLocalityByTypeAndPriceLevel(
-      provinceName,
-      locality,
-      type,
-      priceLevel,
-      currentPlaces,
-    );
+    date: Date,
+  ): Promise<Place | null> {
+    let place: Place | null = null;
 
-    return await this.savePlaceInDatabase(place, provinceId);
+    do {
+      const fetchedPlace = await this.fetchPlaceInLocalityByTypeAndPriceLevel(
+        provinceName,
+        locality,
+        type,
+        priceLevel,
+        currentPlaces,
+      );
+
+      if (fetchedPlace) {
+        place = await this.savePlaceInDatabase(fetchedPlace, provinceId);
+      }
+    } while (place && !this.isOpenThisDay(place.openingHours, date));
+
+    return place;
   }
 
   async fetchPlaces(province: string) {
@@ -262,8 +271,8 @@ export class PlaceService {
     return sortedPlaces;
   }
 
-  private isOpenThisDay(openingHours: string[], date: Date): boolean {
-    if (openingHours === null) {
+  isOpenThisDay(openingHours: string[], date: Date): boolean {
+    if (openingHours === null || !date) {
       return true;
     }
 
@@ -292,7 +301,7 @@ export class PlaceService {
     };
 
     const searchBody = {
-      textQuery: type + ' in ' + locality + ', ' + province,
+      textQuery: type.replace(/_/g, ' ') + ' in ' + locality + ', ' + province,
       languageCode: 'es',
       regionCode: 'AR',
     };
@@ -311,7 +320,19 @@ export class PlaceService {
 
     places = this.filterPlacesByPriceLevel(places, priceLevel);
 
-    return places[Math.floor(Math.random() * places.length)];
+    if (places.length > 0) {
+      do {
+        const place = places[Math.floor(Math.random() * places.length)];
+
+        if (place.reviews && place.reviews.length > 0) {
+          return place;
+        } else {
+          places = places.filter((p) => p.id !== place.id);
+        }
+      } while (places.length > 0);
+    }
+
+    return null;
   }
 
   private filterPlacesByCurrentPlaces(places: any[], currentPlaces: Place[]) {
