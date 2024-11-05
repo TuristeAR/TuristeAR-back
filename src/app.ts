@@ -80,6 +80,9 @@ import { DeleteExpensesByItineraryIdUseCase } from './application/use-cases/expe
 import { DeleteItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
 import { FindForumByIdForDeleteUseCase } from './application/use-cases/forum-use-cases/find-forum-by-id-for-delete.use-case';
 import { FindActivitiesByItineraryIdUseCase } from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
+import {
+  DeletePublicationsByActivitiesUseCase
+} from './application/use-cases/publication-use-cases/delete-publications-by-activities.use-case';
 
 dotenv.config();
 
@@ -214,6 +217,7 @@ const deleteForumUseCase = new DeleteForumUseCase();
 const deleteItineraryByIdUseCase = new DeleteItineraryByIdUseCase();
 const deleteMessagesUseCase = new DeleteMessageUseCase();
 const deletePublicationUseCase = new DeletePublicationUseCase();
+const deletePublicationsByActivitiesUseCase = new DeletePublicationsByActivitiesUseCase();
 
 const updateActivityUseCase = new UpdateActivityUseCase();
 
@@ -1389,6 +1393,8 @@ io.on('connection', (socket) => {
         console.log('The itinerary belongs to another user');
         return;
       }
+
+      await deletePublicationsByActivitiesUseCase.execute(itinerary.activities);
 
       if (itinerary.activities.length > 0) {
         await deleteActivitiesUseCase.execute(itinerary.activities);

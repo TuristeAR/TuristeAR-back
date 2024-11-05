@@ -70,7 +70,7 @@ export class ItineraryService {
 
     const savedItinerary = await createItineraryUseCase.execute(itinerary);
 
-    let forum = new Forum();
+    const forum = new Forum();
 
     forum.itinerary = savedItinerary;
     forum.name = savedItinerary.name;
@@ -80,6 +80,8 @@ export class ItineraryService {
     const createForumUseCase = new CreateForumUseCase();
 
     itinerary.forum = await createForumUseCase.execute(forum);
+
+    await createItineraryUseCase.execute(itinerary)
 
     let itineraryPlaces: Place[] = [];
 
