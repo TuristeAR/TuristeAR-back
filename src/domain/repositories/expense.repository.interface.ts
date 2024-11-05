@@ -3,7 +3,7 @@ import { Expense } from '../entities/expense';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 export interface ExpenseRepositoryInterface {
-  create(data: DeepPartial<Expense>): Promise<Expense>;
+  create(data: DeepPartial<Expense>): Promise<Expense | null>;
   findOne(options: FindOneOptions<Expense>): Promise<Expense | null>;
   findMany(options?: FindManyOptions<Expense>): Promise<Expense[]>;
   save(expense: Expense): Promise<Expense>;
