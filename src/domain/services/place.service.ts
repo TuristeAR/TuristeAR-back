@@ -181,34 +181,43 @@ export class PlaceService {
     offset: number,
   ): Promise<Place[]> {
     try {
-      const findPlaceByProvinceAndTypesUseCase = new FindPlaceByProvinceAndTypesUseCase();
+          const findPlaceByProvinceAndTypesUseCase = new FindPlaceByProvinceAndTypesUseCase();
 
-      const places = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
+          const places = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
 
-      let filteredPlaces = places;
+          let filteredPlaces = places;
 
-    // realiza el filtrado de typos
-    if (types.length > 0) {
-        filteredPlaces = places.filter((place) =>
+        // realiza el filtrado de typos
+         if (types.length > 0)
+          {
+            filteredPlaces = places.filter((place) =>
             place.types.some((type) => types.includes(type)) // Verifica si coinciden
-        );
-    }
+            );
+            if(filteredPlaces.length >= 4){
 
-    // Mapea los lugares filtrados para limitar las imágenes de reseña
-    const limitedReviewImages = filteredPlaces.map((place) => {
+
+
+            }
+
+          }
+
+
+          // Mapea los lugares filtrados para limitar las imágenes de reseña
+        const limitedReviewImages = filteredPlaces.map((place) => {
         const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
         return {
             ...place,
             reviews: firstReview ? [firstReview] : [], // Solo toma la primera reseña, si existe
         };
-    });
+        });
+      
 
-    // Limita el resultado a `count` lugares 
-    return limitedReviewImages.slice(0, count);
+        // Limita el resultado a `count` lugares 
+        return limitedReviewImages.slice(0, count);
 
-    } catch (error) {
-      throw error;
-    }
+      } catch (error) {
+        throw error;
+      }
   }
 
   orderByDistance(places: Place[], dates: Date[]): Place[] {
