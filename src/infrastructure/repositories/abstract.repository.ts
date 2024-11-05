@@ -10,7 +10,6 @@ import {
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 export abstract class AbstractRepository<T extends ObjectLiteral> {
-  [x: string]: any;
   protected constructor(protected readonly repository: Repository<T>) {}
 
   create(data: DeepPartial<T>): Promise<T> {
@@ -40,5 +39,21 @@ export abstract class AbstractRepository<T extends ObjectLiteral> {
 
   save(entity: DeepPartial<T>): Promise<T> {
     return this.repository.save(entity);
+  }
+
+  findByProvinceLocalityTypes(
+    provinceId: number,
+    locality: string,
+    type: string,
+    priceLevels: string[],
+  ): Promise<T[]> {
+    return this.repository
+      .createQueryBuilder('place')
+      .where('place.provinceId = :provinceId', { provinceId })
+      .andWhere('place.locality = :locality', { locality })
+      .andWhere('place.types LIKE :type', { type: `%${type}%` })
+      .andWhere('place.priceLevel IN (:...priceLevels)', { priceLevels })
+      .limit(50)
+      .getMany();
   }
 }
