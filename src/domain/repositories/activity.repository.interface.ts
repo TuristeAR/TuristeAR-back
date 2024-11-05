@@ -1,8 +1,6 @@
 import { DeepPartial, DeleteResult, FindOneOptions, UpdateResult } from 'typeorm';
 import { Activity } from '../entities/activity';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { Itinerary } from '../entities/itinerary';
-import { Weather } from '../entities/weather';
 
 export interface ActivityRepositoryInterface {
   create(data: DeepPartial<Activity>): Promise<Activity>;

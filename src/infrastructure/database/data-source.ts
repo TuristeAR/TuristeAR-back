@@ -15,6 +15,7 @@ import { Forum } from '../../domain/entities/forum';
 import { Expense } from '../../domain/entities/expense';
 import { Comment } from '../../domain/entities/comment';
 import { Notification } from '../../domain/entities/notification';
+import { EventTemp } from '../../domain/entities/event_temp';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ export const AppDataSource = new DataSource({
     Province,
     Place,
     Event,
+    EventTemp,
     Review,
     Itinerary,
     Activity,

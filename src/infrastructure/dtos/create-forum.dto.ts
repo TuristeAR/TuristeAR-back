@@ -15,9 +15,6 @@ export class CreateForumDto {
   @IsNumber()
   categoryId : number;
 
-  @IsNumber()
-  itineraryId : number;
-
   @IsBoolean()
   isPublic : boolean;
 
