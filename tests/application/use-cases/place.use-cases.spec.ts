@@ -21,6 +21,7 @@ describe('PlaceUseCases', () => {
       create: jest.fn<Promise<Place>, [CreatePlaceDto]>(),
       findOne: jest.fn(),
       findMany: jest.fn(),
+      findByProvinceLocalityTypes: jest.fn(),
     } as jest.Mocked<PlaceRepositoryInterface>;
     createPlaceUseCase = new CreatePlaceUseCase();
     (createPlaceUseCase as any).placeRepository = placeRepository;
@@ -41,10 +42,12 @@ describe('PlaceUseCases', () => {
       googleId: 'test-google-id',
       types: ['type1', 'type2'],
       address: 'Test Address',
+      locality: 'Test Locality',
       latitude: 1.0,
       longitude: 1.0,
       rating: 4.5,
       openingHours: ['openingHours1', 'openingHours2'],
+      priceLevel: '',
       phoneNumber: '1234567890',
     };
 
@@ -56,10 +59,12 @@ describe('PlaceUseCases', () => {
       reviews: [],
       types: ['type1', 'type2'],
       address: 'Test Address',
+      locality: 'Test Locality',
       latitude: 1.0,
       longitude: 1.0,
       rating: 4.5,
       openingHours: ['openingHours1', 'openingHours2'],
+      priceLevel: '',
       phoneNumber: '1234567890',
       activities: [],
       createdAt: new Date(),
@@ -80,10 +85,12 @@ describe('PlaceUseCases', () => {
       googleId: 'test-google-id',
       types: ['type1', 'type2'],
       address: 'Test Address',
+      locality: 'Test Locality',
       latitude: 1.0,
       longitude: 1.0,
       rating: 4.5,
       openingHours: ['openingHours1', 'openingHours2'],
+      priceLevel: '',
       phoneNumber: '1234567890',
     };
     placeRepository.create.mockRejectedValue(new Error('Creation failed'));
@@ -102,10 +109,12 @@ describe('PlaceUseCases', () => {
         reviews: [],
         types: ['type1'],
         address: 'Address 1',
+        locality: 'Locality 1',
         latitude: 1.0,
         longitude: 1.0,
         rating: 4.5,
         openingHours: ['9:00 AM - 5:00 PM'],
+        priceLevel: '',
         phoneNumber: '1234567890',
         activities: [],
         createdAt: new Date(),
@@ -118,10 +127,12 @@ describe('PlaceUseCases', () => {
         reviews: [],
         types: ['type2'],
         address: 'Address 2',
+        locality: 'Locality 2',
         latitude: 2.0,
         longitude: 2.0,
         rating: 4.0,
         openingHours: ['10:00 AM - 6:00 PM'],
+        priceLevel: '',
         phoneNumber: '0987654321',
         activities: [],
         createdAt: new Date(),
@@ -211,7 +222,7 @@ describe('PlaceUseCases', () => {
     const places: Place[] = [new Place(), new Place()];
     placeRepository.findMany.mockResolvedValue(places);
 
-    const result = await findPlaceByProvinceAndTypesUseCase.execute(provinceId,[]);
+    const result = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
 
     expect(result).toEqual(places);
     expect(placeRepository.findMany).toHaveBeenCalledWith(
@@ -238,7 +249,7 @@ describe('PlaceUseCases', () => {
     const provinceId = 2;
     placeRepository.findMany.mockResolvedValue([]);
 
-    const result = await findPlaceByProvinceAndTypesUseCase.execute(provinceId,[]);
+    const result = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
 
     expect(result).toEqual([]);
     expect(placeRepository.findMany).toHaveBeenCalledWith(

@@ -10,7 +10,7 @@ export class FindPlaceByProvinceAndTypesUseCase {
   }
 
   //types nunca se utiliza en el where para consultar ...
-  execute(provinceId: number,types: string[]): Promise<Place[]> {
+  execute(provinceId: number): Promise<Place[]> {
     return this.placeRepository.findMany(
       {
         where: {
