@@ -99,8 +99,14 @@ export class PlaceService {
             place.types.some((type) => types.includes(type)) // Verifica si coinciden
             );
             if(filteredPlaces.length >= 4){
-              const provinceName = this.provinceService.getProvinceNameFromId(provinceId);
-              this.fetchPlaceByProvinceAndType(provinceName,types,currentPlace);
+              const provinceName = await this.provinceService.getProvinceNameFromId(provinceId);
+
+              if (provinceName) {
+                 this.fetchPlaceByProvinceAndType(provinceName, types, currentPlace);
+               } else {
+                 console.error("No se pudo obtener el nombre de la provincia.");
+              }
+              
             }
 
           }
