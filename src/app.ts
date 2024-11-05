@@ -19,6 +19,7 @@ import { authMiddleware } from './infrastructure/middlewares/auth.middleware';
 import { ItineraryService } from './domain/services/itinerary.service';
 import { PublicationService } from './domain/services/publication.service';
 import { CreatePublicationDTO } from './infrastructure/dtos/create-publication.dto';
+import { CreateEventDTO } from './infrastructure/dtos/create-event.dto';
 import { FindActivityByIdUseCase } from './application/use-cases/activity-use-cases/find-activity-by-id.use-case';
 import { FindAllCategoryUseCase } from './application/use-cases/category-use-cases/find-all-category.use-case';
 import { CreateWeatherUseCase } from './application/use-cases/weather-use-cases/create-weather.use-case';
@@ -70,16 +71,22 @@ import { FindExpenseByIdUseCase } from './application/use-cases/expense-use-case
 import { DeletePublicationUseCase } from './application/use-cases/publication-use-cases/delete-publication.use-case';
 import { FindCommentsByPublicationIdUserCase } from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
 import { DeleteCommentsUseCase } from './application/use-cases/comment-use-cases/delete-comments.use-case';
+import { EventTempService } from './domain/services/event_temp.service';
+import { UserService } from './domain/services/user.service';
+import { FindActivitiesByItineraryIdUseCase } from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
 import { FindItineraryByIdForDeleteUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-id-for-delete.use-case';
-import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
-import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/delete-forum.use-case';
 import { DeleteActivitiesUseCase } from './application/use-cases/activity-use-cases/delete-activities.use-case';
 import { DeleteEventsUseCase } from './application/use-cases/event-use-cases/delete-events.use-case';
 import { DeleteExpensesByItineraryIdUseCase } from './application/use-cases/expense-use-cases/delete-expenses-by-itinerary-id.use-case';
+import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/delete-forum.use-case';
 import { DeleteItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
+
 import {
   DeletePublicationsByActivitiesUseCase
 } from './application/use-cases/publication-use-cases/delete-publications-by-activities.use-case';
+
+import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
+
 
 dotenv.config();
 
@@ -159,6 +166,8 @@ const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
+const userService = new UserService();
+const eventTempService = new EventTempService();
 
 const createCommentUseCase = new CreateCommentUseCase();
 const createMessageUseCase = new CreateMessageUseCase();
@@ -983,6 +992,25 @@ app.post('/createPublication', authMiddleware, async (req: Request, res: Respons
     return res.status(status.INTERNAL_SERVER_ERROR).json({
       statusCode: status.INTERNAL_SERVER_ERROR,
       message: error || 'Error creating publication',
+    });
+  }
+});
+
+app.post('/createEventTemp', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const CreateEventDTO: CreateEventDTO = req.body;
+
+    const event = await eventTempService.createEventTemp(
+      CreateEventDTO,
+      req.user as User,
+    );
+
+    return res.status(status.CREATED).json({ statusCode: status.CREATED, data: event });
+  } catch (error) {
+    console.log(error)
+    return res.status(status.INTERNAL_SERVER_ERROR).json({
+      statusCode: status.INTERNAL_SERVER_ERROR,
+      message: error || 'Error creating event',
     });
   }
 });
