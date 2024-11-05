@@ -55,7 +55,6 @@ import { CreateForumDto } from './infrastructure/dtos/create-forum.dto';
 import { CreateForumUseCase } from './application/use-cases/forum-use-cases/create-forum.use-case';
 import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
-import { FindForumByItineraryIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
 import { Expense } from './domain/entities/expense';
 import { CreateExpenseUseCase } from './application/use-cases/expense-use-cases/create-expense.use-case';
 import { FindExpensesByItineraryIdUseCases } from './application/use-cases/expense-use-cases/find-expenses-by-itinerary-id.use-case';
@@ -78,8 +77,6 @@ import { DeleteActivitiesUseCase } from './application/use-cases/activity-use-ca
 import { DeleteEventsUseCase } from './application/use-cases/event-use-cases/delete-events.use-case';
 import { DeleteExpensesByItineraryIdUseCase } from './application/use-cases/expense-use-cases/delete-expenses-by-itinerary-id.use-case';
 import { DeleteItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
-import { FindForumByIdForDeleteUseCase } from './application/use-cases/forum-use-cases/find-forum-by-id-for-delete.use-case';
-import { FindActivitiesByItineraryIdUseCase } from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
 import {
   DeletePublicationsByActivitiesUseCase
 } from './application/use-cases/publication-use-cases/delete-publications-by-activities.use-case';
@@ -169,7 +166,6 @@ const createProvinceUseCase = new CreateProvinceUseCase();
 const createWeatherUseCase = new CreateWeatherUseCase();
 const createForumUserCase = new CreateForumUseCase();
 const findActivityByIdUseCase = new FindActivityByIdUseCase();
-const findActivitiesByItineraryIdUseCase = new FindActivitiesByItineraryIdUseCase();
 const findAllCategoryUseCase = new FindAllCategoryUseCase();
 const findAllForumUseCase = new FindAllForumUseCase();
 const findAllPlaceUseCase = new FindAllPlaceUseCase();
@@ -183,8 +179,6 @@ const findCommentsByPublicationIdUserCase = new FindCommentsByPublicationIdUserC
 const findEventByProvinceAndDatesUseCase = new FindEventByProvinceAndDatesUseCase();
 const findEventByProvinceUseCase = new FindEventByProvinceUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
-const findForumByItineraryIdUseCase = new FindForumByItineraryIdUseCase();
-const findForumByItineraryIdForDeleteUseCase = new FindForumByIdForDeleteUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
 const findItineraryByIdForDeleteUseCase = new FindItineraryByIdForDeleteUseCase();
 const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
@@ -1412,15 +1406,14 @@ io.on('connection', (socket) => {
         await deleteExpensesByItineraryIdUseCase.execute(itinerary.expenses);
       }
 
-      const forum = await findForumByItineraryIdForDeleteUseCase.execute(itineraryId);
+      const forum = await findForumByIdUseCase.execute(itinerary.id);
 
       if (forum != null && forum.messages.length > 0) {
         await deleteMessagesUseCase.execute(forum.messages);
       }
 
-      itinerary.forum = null;
-
       if (forum != null) {
+        itinerary.forum = null;
         await deleteForumUseCase.execute(forum);
       }
 

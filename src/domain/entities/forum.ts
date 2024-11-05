@@ -22,10 +22,6 @@ export class Forum extends AbstractEntity {
   @JoinColumn({ name: 'categoryId' })
   category: Category | null;
 
-  @OneToOne(() => Itinerary)
-  @JoinColumn({ name: 'itineraryId' })
-  itinerary: Itinerary;
-
   @Column()
   isPublic: boolean;
 }
