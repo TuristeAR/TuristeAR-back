@@ -83,6 +83,7 @@ export class PlaceService {
     types: string[],
     count: number,
     offset: number,
+    currentPlace: Place[],
   ): Promise<Place[]> {
     try {
           const findPlaceByProvinceAndTypesUseCase = new FindPlaceByProvinceAndTypesUseCase();
@@ -98,7 +99,8 @@ export class PlaceService {
             place.types.some((type) => types.includes(type)) // Verifica si coinciden
             );
             if(filteredPlaces.length >= 4){
-
+              const provinceName = this.provinceService.getProvinceNameFromId(provinceId);
+              this.fetchPlaceByProvinceAndType(provinceName,types,currentPlace);
             }
 
           }
@@ -119,6 +121,56 @@ export class PlaceService {
       } catch (error) {
         throw error;
       }
+  }
+
+  private async fetchPlaceByProvinceAndType(
+    province: string,
+    types: string[],
+    currentPlaces: Place[],
+  ) {
+    let results: any[] = [];
+
+    const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
+
+    const type = types.join(" o ");
+
+    const searchHeaders = {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': process.env.GOOGLE_API_KEY as string,
+      'X-Goog-FieldMask': 'places',
+    };
+
+    const searchBody = {
+      textQuery: type.replace(/_/g, ' ') + ' in ' + province,
+      languageCode: 'es',
+      regionCode: 'AR',
+    };
+
+    const result = await post(searchUrl, searchHeaders, searchBody);
+
+    if (result.places === undefined || result.places === null) {
+      results.push(...[]);
+    } else {
+      results.push(...result.places);
+    }
+
+    let places: any[];
+
+    places = this.filterPlacesByCurrentPlaces(results, currentPlaces);
+
+    if (places.length > 0) {
+      do {
+        const place = places[Math.floor(Math.random() * places.length)];
+
+        if (place.reviews && place.reviews.length > 0) {
+          return place;
+        } else {
+          places = places.filter((p) => p.id !== place.id);
+        }
+      } while (places.length > 0);
+    }
+
+    return null;
   }
 
   orderByDistance(places: Place[], dates: Date[]): Place[] {
@@ -206,55 +258,7 @@ export class PlaceService {
     return null;
   }
 
-  private async fetchPlaceInLocalityByProvinceAndType(
-    province: string,
-    type: string,
-    currentPlaces: Place[],
-  ) {
-    let results: any[] = [];
-
-    const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
-
-    const searchHeaders = {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': process.env.GOOGLE_API_KEY as string,
-      'X-Goog-FieldMask': 'places',
-    };
-
-    const searchBody = {
-      textQuery: type.replace(/_/g, ' ') + ' in ' + province,
-      languageCode: 'es',
-      regionCode: 'AR',
-    };
-
-    const result = await post(searchUrl, searchHeaders, searchBody);
-
-    if (result.places === undefined || result.places === null) {
-      results.push(...[]);
-    } else {
-      results.push(...result.places);
-    }
-
-    let places: any[];
-
-    places = this.filterPlacesByCurrentPlaces(results, currentPlaces);
-
-    places = this.filterPlacesByPriceLevel(places, priceLevel);
-
-    if (places.length > 0) {
-      do {
-        const place = places[Math.floor(Math.random() * places.length)];
-
-        if (place.reviews && place.reviews.length > 0) {
-          return place;
-        } else {
-          places = places.filter((p) => p.id !== place.id);
-        }
-      } while (places.length > 0);
-    }
-
-    return null;
-  }
+ 
 
   private async fetchPlaceInLocalityByTypeAndPriceLevel(
     province: string,
