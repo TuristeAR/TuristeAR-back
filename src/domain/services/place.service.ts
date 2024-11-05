@@ -99,12 +99,9 @@ export class PlaceService {
             );
             if(filteredPlaces.length >= 4){
 
-
-
             }
 
           }
-
 
           // Mapea los lugares filtrados para limitar las imágenes de reseña
         const limitedReviewImages = filteredPlaces.map((place) => {
