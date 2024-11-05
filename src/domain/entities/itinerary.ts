@@ -13,6 +13,7 @@ import { Activity } from './activity';
 import { Event } from './event';
 import { User } from './user';
 import { Forum } from './forum';
+import { Expense } from './expense';
 
 @Entity()
 export class Itinerary extends AbstractEntity {
@@ -21,6 +22,8 @@ export class Itinerary extends AbstractEntity {
 
   @OneToMany(() => Event, (event) => event.itinerary)
   events: Event[];
+  @OneToMany(() => Expense, (expense) => expense.itinerary)
+  expenses: Expense[];
 
   @Column()
   name: string;
@@ -44,5 +47,5 @@ export class Itinerary extends AbstractEntity {
 
   @OneToOne(() => Forum)
   @JoinColumn({ name: 'forumId' })
-  forum: Forum;
+  forum: Forum | null;
 }

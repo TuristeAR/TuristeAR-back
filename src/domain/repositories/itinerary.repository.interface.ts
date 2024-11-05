@@ -1,4 +1,4 @@
-import { DeepPartial, FindOneOptions } from 'typeorm';
+import { DeepPartial, DeleteResult, FindOneOptions } from 'typeorm';
 import { Itinerary } from '../entities/itinerary';
 
 export interface ItineraryRepositoryInterface {
@@ -6,4 +6,6 @@ export interface ItineraryRepositoryInterface {
   findOne(options: FindOneOptions<Itinerary>): Promise<Itinerary | null>;
   findMany(options: FindOneOptions<Itinerary>): Promise<Itinerary[]>;
   save(user: Itinerary): Promise<Itinerary>;
+
+  deleteOne(id: number): Promise<DeleteResult>;
 }

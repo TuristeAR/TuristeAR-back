@@ -9,6 +9,7 @@ export class FindPlaceByProvinceAndTypesUseCase {
     this.placeRepository = new PlaceRepository();
   }
 
+  //types nunca se utiliza en el where para consultar ...
   execute(provinceId: number): Promise<Place[]> {
     return this.placeRepository.findMany(
       {
@@ -31,4 +32,10 @@ export class FindPlaceByProvinceAndTypesUseCase {
       50,
     );
   }
+
+
+
+
+  
 }
+

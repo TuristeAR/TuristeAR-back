@@ -61,22 +61,28 @@ import { Expense } from './domain/entities/expense';
 import { CreateExpenseUseCase } from './application/use-cases/expense-use-cases/create-expense.use-case';
 import { FindExpensesByItineraryIdUseCases } from './application/use-cases/expense-use-cases/find-expenses-by-itinerary-id.use-case';
 import { DeleteExpensesByIdUseCases } from './application/use-cases/expense-use-cases/delete-expense-by-id.use-case';
-import { CreateExpenseDto } from './infrastructure/dtos/create-expense.dto';
 import { FindEventByProvinceAndDatesUseCase } from './application/use-cases/event-use-cases/find-event-by-province-and-dates.use-case';
 import { Comment } from './domain/entities/comment';
 import { CreateCommentUseCase } from './application/use-cases/comment-use-cases/create-comment.use-case';
 import { FindEventByProvinceUseCase } from './application/use-cases/event-use-cases/find-event-by-province.use-case';
-import { UserService } from './domain/services/user.service';
 import { ubicationMiddleware } from './infrastructure/middlewares/ubication.middleware';
 import { UpdateActivityUseCase } from './application/use-cases/activity-use-cases/update-activity.use-case';
 import { SaveExpenseUseCase } from './application/use-cases/expense-use-cases/save-expense.use-case';
 import { FindExpenseByIdUseCase } from './application/use-cases/expense-use-cases/find-expense-by-id.use-case';
 import { DeletePublicationUseCase } from './application/use-cases/publication-use-cases/delete-publication.use-case';
-import {
-  FindCommentsByPublicationIdUserCase
-} from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
+import { FindCommentsByPublicationIdUserCase } from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
 import { DeleteCommentsUseCase } from './application/use-cases/comment-use-cases/delete-comments.use-case';
 import { EventTempService } from './domain/services/event_temp.service';
+import { UserService } from './domain/services/user.service';
+import { FindActivitiesByItineraryIdUseCase } from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
+import { FindForumByIdForDeleteUseCase } from './application/use-cases/forum-use-cases/find-forum-by-id-for-delete.use-case';
+import { FindItineraryByIdForDeleteUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-id-for-delete.use-case';
+import { DeleteActivitiesUseCase } from './application/use-cases/activity-use-cases/delete-activities.use-case';
+import { DeleteEventsUseCase } from './application/use-cases/event-use-cases/delete-events.use-case';
+import { DeleteExpensesByItineraryIdUseCase } from './application/use-cases/expense-use-cases/delete-expenses-by-itinerary-id.use-case';
+import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/delete-forum.use-case';
+import { DeleteItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
+import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
 
 dotenv.config();
 
@@ -99,12 +105,12 @@ const io = new SocketIOServer(server, {
 
 io.on('connection', (socket) => {
   socket.on('message', (msg) => {
-    console.log('Mensaje recibido:', msg);
+    console.log('Received message:', msg);
     io.emit('message', msg);
   });
 
   socket.on('disconnect', () => {
-    console.log('Cliente desconectado', socket.id);
+    console.log('Disconnected client', socket.id);
   });
 });
 
@@ -165,6 +171,7 @@ const createProvinceUseCase = new CreateProvinceUseCase();
 const createWeatherUseCase = new CreateWeatherUseCase();
 const createForumUserCase = new CreateForumUseCase();
 const findActivityByIdUseCase = new FindActivityByIdUseCase();
+const findActivitiesByItineraryIdUseCase = new FindActivitiesByItineraryIdUseCase();
 const findAllCategoryUseCase = new FindAllCategoryUseCase();
 const findAllForumUseCase = new FindAllForumUseCase();
 const findAllPlaceUseCase = new FindAllPlaceUseCase();
@@ -178,8 +185,10 @@ const findCommentsByPublicationIdUserCase = new FindCommentsByPublicationIdUserC
 const findEventByProvinceAndDatesUseCase = new FindEventByProvinceAndDatesUseCase();
 const findEventByProvinceUseCase = new FindEventByProvinceUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
-const findForumByItineraryId = new FindForumByItineraryIdUseCase();
+const findForumByItineraryIdUseCase = new FindForumByItineraryIdUseCase();
+const findForumByItineraryIdForDeleteUseCase = new FindForumByIdForDeleteUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
+const findItineraryByIdForDeleteUseCase = new FindItineraryByIdForDeleteUseCase();
 const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
 const findItineraryByUserWithParticipantsUseCase = new FindItineraryByUserWithParticipantsUseCase();
 const findItineraryWithParticipantsUseCase = new FindItineraryWithParticipantsUseCase();
@@ -202,16 +211,21 @@ const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases()
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
 const saveExpenseUseCase = new SaveExpenseUseCase();
 const findExpenseByIdUseCase = new FindExpenseByIdUseCase();
-const deletePublicationUseCase = new DeletePublicationUseCase();
+const deleteActivitiesUseCase = new DeleteActivitiesUseCase();
 const deleteCommentsUseCase = new DeleteCommentsUseCase();
+const deleteEventsUseCase = new DeleteEventsUseCase();
+const deleteExpensesByItineraryIdUseCase = new DeleteExpensesByItineraryIdUseCase();
+const deleteForumUseCase = new DeleteForumUseCase();
+const deleteItineraryByIdUseCase = new DeleteItineraryByIdUseCase();
+const deleteMessagesUseCase = new DeleteMessageUseCase();
+const deletePublicationUseCase = new DeletePublicationUseCase();
 
 const updateActivityUseCase = new UpdateActivityUseCase();
 
 app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
-  
   const { latitude, longitude, province } = req.body;
 
-  passport.authenticate('google', { scope: ['profile', 'email']})(req, res, next);
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });
 
 app.get(
@@ -220,6 +234,22 @@ app.get(
     scope: ['profile', 'email'],
   }),
 );
+
+app.post('/itinerary/add-event', (req, res) => {
+  const { itineraryId, eventId } = req.body;
+
+  const addedEvent = itineraryService.addEventToItinerary(itineraryId, eventId);
+
+  if (addedEvent) {
+    return res.status(200).json({
+      status: 'success',
+      message: 'Event added to itinerary',
+      event: addedEvent,
+    });
+  } else {
+    return res.status(400).json({ status: 'error', message: 'Error adding event to itinerary' });
+  }
+});
 
 app.get('/auth/google/callback', (req, res, next) => {
   passport.authenticate('google', (err: any, user: User) => {
@@ -439,15 +469,9 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const itinerary = await findItineraryByIdUseCase.execute(Number(id));
 
-    const activities = await itineraryService.findActivitiesByItineraryId(Number(id));
-
-    const events = await itineraryService.findEventsByItineraryId(Number(id));
-
-    const forum = await findForumByItineraryId.execute(Number(id));
-
     return res
       .status(status.OK)
-      .json({ statusCode: status.OK, data: { itinerary, activities, events, forum } });
+      .json({ statusCode: status.OK, data: { itinerary } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
@@ -490,20 +514,6 @@ app.get('/activity/:id', async (req: Request, res: Response) => {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching activity' });
-  }
-});
-
-app.get('/fetch-places', async (req: Request, res: Response) => {
-  try {
-    const province = (req.query.province as string) + ' Province';
-
-    await placeService.fetchPlaces(province);
-
-    return res.status(status.OK).json({ statusCode: status.OK, message: 'Places fetched' });
-  } catch (error) {
-    return res
-      .status(status.INTERNAL_SERVER_ERROR)
-      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching places' });
   }
 });
 
@@ -554,7 +564,7 @@ app.post('/itinerary/add-user', authMiddleware, (req, res) => {
   itineraryService
     .addUserToItinerary(itineraryId, participantId)
     .then((updatedItinerary) => {
-      io.emit('usersAdddItinerary', { updatedItinerary });
+      io.emit('usersAddItinerary', { updatedItinerary });
       return res.status(200).json({ status: 'success', data: updatedItinerary });
     })
     .catch(() => {
@@ -680,9 +690,7 @@ app.delete('/itinerary/remove-event', async (req, res) => {
       itineraryId,
       eventId,
     });
-    return res
-      .status(200)
-      .json({ status: 'success', message: `Event with ID ${eventId} removed` });
+    return res.status(200).json({ status: 'success', message: `Event with ID ${eventId} removed` });
   } catch (error) {
     console.error('Error removing event from itinerary:');
     return res.status(500).json({ status: 'error' });
@@ -787,7 +795,7 @@ app.get('/publications/:userID', async (req: Request, res: Response) => {
     }
 
     if (!publications) {
-      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+      return res.status(404).json({ message: 'Were not found publications' });
     }
 
     return res.json(publications);
@@ -807,7 +815,7 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
     }
 
     if (!publications) {
-      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+      return res.status(404).json({ message: 'Were not found publications' });
     }
 
     return res.json(publications);
@@ -827,7 +835,7 @@ app.get('/publications/saved/:userId', authMiddleware, async (req: Request, res:
     }
 
     if (!publications) {
-      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+      return res.status(404).json({ message: 'Were not found publications' });
     }
 
     return res.json(publications);
@@ -847,7 +855,7 @@ app.get('/publications/categories/:categoryId', async (req: Request, res: Respon
     }
 
     if (!publications) {
-      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+      return res.status(404).json({ message: 'Were not found publications' });
     }
 
     return res.json(publications);
@@ -867,7 +875,7 @@ app.get('/publication/:publicationId', async (req: Request, res: Response) => {
     }
 
     if (!publication) {
-      return res.status(404).json({ message: 'No se encontraron publicaciones' });
+      return res.status(404).json({ message: 'Were not found publication' });
     }
 
     return res.json(publication);
@@ -881,7 +889,7 @@ app.get('/categories', async (_req: Request, res: Response) => {
     const categories = await findAllCategoryUseCase.execute();
 
     if (!categories) {
-      return res.status(404).json({ message: 'No se encontraron las categorias' });
+      return res.status(404).json({ message: 'Were not found categories' });
     }
 
     return res.json(categories);
@@ -892,12 +900,12 @@ app.get('/categories', async (_req: Request, res: Response) => {
 
 app.get('/places/province?', async (req: Request, res: Response) => {
   const { provinceId, types, count = 4, offset = 0 } = req.query;
-
+  console.log(types);
   try {
     const typesArray: string[] = Array.isArray(types)
       ? types.map((type) => String(type))
       : [String(types)];
-
+    console.log(typesArray);
     const places = await placeService.findPlaceByProvinceAndTypes(
       Number(provinceId),
       typesArray,
@@ -951,7 +959,7 @@ app.put('/editProfile', async (req: Request, res: Response) => {
     let user = req.user as User;
 
     if (!user) {
-      return res.status(404).json({ message: 'No se encontró al usuario' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     user.description = description || user.description;
@@ -962,9 +970,9 @@ app.put('/editProfile', async (req: Request, res: Response) => {
 
     await updateUserUseCase.execute(user);
 
-    return res.json({ message: 'Datos modificados correctamente', user });
+    return res.json({ message: 'Data modified successfully', user });
   } catch (error) {
-    return res.status(500).json({ message: 'Error al modificar los datos', error });
+    return res.status(500).json({ message: 'Error modifying data', error });
   }
 });
 
@@ -979,7 +987,6 @@ app.post('/createPublication', authMiddleware, async (req: Request, res: Respons
 
     return res.status(status.CREATED).json({ statusCode: status.CREATED, data: publication });
   } catch (error) {
-    console.log(error)
     return res.status(status.INTERNAL_SERVER_ERROR).json({
       statusCode: status.INTERNAL_SERVER_ERROR,
       message: error || 'Error creating publication',
@@ -1044,7 +1051,7 @@ app.post('/handleLike/:publicationId', authMiddleware, async (req: Request, res:
     .then(() => {
       return res
         .status(200)
-        .json({ status: 'success', data: { message: 'Publicación agregada correctamente' } });
+        .json({ status: 'success', data: { message: 'Publication added successfully' } });
     })
     .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to likes' });
@@ -1061,7 +1068,7 @@ app.post('/handleSaved/:publicationId', authMiddleware, async (req: Request, res
     .then(() => {
       return res
         .status(200)
-        .json({ status: 'success', data: { message: 'Publicación guardada correctamente' } });
+        .json({ status: 'success', data: { message: 'Publication added successfully' } });
     })
     .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to saved' });
@@ -1078,7 +1085,7 @@ app.post('/handleReposts/:publicationId', authMiddleware, async (req: Request, r
     .then(() => {
       return res
         .status(200)
-        .json({ status: 'success', data: { message: 'Publicación reposteada correctamente' } });
+        .json({ status: 'success', data: { message: 'Publications repost successfully' } });
     })
     .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to reposts' });
@@ -1090,7 +1097,7 @@ app.get('/forums', async (_req: Request, res: Response) => {
     const forums = await findAllForumUseCase.execute();
 
     if (!forums) {
-      return res.status(404).json({ message: 'No se encontraron los foros' });
+      return res.status(404).json({ message: 'Were not found forums' });
     }
 
     return res.json(forums);
@@ -1104,18 +1111,18 @@ app.get('/forum/:id', async (req: Request, res: Response) => {
     const id = Number(req.params.id);
 
     if (isNaN(id)) {
-      return res.status(400).json({ message: 'ID inválido' });
+      return res.status(400).json({ message: 'Invalid ID' });
     }
 
     const forum = await findForumByIdUseCase.execute(id);
 
     if (!forum) {
-      return res.status(404).json({ message: 'No se encontró el foro' });
+      return res.status(404).json({ message: 'Forum not found' });
     }
 
     return res.json(forum);
   } catch (error) {
-    return res.status(500).json({ message: 'Error al obtener el foro', error });
+    return res.status(500).json({ message: 'Error getting forum', error });
   }
 });
 
@@ -1130,42 +1137,42 @@ app.post('/expenses', async (req, res) => {
       participatingUsers,
       itineraryId,
       individualAmounts,
-      individualPercentages
+      individualPercentages,
     } = req.body;
 
     if (!description) {
-      return res.status(400).json({ message: 'Falta el campo description' });
+      return res.status(400).json({ message: 'Description field is missing' });
     }
 
     if (!date) {
-      return res.status(400).json({ message: 'Falta el campo date' });
+      return res.status(400).json({ message: 'Date field is missing' });
     }
 
     if (!payerId) {
-      return res.status(400).json({ message: 'Falta el campo payerId' });
+      return res.status(400).json({ message: 'Payer field is missing' });
     }
 
     if (totalAmount == null) {
-      return res.status(400).json({ message: 'Falta el campo totalAmount' });
+      return res.status(400).json({ message: 'TotalAmount field is missing' });
     }
 
     if (!distributionType) {
-      return res.status(400).json({ message: 'Falta el campo distributionType' });
+      return res.status(400).json({ message: 'DistributionType field is missing' });
     }
 
     if (!itineraryId) {
-      return res.status(400).json({ message: 'Falta el campo itineraryId' });
+      return res.status(400).json({ message: 'ItineraryId field is missing' });
     }
 
     const payer = await findUserByIdUseCase.execute(payerId);
     const itinerary = await findItineraryByIdUseCase.execute(itineraryId);
 
     if (!payer || !itinerary) {
-      return res.status(404).json({ message: 'Payer o itinerario no encontrado' });
+      return res.status(404).json({ message: 'Payer or Itinerary not found' });
     }
 
     const users = await Promise.all(
-      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId))
+      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId)),
     );
 
     const validUsers = users.filter((user) => user);
@@ -1179,14 +1186,14 @@ app.post('/expenses', async (req, res) => {
     expense.itinerary = itinerary;
     expense.individualAmounts = individualAmounts || {};
     expense.participatingUsers = validUsers;
-    expense.individualPercentages =individualPercentages || {};
+    expense.individualPercentages = individualPercentages || {};
 
     const response = await createExpenseUseCase.execute(expense);
 
     res.status(200).json(response);
   } catch (error) {
-    console.error('Error al crear el gasto:', error); 
-    res.status(500).json({ message: 'Error interno del servidor' });
+    console.error('Error creating expense:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
@@ -1203,34 +1210,36 @@ app.put('/expenses/:idExpense', async (req, res) => {
       participatingUsers,
       itineraryId,
       individualAmounts,
-      individualPercentages
+      individualPercentages,
     } = req.body;
 
-    if (!description) return res.status(400).json({ message: 'Falta el campo description' });
-    if (!date) return res.status(400).json({ message: 'Falta el campo date' });
-    if (!payerId) return res.status(400).json({ message: 'Falta el campo payerId' });
-    if (totalAmount == null) return res.status(400).json({ message: 'Falta el campo totalAmount' });
-    if (!distributionType) return res.status(400).json({ message: 'Falta el campo distributionType' });
-    if (!itineraryId) return res.status(400).json({ message: 'Falta el campo itineraryId' });
+    if (!description) return res.status(400).json({ message: 'Description field is missing' });
+    if (!date) return res.status(400).json({ message: 'Date field is missing' });
+    if (!payerId) return res.status(400).json({ message: 'Payer field is missing' });
+    if (totalAmount == null)
+      return res.status(400).json({ message: 'TotalAmount field is missing' });
+    if (!distributionType)
+      return res.status(400).json({ message: 'DistributionType field is missing' });
+    if (!itineraryId) return res.status(400).json({ message: 'ItineraryId field is missing' });
 
     const payer = await findUserByIdUseCase.execute(payerId);
     const itinerary = await findItineraryByIdUseCase.execute(itineraryId);
     if (!payer || !itinerary) {
-      return res.status(404).json({ message: 'Payer o itinerario no encontrado' });
+      return res.status(404).json({ message: 'Payer or Itinerary not found' });
     }
 
     const existingExpense = await findExpenseByIdUseCase.execute(Number(idExpense));
     if (!existingExpense) {
-      return res.status(404).json({ message: 'Gasto no encontrado' });
+      return res.status(404).json({ message: 'Expense not found' });
     }
 
-    // Obtener las instancias de los usuarios participantes
+    // Get the instances of participating users
     const users = await Promise.all(
-      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId))
+      participatingUsers.map((userId: number) => findUserByIdUseCase.execute(userId)),
     );
     const validUsers = users.filter((user) => user);
 
-    // Actualizar propiedades del gasto existente
+    // Update existing expense properties
     existingExpense.description = description;
     existingExpense.date = new Date(date);
     existingExpense.totalAmount = totalAmount;
@@ -1240,68 +1249,67 @@ app.put('/expenses/:idExpense', async (req, res) => {
     existingExpense.individualAmounts = individualAmounts || {};
     existingExpense.individualPercentages = individualPercentages || {};
 
-    // Actualizar la relación many-to-many
+    // Update the many-to-many relationship
     existingExpense.participatingUsers = validUsers;
 
-    // Guardar la actualización
+    // Save the update
     const response = await saveExpenseUseCase.execute(existingExpense);
 
     res.status(200).json(response);
   } catch (error) {
-    console.error('Error al editar el gasto:', error); 
-    res.status(500).json({ message: 'Error interno del servidor', error });
+    console.error('Error editing expense:', error);
+    res.status(500).json({ message: 'Internal Server Error', error });
   }
 });
 
 app.get('/expenses/:itineraryId', async (req, res) => {
-  const { itineraryId } = req.params; 
+  const { itineraryId } = req.params;
 
   try {
     const expenses = await findExpensesByItineraryIdUseCase.execute(Number(itineraryId));
 
-    res.status(200).json(expenses); 
+    res.status(200).json(expenses);
   } catch (error) {
-    console.error('Error al obtener los gastos:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    console.error('Error obtaining expenses:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
 app.delete('/expenses/:expenseId', async (req, res) => {
-  const { expenseId } = req.params; 
+  const { expenseId } = req.params;
 
   try {
     const expenses = await deleteExpensesByIdUseCases.execute(Number(expenseId));
 
-    res.status(200).json(expenses); 
+    res.status(200).json(expenses);
   } catch (error) {
-    console.error('Error al eliminar un gasto:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    console.error('Error deleting an expense:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
 app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = req.user as User;
-    const {activityId, images} = req.body;
+    const { activityId, images } = req.body;
 
-    console.log(images)
-    const activity= await findActivityByIdUseCase.execute(Number(activityId));
+    console.log(images);
+    const activity = await findActivityByIdUseCase.execute(Number(activityId));
 
     for (const image of images) {
       activity?.images.push(image);
     }
 
-
-    if(!activity){
-      return res.status(400).json({ message: 'ID inválido' });
+    if (!activity) {
+      return res.status(400).json({ message: 'Invalid ID' });
     }
 
     const updatedActivity = await updateActivityUseCase.execute(activity);
 
     return res.json(updatedActivity);
   } catch (error) {
-    console.log(error)
-    return res.status(500).json({ message: 'Error al cargar imágenes', error });
+    console.log(error);
+    return res.status(500).json({ message: 'Error loading images', error });
   }
 });
 
@@ -1313,7 +1321,7 @@ io.on('connection', (socket) => {
       const forum = await findForumByIdUseCase.execute(Number(forumId));
 
       if (!forum) {
-        socket.emit('error', { message: 'Foro no encontrado' });
+        socket.emit('error', { message: 'Forum not found' });
         return;
       }
 
@@ -1333,7 +1341,7 @@ io.on('connection', (socket) => {
         createdAt: message.createdAt,
       });
     } catch (error) {
-      socket.emit('error', { message: 'Error al crear el mensaje', error });
+      socket.emit('error', { message: 'Error creating message', error });
     }
   });
 
@@ -1344,7 +1352,7 @@ io.on('connection', (socket) => {
       const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
 
       if (!publication) {
-        socket.emit('error', { message: 'Publicación no encontrada' });
+        socket.emit('error', { message: 'Publication not found' });
         return;
       }
 
@@ -1362,7 +1370,7 @@ io.on('connection', (socket) => {
         createdAt: comment.createdAt,
       });
     } catch (error) {
-      socket.emit('error', { message: 'Error al crear el mensaje', error });
+      socket.emit('error', { message: 'Error creating comment', error });
     }
   });
 
@@ -1373,28 +1381,73 @@ io.on('connection', (socket) => {
       const publication = await findPublicationByIdUseCase.execute(Number(publicationId));
 
       if (!publication) {
-        socket.emit('error', { message: 'Publicación no encontrada' });
+        socket.emit('error', { message: 'Publication not found' });
         return;
       }
 
-      if(publication.user.id !== userId) {
-        socket.emit('error', { message: 'La publicación no le pertenece' });
+      if (publication.user.id !== userId) {
+        socket.emit('error', { message: 'The publication does not belong to you' });
         return;
       }
 
-      if(publication.comments.length > 0) {
-        const comments= await findCommentsByPublicationIdUserCase.execute(Number(publicationId))
-        await deleteCommentsUseCase.execute(comments)
-
+      if (publication.comments.length > 0) {
+        const comments = await findCommentsByPublicationIdUserCase.execute(Number(publicationId));
+        await deleteCommentsUseCase.execute(comments);
       }
 
       await deletePublicationUseCase.execute(publication);
 
-      io.emit('receiveDelete', {
-
-      });
+      io.emit('receiveDelete', {});
     } catch (error) {
-      socket.emit('error', { message: 'Error al crear el mensaje', error });
+      socket.emit('error', { message: 'Error deleting publication', error });
+    }
+  });
+
+  socket.on('deleteItinerary', async (data) => {
+    try {
+      const { itineraryId, userId } = data;
+
+      const itinerary = await findItineraryByIdForDeleteUseCase.execute(Number(itineraryId));
+
+      if (!itinerary || itinerary.user.id != userId) {
+        console.log('The itinerary belongs to another user');
+        return;
+      }
+
+      if (itinerary.activities.length > 0) {
+        await deleteActivitiesUseCase.execute(itinerary.activities);
+      }
+
+      if (itinerary.events.length > 0) {
+        await deleteEventsUseCase.execute(itinerary.events);
+      }
+
+      if (itinerary.events.length > 0) {
+        await deleteEventsUseCase.execute(itinerary.events);
+      }
+
+      if (itinerary.expenses.length > 0) {
+        await deleteExpensesByItineraryIdUseCase.execute(itinerary.expenses);
+      }
+
+      const forum = await findForumByItineraryIdForDeleteUseCase.execute(itineraryId);
+
+      if (forum != null && forum.messages.length > 0) {
+        await deleteMessagesUseCase.execute(forum.messages);
+      }
+
+      itinerary.forum = null;
+
+      if (forum != null) {
+        await deleteForumUseCase.execute(forum);
+      }
+
+      await deleteItineraryByIdUseCase.execute(itinerary);
+
+      io.emit('receiveDelete', {});
+    } catch (error) {
+      console.log(error);
+      socket.emit('error', { message: 'Error deleting itinerary', error });
     }
   });
 });
