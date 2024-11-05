@@ -464,15 +464,9 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const itinerary = await findItineraryByIdUseCase.execute(Number(id));
 
-    const activities = await findActivitiesByItineraryIdUseCase.execute(Number(id));
-
-    const events = await itineraryService.findEventsByItineraryId(Number(id));
-
-    const forum = await findForumByItineraryIdUseCase.execute(Number(id));
-
     return res
       .status(status.OK)
-      .json({ statusCode: status.OK, data: { itinerary, activities, events, forum } });
+      .json({ statusCode: status.OK, data: { itinerary } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
@@ -515,20 +509,6 @@ app.get('/activity/:id', async (req: Request, res: Response) => {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching activity' });
-  }
-});
-
-app.get('/fetch-places', async (req: Request, res: Response) => {
-  try {
-    const province = (req.query.province as string) + ' Province';
-
-    await placeService.fetchPlaces(province);
-
-    return res.status(status.OK).json({ statusCode: status.OK, message: 'Places fetched' });
-  } catch (error) {
-    return res
-      .status(status.INTERNAL_SERVER_ERROR)
-      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching places' });
   }
 });
 

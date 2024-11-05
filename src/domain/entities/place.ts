@@ -6,7 +6,6 @@ import { Activity } from './activity';
 
 @Entity()
 export class Place extends AbstractEntity {
-
   @ManyToOne(() => Province, (province) => province.places)
   @JoinColumn({ name: 'provinceId' })
   province: Province;
@@ -26,6 +25,9 @@ export class Place extends AbstractEntity {
   @Column({ nullable: false })
   address: string;
 
+  @Column({ nullable: true })
+  locality: string;
+
   @Column('float', { nullable: false })
   latitude: number;
 
@@ -37,6 +39,9 @@ export class Place extends AbstractEntity {
 
   @Column('simple-array', { nullable: true })
   openingHours: string[];
+
+  @Column({ nullable: true })
+  priceLevel: string;
 
   @Column({ nullable: true })
   phoneNumber: string;
