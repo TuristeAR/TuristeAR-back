@@ -56,7 +56,6 @@ import { CreateForumDto } from './infrastructure/dtos/create-forum.dto';
 import { CreateForumUseCase } from './application/use-cases/forum-use-cases/create-forum.use-case';
 import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
-//import { FindForumByItineraryIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
 import { Expense } from './domain/entities/expense';
 import { CreateExpenseUseCase } from './application/use-cases/expense-use-cases/create-expense.use-case';
 import { FindExpensesByItineraryIdUseCases } from './application/use-cases/expense-use-cases/find-expenses-by-itinerary-id.use-case';
@@ -76,8 +75,6 @@ import { EventTempService } from './domain/services/event_temp.service';
 import { UserService } from './domain/services/user.service';
 import { FindActivitiesByItineraryIdUseCase } from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
 import { FindItineraryByIdForDeleteUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-id-for-delete.use-case';
-import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
-import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/delete-forum.use-case';
 import { DeleteActivitiesUseCase } from './application/use-cases/activity-use-cases/delete-activities.use-case';
 import { DeleteEventsUseCase } from './application/use-cases/event-use-cases/delete-events.use-case';
 import { DeleteExpensesByItineraryIdUseCase } from './application/use-cases/expense-use-cases/delete-expenses-by-itinerary-id.use-case';
@@ -90,7 +87,6 @@ import {
 
 import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
 
-import { FindActivitiesByItineraryIdUseCase } from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
 
 dotenv.config();
 
