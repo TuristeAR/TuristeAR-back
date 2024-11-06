@@ -85,6 +85,7 @@ import { UpdatePublicationUseCase } from './application/use-cases/publication-us
 import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary.use-case';
 import { FindNotificationsByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
 import { FindNotificationsDetailByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
+import { UpdateNotificationUseCase } from './application/use-cases/notification-use-cases/update-notification.use-case';
 
 dotenv.config();
 
@@ -1300,6 +1301,25 @@ app.get('/notifications-detail/byUser', authMiddleware, async (req, res) => {
   try {
     const notifications = await findNotificationsDetailByUserIdUseCase.execute(Number(user.id));
     res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error obtaining notifications:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.put('/markNotificationsAsRead', authMiddleware, async (req, res) => {
+  const user = req.user as User;
+  try {
+    const notifications = await findNotificationsDetailByUserIdUseCase.execute(Number(user.id));
+    const updateNotificationUseCase = new UpdateNotificationUseCase();
+    const filteredNotifications = notifications.filter(notification => !notification.isRead)
+
+    for (const notification of filteredNotifications) {
+      notification.isRead = true;
+      await updateNotificationUseCase.execute(notification);
+    }
+
+    res.status(200).json(filteredNotifications);
   } catch (error) {
     console.error('Error obtaining notifications:', error);
     res.status(500).json({ message: 'Internal Server Error' });
