@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateNorificationDto {
 
@@ -11,10 +11,12 @@ export class CreateNorificationDto {
     @IsNumber()
     user: number;
 
+    @IsOptional()
     @IsNumber()
-    publication: number;
+    publication?: number;
 
+    @IsOptional
     @IsNumber()
-    itinerary: number;
+    itinerary?: number;
 
 }

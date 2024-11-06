@@ -10,7 +10,7 @@ export class DeletePublicationsByActivitiesUseCase {
     this.publicationRepository = new PublicationRepository();
   }
 
-  async execute(activities: Activity[]): Promise<DeleteResult> {
+  async execute(activities: Activity[]): Promise<DeleteResult | null> {
     const activityIds = activities.map(activity => activity.id);
 
     const publications = await this.publicationRepository.findMany({
@@ -24,7 +24,7 @@ export class DeletePublicationsByActivitiesUseCase {
 
     const publicationIds = publications.map(publication => publication.id);
 
-    return this.publicationRepository.deleteMany(publicationIds);
+    return publicationIds.length > 0 ? this.publicationRepository.deleteMany(publicationIds) : null;
   }
 
 
