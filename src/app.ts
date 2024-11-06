@@ -86,6 +86,9 @@ import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-ca
 import {
   FindNotificationsByUserUseCase
 } from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
+import {
+  FindNotificationsDetailByUserUseCase
+} from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
 
 dotenv.config();
 
@@ -209,6 +212,7 @@ const updateUserUseCase = new UpdateUserUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
 const findNotificationsByUserIdUseCase = new FindNotificationsByUserUseCase();
+const findNotificationsDetailByUserIdUseCase = new FindNotificationsDetailByUserUseCase();
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
 const saveExpenseUseCase = new SaveExpenseUseCase();
 const findExpenseByIdUseCase = new FindExpenseByIdUseCase();
@@ -1287,6 +1291,17 @@ app.get('/notifications/byUser', authMiddleware, async (req, res) => {
   const user = req.user as User;
   try {
     const notifications = await findNotificationsByUserIdUseCase.execute(Number(user.id));
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error obtaining notifications:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.get('/notifications-detail/byUser', authMiddleware, async (req, res) => {
+  const user = req.user as User;
+  try {
+    const notifications = await findNotificationsDetailByUserIdUseCase.execute(Number(user.id));
     res.status(200).json(notifications);
   } catch (error) {
     console.error('Error obtaining notifications:', error);
