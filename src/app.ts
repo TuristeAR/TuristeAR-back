@@ -83,6 +83,9 @@ import { DeletePublicationsByActivitiesUseCase } from './application/use-cases/p
 import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
 import { UpdatePublicationUseCase } from './application/use-cases/publication-use-cases/update-publication.use-case';
 import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary.use-case';
+import {
+  FindNotificationsByUserUseCase
+} from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
 
 dotenv.config();
 
@@ -205,6 +208,7 @@ const findUserByNameUseCase = new FindUserByNameUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
+const findNotificationsByUserIdUseCase = new FindNotificationsByUserUseCase();
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
 const saveExpenseUseCase = new SaveExpenseUseCase();
 const findExpenseByIdUseCase = new FindExpenseByIdUseCase();
@@ -1275,6 +1279,17 @@ app.delete('/expenses/:expenseId', async (req, res) => {
     res.status(200).json(expenses);
   } catch (error) {
     console.error('Error deleting an expense:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.get('/notifications/byUser', authMiddleware, async (req, res) => {
+  const user = req.user as User;
+  try {
+    const notifications = await findNotificationsByUserIdUseCase.execute(Number(user.id));
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error obtaining notifications:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
