@@ -120,6 +120,7 @@ export class PublicationService {
         const createNotificationUseCase = new CreateNotificationUseCase();
         await createNotificationUseCase.execute(notification);
       } else {
+        existingNotification.isRead=false;
         existingNotification.description = getNotificationDescription();
         await updateNotificationUseCase.execute(existingNotification);
       }
