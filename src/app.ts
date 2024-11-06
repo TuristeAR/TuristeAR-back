@@ -83,12 +83,8 @@ import { DeletePublicationsByActivitiesUseCase } from './application/use-cases/p
 import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
 import { UpdatePublicationUseCase } from './application/use-cases/publication-use-cases/update-publication.use-case';
 import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary.use-case';
-import {
-  FindNotificationsByUserUseCase
-} from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
-import {
-  FindNotificationsDetailByUserUseCase
-} from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
+import { FindNotificationsByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
+import { FindNotificationsDetailByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
 
 dotenv.config();
 
@@ -423,11 +419,13 @@ app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) =>
   try {
     const createItineraryDto: CreateItineraryDto = req.body;
 
-    await itineraryService.create(req.user as User, createItineraryDto);
+    const itinerary = await itineraryService.create(req.user as User, createItineraryDto);
 
-    return res
-      .status(status.CREATED)
-      .json({ statusCode: status.CREATED, message: 'Itinerary created successfully' });
+    return res.status(status.CREATED).json({
+      statusCode: status.CREATED,
+      message: 'Itinerary created successfully',
+      itineraryId: itinerary.id,
+    });
   } catch (error) {
     console.error('Error creating itinerary: ', error);
     return res.status(status.INTERNAL_SERVER_ERROR).json({
@@ -907,7 +905,6 @@ app.get('/places/province?', async (req: Request, res: Response) => {
   const { provinceId, types, count = 4, offset = 0 } = req.query;
   console.log(types);
   try {
-
     const places = await placeService.findPlaceByProvinceAndTypes(
       Number(provinceId),
       types as string,
@@ -1453,7 +1450,7 @@ io.on('connection', (socket) => {
         await deleteExpensesByItineraryIdUseCase.execute(itinerary.expenses);
       }
 
-      if(itinerary.forum){
+      if (itinerary.forum) {
         const forum = await findForumByIdUseCase.execute(itinerary.forum.id);
 
         if (forum != null && forum.messages.length > 0) {
@@ -1462,7 +1459,7 @@ io.on('connection', (socket) => {
 
         itinerary.forum = null;
         const updateItineraryUseCase = new UpdateItineraryUseCase();
-        await updateItineraryUseCase.execute(itinerary)
+        await updateItineraryUseCase.execute(itinerary);
 
         if (forum != null) {
           await deleteForumUseCase.execute(forum);
