@@ -1,18 +1,22 @@
-import { IsArray, IsBoolean, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateNorificationDto {
 
     @IsString()
     description: string;
 
-    @IsArray()
-    @IsString({each: true})
-    images: string[];
-
     @IsBoolean()
     isRead: boolean;
 
     @IsNumber()
     user: number;
+
+    @IsOptional()
+    @IsNumber()
+    publication?: number;
+
+    @IsOptional()
+    @IsNumber()
+    itinerary?: number;
 
 }

@@ -19,6 +19,7 @@ import { authMiddleware } from './infrastructure/middlewares/auth.middleware';
 import { ItineraryService } from './domain/services/itinerary.service';
 import { PublicationService } from './domain/services/publication.service';
 import { CreatePublicationDTO } from './infrastructure/dtos/create-publication.dto';
+import { CreateEventDTO } from './infrastructure/dtos/create-event.dto';
 import { FindActivityByIdUseCase } from './application/use-cases/activity-use-cases/find-activity-by-id.use-case';
 import { FindAllCategoryUseCase } from './application/use-cases/category-use-cases/find-all-category.use-case';
 import { CreateWeatherUseCase } from './application/use-cases/weather-use-cases/create-weather.use-case';
@@ -55,7 +56,6 @@ import { CreateForumDto } from './infrastructure/dtos/create-forum.dto';
 import { CreateForumUseCase } from './application/use-cases/forum-use-cases/create-forum.use-case';
 import { Forum } from './domain/entities/forum';
 import { FindCategoryByIdUseCase } from './application/use-cases/category-use-cases/find-category-by-id.use-case';
-import { FindForumByItineraryIdUseCase } from './application/use-cases/forum-use-cases/find-forum-by-itinerary-id.use-case';
 import { Expense } from './domain/entities/expense';
 import { CreateExpenseUseCase } from './application/use-cases/expense-use-cases/create-expense.use-case';
 import { FindExpensesByItineraryIdUseCases } from './application/use-cases/expense-use-cases/find-expenses-by-itinerary-id.use-case';
@@ -71,18 +71,24 @@ import { FindExpenseByIdUseCase } from './application/use-cases/expense-use-case
 import { DeletePublicationUseCase } from './application/use-cases/publication-use-cases/delete-publication.use-case';
 import { FindCommentsByPublicationIdUserCase } from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
 import { DeleteCommentsUseCase } from './application/use-cases/comment-use-cases/delete-comments.use-case';
+import { EventTempService } from './domain/services/event_temp.service';
+import { UserService } from './domain/services/user.service';
 import { FindItineraryByIdForDeleteUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-id-for-delete.use-case';
-import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
-import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/delete-forum.use-case';
 import { DeleteActivitiesUseCase } from './application/use-cases/activity-use-cases/delete-activities.use-case';
 import { DeleteEventsUseCase } from './application/use-cases/event-use-cases/delete-events.use-case';
 import { DeleteExpensesByItineraryIdUseCase } from './application/use-cases/expense-use-cases/delete-expenses-by-itinerary-id.use-case';
+import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/delete-forum.use-case';
 import { DeleteItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
-import { FindForumByIdForDeleteUseCase } from './application/use-cases/forum-use-cases/find-forum-by-id-for-delete.use-case';
-import { FindActivitiesByItineraryIdUseCase } from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
+import { DeletePublicationsByActivitiesUseCase } from './application/use-cases/publication-use-cases/delete-publications-by-activities.use-case';
+import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
+import { UpdatePublicationUseCase } from './application/use-cases/publication-use-cases/update-publication.use-case';
+import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary.use-case';
 import {
-  DeletePublicationsByActivitiesUseCase
-} from './application/use-cases/publication-use-cases/delete-publications-by-activities.use-case';
+  FindNotificationsByUserUseCase
+} from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
+import {
+  FindNotificationsDetailByUserUseCase
+} from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
 
 dotenv.config();
 
@@ -162,6 +168,8 @@ const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
+const userService = new UserService();
+const eventTempService = new EventTempService();
 
 const createCommentUseCase = new CreateCommentUseCase();
 const createMessageUseCase = new CreateMessageUseCase();
@@ -169,7 +177,6 @@ const createProvinceUseCase = new CreateProvinceUseCase();
 const createWeatherUseCase = new CreateWeatherUseCase();
 const createForumUserCase = new CreateForumUseCase();
 const findActivityByIdUseCase = new FindActivityByIdUseCase();
-const findActivitiesByItineraryIdUseCase = new FindActivitiesByItineraryIdUseCase();
 const findAllCategoryUseCase = new FindAllCategoryUseCase();
 const findAllForumUseCase = new FindAllForumUseCase();
 const findAllPlaceUseCase = new FindAllPlaceUseCase();
@@ -183,8 +190,6 @@ const findCommentsByPublicationIdUserCase = new FindCommentsByPublicationIdUserC
 const findEventByProvinceAndDatesUseCase = new FindEventByProvinceAndDatesUseCase();
 const findEventByProvinceUseCase = new FindEventByProvinceUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
-const findForumByItineraryIdUseCase = new FindForumByItineraryIdUseCase();
-const findForumByItineraryIdForDeleteUseCase = new FindForumByIdForDeleteUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
 const findItineraryByIdForDeleteUseCase = new FindItineraryByIdForDeleteUseCase();
 const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
@@ -206,6 +211,8 @@ const findUserByNameUseCase = new FindUserByNameUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
+const findNotificationsByUserIdUseCase = new FindNotificationsByUserUseCase();
+const findNotificationsDetailByUserIdUseCase = new FindNotificationsDetailByUserUseCase();
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
 const saveExpenseUseCase = new SaveExpenseUseCase();
 const findExpenseByIdUseCase = new FindExpenseByIdUseCase();
@@ -416,9 +423,11 @@ app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) =>
   try {
     const createItineraryDto: CreateItineraryDto = req.body;
 
-    const itinerary = await itineraryService.create(req.user as User, createItineraryDto);
+    await itineraryService.create(req.user as User, createItineraryDto);
 
-    return res.status(status.CREATED).json({ statusCode: status.CREATED, data: itinerary });
+    return res
+      .status(status.CREATED)
+      .json({ statusCode: status.CREATED, message: 'Itinerary created successfully' });
   } catch (error) {
     console.error('Error creating itinerary: ', error);
     return res.status(status.INTERNAL_SERVER_ERROR).json({
@@ -468,9 +477,7 @@ app.get('/itinerary/:id', async (req: Request, res: Response) => {
 
     const itinerary = await findItineraryByIdUseCase.execute(Number(id));
 
-    return res
-      .status(status.OK)
-      .json({ statusCode: status.OK, data: { itinerary } });
+    return res.status(status.OK).json({ statusCode: status.OK, data: { itinerary } });
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
@@ -916,18 +923,14 @@ app.get('/categories', async (_req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error fetching categories', error });
   }
 });
-
 app.get('/places/province?', async (req: Request, res: Response) => {
   const { provinceId, types, count = 4, offset = 0 } = req.query;
   console.log(types);
   try {
-    const typesArray: string[] = Array.isArray(types)
-      ? types.map((type) => String(type))
-      : [String(types)];
-    console.log(typesArray);
+
     const places = await placeService.findPlaceByProvinceAndTypes(
       Number(provinceId),
-      typesArray,
+      types as string,
       Number(count),
       Number(offset),
     );
@@ -1009,6 +1012,22 @@ app.post('/createPublication', authMiddleware, async (req: Request, res: Respons
     return res.status(status.INTERNAL_SERVER_ERROR).json({
       statusCode: status.INTERNAL_SERVER_ERROR,
       message: error || 'Error creating publication',
+    });
+  }
+});
+
+app.post('/createEventTemp', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const CreateEventDTO: CreateEventDTO = req.body;
+
+    const event = await eventTempService.createEventTemp(CreateEventDTO, req.user as User);
+
+    return res.status(status.CREATED).json({ statusCode: status.CREATED, data: event });
+  } catch (error) {
+    console.log(error);
+    return res.status(status.INTERNAL_SERVER_ERROR).json({
+      statusCode: status.INTERNAL_SERVER_ERROR,
+      message: error || 'Error creating event',
     });
   }
 });
@@ -1288,6 +1307,28 @@ app.delete('/expenses/:expenseId', async (req, res) => {
   }
 });
 
+app.get('/notifications/byUser', authMiddleware, async (req, res) => {
+  const user = req.user as User;
+  try {
+    const notifications = await findNotificationsByUserIdUseCase.execute(Number(user.id));
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error obtaining notifications:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.get('/notifications-detail/byUser', authMiddleware, async (req, res) => {
+  const user = req.user as User;
+  try {
+    const notifications = await findNotificationsDetailByUserIdUseCase.execute(Number(user.id));
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error obtaining notifications:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = req.user as User;
@@ -1432,16 +1473,20 @@ io.on('connection', (socket) => {
         await deleteExpensesByItineraryIdUseCase.execute(itinerary.expenses);
       }
 
-      const forum = await findForumByItineraryIdForDeleteUseCase.execute(itineraryId);
+      if(itinerary.forum){
+        const forum = await findForumByIdUseCase.execute(itinerary.forum.id);
 
-      if (forum != null && forum.messages.length > 0) {
-        await deleteMessagesUseCase.execute(forum.messages);
-      }
+        if (forum != null && forum.messages.length > 0) {
+          await deleteMessagesUseCase.execute(forum.messages);
+        }
 
-      itinerary.forum = null;
+        itinerary.forum = null;
+        const updateItineraryUseCase = new UpdateItineraryUseCase();
+        await updateItineraryUseCase.execute(itinerary)
 
-      if (forum != null) {
-        await deleteForumUseCase.execute(forum);
+        if (forum != null) {
+          await deleteForumUseCase.execute(forum);
+        }
       }
 
       await deleteItineraryByIdUseCase.execute(itinerary);

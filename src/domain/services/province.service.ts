@@ -60,4 +60,12 @@ export class ProvinceService {
 
     return province;
   }
+
+  async getProvinceFromId(id: number){
+    const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
+
+    const province = await findProvinceByIdUseCase.execute(id);
+
+    return await findProvinceByIdUseCase.execute(id);
+  }
 }

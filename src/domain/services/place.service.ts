@@ -77,43 +77,124 @@ export class PlaceService {
       throw error;
     }
   }
-
+// ------------------------------------------------ buscar lugares por provincia y tipo 
   async findPlaceByProvinceAndTypes(
     provinceId: number,
-    types: string[],
+    types: string,
     count: number,
     offset: number,
   ): Promise<Place[]> {
     try {
-      const findPlaceByProvinceAndTypesUseCase = new FindPlaceByProvinceAndTypesUseCase();
+          const findPlaceByProvinceAndTypesUseCase = new FindPlaceByProvinceAndTypesUseCase();
+          const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
 
-      const places = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
+          let places = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
 
-      let filteredPlaces = places;
+          let filteredPlaces: any[] = [];
 
-    // realiza el filtrado de typos
-    if (types.length > 0) {
-        filteredPlaces = places.filter((place) =>
-            place.types.some((type) => types.includes(type)) // Verifica si coinciden
-        );
-    }
+         // realiza el filtrado de typos
+         
+            filteredPlaces = places.filter((place) =>
+            place.types.some((type) => types === type) // Verifica si coinciden
+            );
+            // verifica q el filtrado contenga almenos 4 lugares
+            if(filteredPlaces.length < 4){
+              console.log("place menor a 4 ",filteredPlaces.length);
 
-    // Mapea los lugares filtrados para limitar las imágenes de reseña
-    const limitedReviewImages = filteredPlaces.map((place) => {
-        const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
-        return {
+              const provinceName = await this.provinceService.getProvinceNameFromId(provinceId);
+
+              if (provinceName) {
+                do{
+                // Realiza el fetch adicional
+                const additionalPlace = await this.fetchPlaceByProvinceAndType(provinceName, types);
+
+                const province = await findProvinceByIdUseCase.execute(provinceId);
+                  if (province) {  // Verificamos que `province` no sea null
+                const newPlace: Place = {
+                  province: province,
+                  googleId: additionalPlace.id,
+                  reviews: additionalPlace.reviews || null,
+                  name: additionalPlace.displayName.text,
+                  types: additionalPlace.types ?? null,
+                  address: additionalPlace.shortFormattedAddress,
+                  rating: additionalPlace.rating || null,
+                  locality: '',
+                  latitude: additionalPlace.latitude,
+                  longitude: additionalPlace.longitude,
+                  openingHours: additionalPlace.openingHoursForToday,
+                  priceLevel: '',
+                  phoneNumber: '',
+                  activities: additionalPlace.activities,
+                  id: additionalPlace.id,
+                  createdAt: additionalPlace.createdAt
+                }
+
+                filteredPlaces.push(newPlace);
+              }
+              
+            }while(filteredPlaces.length<=4)
+
+              } else {
+                 console.error("No se pudo obtener el nombre de la provincia.");
+              }
+         
+          }
+
+          // Mapea los lugares filtrados para limitar las imágenes de reseña
+           const limitedReviewImages = filteredPlaces.map((place) => {
+           const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
+          return {
             ...place,
             reviews: firstReview ? [firstReview] : [], // Solo toma la primera reseña, si existe
-        };
-    });
+          };
+          });
+      
 
-    // Limita el resultado a `count` lugares 
-    return limitedReviewImages.slice(0, count);
+          // Limita el resultado a `count` lugares 
+          return limitedReviewImages.slice(0, count);
 
-    } catch (error) {
-      throw error;
-    }
+      } catch (error) {
+        throw error;
+      }
   }
+// ------------------------------------------------------------------ fetch api por provincia y tipo
+  private async fetchPlaceByProvinceAndType(
+    province: string,
+    types: string,
+  ) {
+    let results: any[] = [];
+    const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
+    const searchHeaders = {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': process.env.GOOGLE_API_KEY as string,
+      'X-Goog-FieldMask': 'places',
+    };
+    const searchBody = {
+      textQuery: types.replace(/_/g, ' ') + ' in ' + province,
+      languageCode: 'es',
+      regionCode: 'AR',
+    };
+    const result = await post(searchUrl, searchHeaders, searchBody);
+    if (result.places === undefined || result.places === null) {
+      results.push(...[]);
+    } else {
+      results.push(...result.places);
+    }
+
+    if ( results.length > 0) {
+      do {
+        const place = results[Math.floor(Math.random() * results.length)];
+        if (place.reviews && place.reviews.length > 0) {
+          return place;
+        } else {
+          results = results.filter((p) => p.id !== place.id);
+        }
+      } while (results.length > 0);
+    }
+    return null;
+  }
+
+  // ------------------------------------------------------------------------------------------
 
   orderByDistance(places: Place[], dates: Date[]): Place[] {
     if (places.length <= 1) return places;
@@ -199,6 +280,8 @@ export class PlaceService {
 
     return null;
   }
+
+ 
 
   private async fetchPlaceInLocalityByTypeAndPriceLevel(
     province: string,

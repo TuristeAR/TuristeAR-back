@@ -55,6 +55,15 @@ export class ItineraryService {
     itinerary.user = user;
     itinerary.activities = [];
     itinerary.events = [];
+    const forum = new Forum();
+
+    forum.name = `Viaje a ${provinceName}`;
+    forum.messages = [];
+    forum.isPublic = false;
+
+    const createForumUseCase = new CreateForumUseCase();
+
+    itinerary.forum = await createForumUseCase.execute(forum);
 
     for (const eventId of createItineraryDto.events) {
       const event = await this.findEventByIdUseCase.execute(eventId);
@@ -69,19 +78,6 @@ export class ItineraryService {
     const createItineraryUseCase = new CreateItineraryUseCase();
 
     const savedItinerary = await createItineraryUseCase.execute(itinerary);
-
-    const forum = new Forum();
-
-    forum.itinerary = savedItinerary;
-    forum.name = savedItinerary.name;
-    forum.messages = [];
-    forum.isPublic = false;
-
-    const createForumUseCase = new CreateForumUseCase();
-
-    itinerary.forum = await createForumUseCase.execute(forum);
-
-    await createItineraryUseCase.execute(itinerary)
 
     let itineraryPlaces: Place[] = [];
 
