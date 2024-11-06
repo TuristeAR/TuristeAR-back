@@ -111,7 +111,7 @@ export class PlaceService {
                 const province = await findProvinceByIdUseCase.execute(provinceId);
                   if (province) {  // Verificamos que `province` no sea null
                 const newPlace: Place = {
-                  id: additionalPlace.id,
+                  id: await this.generateNumericId(additionalPlace.id),
                   googleId: additionalPlace.id,
                   name: additionalPlace.displayName.text,
                   types: additionalPlace.types ?? null,
@@ -126,7 +126,7 @@ export class PlaceService {
                   phoneNumber: '',
                   activities: additionalPlace.activities,
                   province: province,
-                  createdAt: additionalPlace.createdAt
+                  createdAt: additionalPlace.createdAt,
                 }
 
                 filteredPlaces.push(newPlace);
@@ -156,6 +156,9 @@ export class PlaceService {
       } catch (error) {
         throw error;
       }
+  }
+  private async generateNumericId(idGoogle: string) {
+    return idGoogle.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   }
 // ------------------------------------------------------------------ fetch api por provincia y tipo
   private async fetchPlaceByProvinceAndType(
