@@ -907,17 +907,12 @@ app.get('/places/province?', async (req: Request, res: Response) => {
   const { provinceId, types, count = 4, offset = 0 } = req.query;
   console.log(types);
   try {
-    const typesArray: string[] = Array.isArray(types)
-      ? types.map((type) => String(type))
-      : [String(types)];
-    console.log(typesArray);
-    const currentPlace = await placeService.findManyByPlaceProvinceId(Number(provinceId));
+    
     const places = await placeService.findPlaceByProvinceAndTypes(
       Number(provinceId),
-      typesArray,
+      types as string,
       Number(count),
       Number(offset),
-      currentPlace,
     );
     return res.status(status.OK).json({ statusCode: status.OK, data: places });
   } catch (error) {
