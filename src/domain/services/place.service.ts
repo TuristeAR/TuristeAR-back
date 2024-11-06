@@ -111,12 +111,12 @@ export class PlaceService {
                 const province = await findProvinceByIdUseCase.execute(provinceId);
                   if (province) {  // Verificamos que `province` no sea null
                 const newPlace: Place = {
-                  province: province,
+                  id: additionalPlace.id,
                   googleId: additionalPlace.id,
-                  reviews: additionalPlace.reviews || null,
                   name: additionalPlace.displayName.text,
                   types: additionalPlace.types ?? null,
                   address: additionalPlace.shortFormattedAddress,
+                  reviews: additionalPlace.reviews || null,
                   rating: additionalPlace.rating || null,
                   locality: '',
                   latitude: additionalPlace.latitude,
@@ -125,7 +125,7 @@ export class PlaceService {
                   priceLevel: '',
                   phoneNumber: '',
                   activities: additionalPlace.activities,
-                  id: additionalPlace.id,
+                  province: province,
                   createdAt: additionalPlace.createdAt
                 }
 
