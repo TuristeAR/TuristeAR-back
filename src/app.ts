@@ -81,6 +81,14 @@ import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/dele
 import { DeleteItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
 import { DeletePublicationsByActivitiesUseCase } from './application/use-cases/publication-use-cases/delete-publications-by-activities.use-case';
 import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
+import { UpdatePublicationUseCase } from './application/use-cases/publication-use-cases/update-publication.use-case';
+import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary.use-case';
+import {
+  FindNotificationsByUserUseCase
+} from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
+import {
+  FindNotificationsDetailByUserUseCase
+} from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
 
 dotenv.config();
 
@@ -203,6 +211,8 @@ const findUserByNameUseCase = new FindUserByNameUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
+const findNotificationsByUserIdUseCase = new FindNotificationsByUserUseCase();
+const findNotificationsDetailByUserIdUseCase = new FindNotificationsDetailByUserUseCase();
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
 const saveExpenseUseCase = new SaveExpenseUseCase();
 const findExpenseByIdUseCase = new FindExpenseByIdUseCase();
@@ -893,18 +903,14 @@ app.get('/categories', async (_req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error fetching categories', error });
   }
 });
-
 app.get('/places/province?', async (req: Request, res: Response) => {
   const { provinceId, types, count = 4, offset = 0 } = req.query;
   console.log(types);
   try {
-    const typesArray: string[] = Array.isArray(types)
-      ? types.map((type) => String(type))
-      : [String(types)];
-    console.log(typesArray);
+
     const places = await placeService.findPlaceByProvinceAndTypes(
       Number(provinceId),
-      typesArray,
+      types as string,
       Number(count),
       Number(offset),
     );
@@ -1281,6 +1287,28 @@ app.delete('/expenses/:expenseId', async (req, res) => {
   }
 });
 
+app.get('/notifications/byUser', authMiddleware, async (req, res) => {
+  const user = req.user as User;
+  try {
+    const notifications = await findNotificationsByUserIdUseCase.execute(Number(user.id));
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error obtaining notifications:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.get('/notifications-detail/byUser', authMiddleware, async (req, res) => {
+  const user = req.user as User;
+  try {
+    const notifications = await findNotificationsDetailByUserIdUseCase.execute(Number(user.id));
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error obtaining notifications:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = req.user as User;
@@ -1425,15 +1453,20 @@ io.on('connection', (socket) => {
         await deleteExpensesByItineraryIdUseCase.execute(itinerary.expenses);
       }
 
-      const forum = await findForumByIdUseCase.execute(itinerary.id);
+      if(itinerary.forum){
+        const forum = await findForumByIdUseCase.execute(itinerary.forum.id);
 
-      if (forum != null && forum.messages.length > 0) {
-        await deleteMessagesUseCase.execute(forum.messages);
-      }
+        if (forum != null && forum.messages.length > 0) {
+          await deleteMessagesUseCase.execute(forum.messages);
+        }
 
-      if (forum != null) {
         itinerary.forum = null;
-        await deleteForumUseCase.execute(forum);
+        const updateItineraryUseCase = new UpdateItineraryUseCase();
+        await updateItineraryUseCase.execute(itinerary)
+
+        if (forum != null) {
+          await deleteForumUseCase.execute(forum);
+        }
       }
 
       await deleteItineraryByIdUseCase.execute(itinerary);
