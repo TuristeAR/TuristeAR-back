@@ -81,7 +81,8 @@ import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/dele
 import { DeleteItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
 import { DeletePublicationsByActivitiesUseCase } from './application/use-cases/publication-use-cases/delete-publications-by-activities.use-case';
 import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
-import { FindActivitiesByItineraryIdUseCase } from './application/use-cases/activity-use-cases/find-activities-by-itinerary-id.use-case';
+import { UpdatePublicationUseCase } from './application/use-cases/publication-use-cases/update-publication.use-case';
+import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary.use-case';
 
 dotenv.config();
 
@@ -170,7 +171,6 @@ const createProvinceUseCase = new CreateProvinceUseCase();
 const createWeatherUseCase = new CreateWeatherUseCase();
 const createForumUserCase = new CreateForumUseCase();
 const findActivityByIdUseCase = new FindActivityByIdUseCase();
-const findActivitiesByItineraryIdUseCase = new FindActivitiesByItineraryIdUseCase();
 const findAllCategoryUseCase = new FindAllCategoryUseCase();
 const findAllForumUseCase = new FindAllForumUseCase();
 const findAllPlaceUseCase = new FindAllPlaceUseCase();
@@ -184,8 +184,6 @@ const findCommentsByPublicationIdUserCase = new FindCommentsByPublicationIdUserC
 const findEventByProvinceAndDatesUseCase = new FindEventByProvinceAndDatesUseCase();
 const findEventByProvinceUseCase = new FindEventByProvinceUseCase();
 const findForumByIdUseCase = new FindForumByIdUseCase();
-//const findForumByItineraryIdUseCase = new FindForumByItineraryIdUseCase();
-const findForumByItineraryIdForDeleteUseCase = new FindForumByIdUseCase();
 const findItineraryByIdUseCase = new FindItineraryByIdUseCase();
 const findItineraryByIdForDeleteUseCase = new FindItineraryByIdForDeleteUseCase();
 const findItineraryByUserUseCase = new FindItineraryByUserUseCase();
@@ -897,12 +895,11 @@ app.get('/categories', async (_req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error fetching categories', error });
   }
 });
-
 app.get('/places/province?', async (req: Request, res: Response) => {
   const { provinceId, types, count = 4, offset = 0 } = req.query;
   console.log(types);
   try {
-    
+
     const places = await placeService.findPlaceByProvinceAndTypes(
       Number(provinceId),
       types as string,
@@ -1426,16 +1423,20 @@ io.on('connection', (socket) => {
         await deleteExpensesByItineraryIdUseCase.execute(itinerary.expenses);
       }
 
-      const forum = await findForumByItineraryIdForDeleteUseCase.execute(itineraryId);
+      if(itinerary.forum){
+        const forum = await findForumByIdUseCase.execute(itinerary.forum.id);
 
-      if (forum != null && forum.messages.length > 0) {
-        await deleteMessagesUseCase.execute(forum.messages);
-      }
+        if (forum != null && forum.messages.length > 0) {
+          await deleteMessagesUseCase.execute(forum.messages);
+        }
 
-      itinerary.forum = null;
+        itinerary.forum = null;
+        const updateItineraryUseCase = new UpdateItineraryUseCase();
+        await updateItineraryUseCase.execute(itinerary)
 
-      if (forum != null) {
-        await deleteForumUseCase.execute(forum);
+        if (forum != null) {
+          await deleteForumUseCase.execute(forum);
+        }
       }
 
       await deleteItineraryByIdUseCase.execute(itinerary);
