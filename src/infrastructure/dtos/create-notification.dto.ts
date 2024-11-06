@@ -15,7 +15,7 @@ export class CreateNorificationDto {
     @IsNumber()
     publication?: number;
 
-    @IsOptional
+    @IsOptional()
     @IsNumber()
     itinerary?: number;
 

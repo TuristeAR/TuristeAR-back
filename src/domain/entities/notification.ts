@@ -6,7 +6,7 @@ import { Itinerary } from './itinerary';
 
 @Entity()
 export class Notification extends AbstractEntity {
-    @Column()
+    @Column('text')
     description: string;
 
     @Column()

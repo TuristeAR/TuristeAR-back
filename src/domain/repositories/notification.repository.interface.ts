@@ -1,4 +1,4 @@
-import { DeepPartial, FindOneOptions } from 'typeorm';
+import { DeepPartial, DeleteResult, FindOneOptions } from 'typeorm';
 import {Notification} from '../entities/notification';
 
 export interface NotificationRepositoryInterface {
@@ -6,4 +6,8 @@ export interface NotificationRepositoryInterface {
   findOne(options: FindOneOptions<Notification>): Promise<Notification | null>;
 
   findMany(options: FindOneOptions<Notification>): Promise<Notification[]>;
+
+  save(notification: Notification): Promise<Notification>;
+
+  deleteOne(notificationId: number): Promise<DeleteResult>;
 }
