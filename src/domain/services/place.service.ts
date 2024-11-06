@@ -22,7 +22,7 @@ export class PlaceService {
 
   async findOneInLocalityByTypesAndPriceLevelWithDate(
     currentPlaces: Place[],
-    type: string,
+    types: string[],
     priceLevel: string[],
     provinceId: number,
     provinceName: string,
@@ -31,31 +31,34 @@ export class PlaceService {
   ): Promise<Place | null> {
     let place: Place | null = null;
 
-    do {
-      const savedPlace = await this.getPlaceInLocalityByTypeAndPriceLevelWithDate(
-        provinceId,
+    for (const type of types) {
+      let fetchedPlaces = await this.fetchPlacesInLocalityByTypeAndPriceLevel(
+        provinceName,
         locality,
         type,
         priceLevel,
         currentPlaces,
       );
 
-      if (savedPlace) {
-        place = savedPlace;
-      } else {
-        const fetchedPlace = await this.fetchPlaceInLocalityByTypeAndPriceLevel(
-          provinceName,
-          locality,
-          type,
-          priceLevel,
-          currentPlaces,
-        );
+      while (fetchedPlaces.length > 0) {
+        const randomPlace = fetchedPlaces[Math.floor(Math.random() * fetchedPlaces.length)];
 
-        if (fetchedPlace) {
-          place = await this.savePlaceInDatabase(fetchedPlace, provinceId, locality);
+        if (
+          randomPlace.reviews?.length > 0 &&
+          this.isOpenThisDay(randomPlace.currentOpeningHours?.weekdayDescriptions ?? null, date)
+        ) {
+          place = await this.savePlaceInDatabase(randomPlace, provinceId, locality);
+
+          break;
         }
+
+        fetchedPlaces = fetchedPlaces.filter((p) => p.id !== randomPlace.id);
       }
-    } while (place && !this.isOpenThisDay(place.openingHours, date));
+
+      if (place) {
+        break;
+      }
+    }
 
     return place;
   }
@@ -91,25 +94,24 @@ export class PlaceService {
 
       let filteredPlaces = places;
 
-    // realiza el filtrado de typos
-    if (types.length > 0) {
-        filteredPlaces = places.filter((place) =>
-            place.types.some((type) => types.includes(type)) // Verifica si coinciden
+      // realiza el filtrado de typos
+      if (types.length > 0) {
+        filteredPlaces = places.filter(
+          (place) => place.types.some((type) => types.includes(type)), // Verifica si coinciden
         );
-    }
+      }
 
-    // Mapea los lugares filtrados para limitar las imágenes de reseña
-    const limitedReviewImages = filteredPlaces.map((place) => {
+      // Mapea los lugares filtrados para limitar las imágenes de reseña
+      const limitedReviewImages = filteredPlaces.map((place) => {
         const firstReview = place.reviews.length > 0 ? place.reviews[0] : null;
         return {
-            ...place,
-            reviews: firstReview ? [firstReview] : [], // Solo toma la primera reseña, si existe
+          ...place,
+          reviews: firstReview ? [firstReview] : [], // Solo toma la primera reseña, si existe
         };
-    });
+      });
 
-    // Limita el resultado a `count` lugares 
-    return limitedReviewImages.slice(0, count);
-
+      // Limita el resultado a `count` lugares
+      return limitedReviewImages.slice(0, count);
     } catch (error) {
       throw error;
     }
@@ -250,6 +252,46 @@ export class PlaceService {
     }
 
     return null;
+  }
+
+  private async fetchPlacesInLocalityByTypeAndPriceLevel(
+    province: string,
+    locality: string,
+    type: string,
+    priceLevel: string[],
+    currentPlaces: Place[],
+  ) {
+    let results: any[] = [];
+
+    const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
+
+    const searchHeaders = {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': process.env.GOOGLE_API_KEY as string,
+      'X-Goog-FieldMask': 'places',
+    };
+
+    const searchBody = {
+      textQuery: type.replace(/_/g, ' ') + ' in ' + locality + ', ' + province,
+      languageCode: 'es',
+      regionCode: 'AR',
+    };
+
+    const result = await post(searchUrl, searchHeaders, searchBody);
+
+    if (result.places === undefined || result.places === null) {
+      results.push(...[]);
+    } else {
+      results.push(...result.places);
+    }
+
+    let places: any[];
+
+    places = this.filterPlacesByCurrentPlaces(results, currentPlaces);
+
+    places = this.filterPlacesByPriceLevel(places, priceLevel);
+
+    return places;
   }
 
   private filterPlacesByCurrentPlaces(places: any[], currentPlaces: Place[]) {
