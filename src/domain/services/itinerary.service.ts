@@ -114,6 +114,10 @@ export class ItineraryService {
           dates[i],
         );
 
+        if (!place) {
+          continue;
+        }
+
         usedPlaces.push(place);
 
         usedPlaces = this.placeService.orderByDistance(usedPlaces, dates);
@@ -157,6 +161,10 @@ export class ItineraryService {
             usedPlaces,
             dates[i],
           );
+
+          if (!place) {
+            continue;
+          }
 
           usedPlaces.push(place);
 
@@ -581,18 +589,19 @@ export class ItineraryService {
     typesByCompany: string[],
     usedPlaces: Place[],
     date: Date,
-  ): Promise<Place> {
+  ): Promise<Place | null> {
+    let place: Place | null = null;
+
     const usedTypes = currentPlace.types;
 
     const availableTypes = typesByCompany.filter((type) => !usedTypes.includes(type));
 
     for (const types of availableTypes) {
       const typesArray = types.split(',');
-      const randomType = typesArray[Math.floor(Math.random() * typesArray.length)];
 
-      const place = await this.placeService.findOneInLocalityByTypesAndPriceLevelWithDate(
+      place = await this.placeService.findOneInLocalityByTypesAndPriceLevelWithDate(
         itineraryPlaces,
-        randomType,
+        typesArray,
         createItineraryDto.priceLevel,
         createItineraryDto.provinceId,
         provinceName,
@@ -600,12 +609,12 @@ export class ItineraryService {
         date,
       );
 
-      if (place && !usedPlaces.some((usedPlace) => usedPlace.id === place.id)) {
+      if (place && !usedPlaces.some((usedPlace) => usedPlace.id === place?.id)) {
         return place;
       }
     }
 
-    throw new Error('No available place found for the next activity');
+    return place;
   }
 
   private isInDate(eventFromDate: Date, eventToDate: Date, date: Date): boolean {
