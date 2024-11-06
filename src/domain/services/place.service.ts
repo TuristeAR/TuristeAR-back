@@ -77,7 +77,7 @@ export class PlaceService {
       throw error;
     }
   }
-
+// ------------------------------------------------ buscar lugares por provincia y tipo 
   async findPlaceByProvinceAndTypes(
     provinceId: number,
     types: string[],
@@ -88,7 +88,7 @@ export class PlaceService {
     try {
           const findPlaceByProvinceAndTypesUseCase = new FindPlaceByProvinceAndTypesUseCase();
 
-          const places = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
+          let places = await findPlaceByProvinceAndTypesUseCase.execute(provinceId);
 
           let filteredPlaces = places;
 
@@ -98,11 +98,20 @@ export class PlaceService {
             filteredPlaces = places.filter((place) =>
             place.types.some((type) => types.includes(type)) // Verifica si coinciden
             );
-            if(filteredPlaces.length >= 4){
+            // verifica q el filtrado contenga almenos 4 lugares
+            if(filteredPlaces.length < 4){
+              console.log("place menor a 4 ",filteredPlaces.length);
               const provinceName = await this.provinceService.getProvinceNameFromId(provinceId);
 
               if (provinceName) {
-                 this.fetchPlaceByProvinceAndType(provinceName, types, currentPlace);
+                // Realiza el fetch adicional
+                const additionalPlaces = await this.fetchPlaceByProvinceAndType(provinceName, types, currentPlace);
+        
+                // pensar en volver a utilizar el filtrado 
+                console.log("place luego del fetch ",additionalPlaces.length);
+                // Concatena los lugares filtrados iniciales con los adicionales obtenidos en el fetch
+                filteredPlaces = [...filteredPlaces, ...additionalPlaces];
+
                } else {
                  console.error("No se pudo obtener el nombre de la provincia.");
               }
@@ -128,46 +137,36 @@ export class PlaceService {
         throw error;
       }
   }
-
+// ------------------------------------------------------------------ fetch api por provincia y tipo
   private async fetchPlaceByProvinceAndType(
     province: string,
     types: string[],
     currentPlaces: Place[],
   ) {
     let results: any[] = [];
-
     const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
-
     const type = types.join(" o ");
-
     const searchHeaders = {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': process.env.GOOGLE_API_KEY as string,
       'X-Goog-FieldMask': 'places',
     };
-
     const searchBody = {
       textQuery: type.replace(/_/g, ' ') + ' in ' + province,
       languageCode: 'es',
       regionCode: 'AR',
     };
-
     const result = await post(searchUrl, searchHeaders, searchBody);
-
     if (result.places === undefined || result.places === null) {
       results.push(...[]);
     } else {
       results.push(...result.places);
     }
-
     let places: any[];
-
     places = this.filterPlacesByCurrentPlaces(results, currentPlaces);
-
     if (places.length > 0) {
       do {
         const place = places[Math.floor(Math.random() * places.length)];
-
         if (place.reviews && place.reviews.length > 0) {
           return place;
         } else {
@@ -175,9 +174,10 @@ export class PlaceService {
         }
       } while (places.length > 0);
     }
-
     return null;
   }
+
+  // ------------------------------------------------------------------------------------------
 
   orderByDistance(places: Place[], dates: Date[]): Place[] {
     if (places.length <= 1) return places;
