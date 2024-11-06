@@ -17,6 +17,10 @@ import { Forum } from '../entities/forum';
 import { CreateForumUseCase } from '../../application/use-cases/forum-use-cases/create-forum.use-case';
 import { FindEventByIdUseCase } from '../../application/use-cases/event-use-cases/find-event-by-id.use-case';
 import { FindItineraryWithEventUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-event.use-case';
+import {
+  CreateNotificationUseCase
+} from '../../application/use-cases/notification-use-cases/create-notification.use-case';
+import { Notification } from '../entities/notification';
 
 export class ItineraryService {
   private provinceService: ProvinceService;
@@ -315,8 +319,17 @@ export class ItineraryService {
     if (!itinerary.participants.some((u) => u.id === user.id)) {
       itinerary.participants.push(user);
 
-      const updateItineraryUseCase = new UpdateItineraryUseCase();
+      const createNotificationUseCase = new CreateNotificationUseCase();
+      const notification = new Notification();
+      notification.itinerary = itinerary;
+      notification.user = user;
+      notification.description = itinerary.user.name + ' te agregó a su viaje!';
+      notification.publication = null;
+      notification.isRead = false;
 
+      await createNotificationUseCase.execute(notification);
+
+      const updateItineraryUseCase = new UpdateItineraryUseCase();
       return updateItineraryUseCase.execute(itinerary);
     } else {
       return Promise.resolve(itinerary);
