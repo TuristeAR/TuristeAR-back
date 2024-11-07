@@ -22,7 +22,7 @@ export class PlaceService {
 
   async findOneInLocalityByTypesAndPriceLevelWithDate(
     currentPlaces: Place[],
-    type: string,
+    types: string[],
     priceLevel: string[],
     provinceId: number,
     provinceName: string,
@@ -31,31 +31,34 @@ export class PlaceService {
   ): Promise<Place | null> {
     let place: Place | null = null;
 
-    do {
-      const savedPlace = await this.getPlaceInLocalityByTypeAndPriceLevelWithDate(
-        provinceId,
+    for (const type of types) {
+      let fetchedPlaces = await this.fetchPlacesInLocalityByTypeAndPriceLevel(
+        provinceName,
         locality,
         type,
         priceLevel,
         currentPlaces,
       );
 
-      if (savedPlace) {
-        place = savedPlace;
-      } else {
-        const fetchedPlace = await this.fetchPlaceInLocalityByTypeAndPriceLevel(
-          provinceName,
-          locality,
-          type,
-          priceLevel,
-          currentPlaces,
-        );
+      while (fetchedPlaces.length > 0) {
+        const randomPlace = fetchedPlaces[Math.floor(Math.random() * fetchedPlaces.length)];
 
-        if (fetchedPlace) {
-          place = await this.savePlaceInDatabase(fetchedPlace, provinceId, locality);
+        if (
+          randomPlace.reviews?.length > 0 &&
+          this.isOpenThisDay(randomPlace.currentOpeningHours?.weekdayDescriptions ?? null, date)
+        ) {
+          place = await this.savePlaceInDatabase(randomPlace, provinceId, locality);
+
+          break;
         }
+
+        fetchedPlaces = fetchedPlaces.filter((p) => p.id !== randomPlace.id);
       }
-    } while (place && !this.isOpenThisDay(place.openingHours, date));
+
+      if (place) {
+        break;
+      }
+    }
 
     return place;
   }
@@ -111,12 +114,12 @@ export class PlaceService {
                 const province = await findProvinceByIdUseCase.execute(provinceId);
                   if (province) {  // Verificamos que `province` no sea null
                 const newPlace: Place = {
-                  province: province,
+                  id: await this.generateNumericId(additionalPlace.id),
                   googleId: additionalPlace.id,
-                  reviews: additionalPlace.reviews || null,
                   name: additionalPlace.displayName.text,
                   types: additionalPlace.types ?? null,
                   address: additionalPlace.shortFormattedAddress,
+                  reviews: additionalPlace.reviews || null,
                   rating: additionalPlace.rating || null,
                   locality: '',
                   latitude: additionalPlace.latitude,
@@ -125,8 +128,8 @@ export class PlaceService {
                   priceLevel: '',
                   phoneNumber: '',
                   activities: additionalPlace.activities,
-                  id: additionalPlace.id,
-                  createdAt: additionalPlace.createdAt
+                  province: province,
+                  createdAt: additionalPlace.createdAt,
                 }
 
                 filteredPlaces.push(newPlace);
@@ -156,6 +159,9 @@ export class PlaceService {
       } catch (error) {
         throw error;
       }
+  }
+  private async generateNumericId(idGoogle: string) {
+    return idGoogle.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   }
 // ------------------------------------------------------------------ fetch api por provincia y tipo
   private async fetchPlaceByProvinceAndType(
@@ -333,6 +339,46 @@ export class PlaceService {
     }
 
     return null;
+  }
+
+  private async fetchPlacesInLocalityByTypeAndPriceLevel(
+    province: string,
+    locality: string,
+    type: string,
+    priceLevel: string[],
+    currentPlaces: Place[],
+  ) {
+    let results: any[] = [];
+
+    const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
+
+    const searchHeaders = {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': process.env.GOOGLE_API_KEY as string,
+      'X-Goog-FieldMask': 'places',
+    };
+
+    const searchBody = {
+      textQuery: type.replace(/_/g, ' ') + ' in ' + locality + ', ' + province,
+      languageCode: 'es',
+      regionCode: 'AR',
+    };
+
+    const result = await post(searchUrl, searchHeaders, searchBody);
+
+    if (result.places === undefined || result.places === null) {
+      results.push(...[]);
+    } else {
+      results.push(...result.places);
+    }
+
+    let places: any[];
+
+    places = this.filterPlacesByCurrentPlaces(results, currentPlaces);
+
+    places = this.filterPlacesByPriceLevel(places, priceLevel);
+
+    return places;
   }
 
   private filterPlacesByCurrentPlaces(places: any[], currentPlaces: Place[]) {

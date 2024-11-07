@@ -13,7 +13,7 @@ export class FindNotificationsDetailByUserUseCase {
     return this.notificationRepository.findMany({
       where: { user : {id : userId}},
       relations: ['user', 'publication.likes','publication.reposts',
-        'publication.comments','publication.saved', 'itinerary'],
+        'publication.comments','publication.saved', 'itinerary.user'],
       order: { id: 'DESC' },
     });
   }
