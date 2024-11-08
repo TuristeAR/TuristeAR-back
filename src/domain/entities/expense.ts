@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from 'ty
 import { AbstractEntity } from './abstract.entity';
 import { Itinerary } from './itinerary';
 import { User } from './user';
+import { NullLiteral } from 'typescript';
 
 @Entity()
 export class Expense extends AbstractEntity {
@@ -38,4 +39,7 @@ export class Expense extends AbstractEntity {
     inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
   })
   participatingUsers: User[];
+
+  @Column('simple-json',{ nullable: true })
+  imageUrls: string[] | null; 
 }

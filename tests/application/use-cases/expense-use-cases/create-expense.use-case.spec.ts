@@ -42,6 +42,7 @@ describe('CreateExpenseUseCase', () => {
       individualPercentages: { user1: 50, user2: 50 },
       participatingUsers: [payer],
       createdAt: new Date(),
+      imageUrls:[]
     };
 
     // Configurar el mock para que retorne el gasto creado
@@ -70,6 +71,7 @@ describe('CreateExpenseUseCase', () => {
       individualPercentages: { user1: 50, user2: 50 },
       participatingUsers: [{ id: 1 } as User],
       createdAt: new Date(),
+      imageUrls:[]
     };
 
     // Configurar el mock para que retorne `null`
