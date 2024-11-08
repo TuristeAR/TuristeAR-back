@@ -1135,6 +1135,7 @@ app.post('/expenses', async (req, res) => {
       itineraryId,
       individualAmounts,
       individualPercentages,
+      imageUrls
     } = req.body;
 
     if (!description) {
@@ -1184,6 +1185,7 @@ app.post('/expenses', async (req, res) => {
     expense.individualAmounts = individualAmounts || {};
     expense.participatingUsers = validUsers;
     expense.individualPercentages = individualPercentages || {};
+    expense.imageUrls = imageUrls
 
     const response = await createExpenseUseCase.execute(expense);
 
