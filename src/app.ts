@@ -1379,6 +1379,7 @@ io.on('connection', (socket) => {
         images: message.images,
         user: message.user,
         createdAt: message.createdAt,
+        forumId: message.forum.id
       });
     } catch (error) {
       socket.emit('error', { message: 'Error creating message', error });
