@@ -4,6 +4,7 @@ import { DeleteResult, In } from 'typeorm';
 import { Activity } from '../../../domain/entities/activity';
 import { FindCommentsByPublicationIdUserCase } from '../comment-use-cases/find-comments-by-publication-id.user-case';
 import { DeleteCommentsUseCase } from '../comment-use-cases/delete-comments.use-case';
+import { DeleteNotificationByIdUseCase } from '../notification-use-cases/delete-notification-by-id.use-case';
 
 export class DeletePublicationsByActivitiesUseCase {
   private publicationRepository: PublicationRepositoryInterface;
@@ -21,15 +22,20 @@ export class DeletePublicationsByActivitiesUseCase {
           id: In(activityIds),
         },
       },
-      relations: ["activities", 'comments'],
+      relations: ["activities", 'comments','notifications'],
     });
 
     for (const publication of publications) {
       if (publication.comments.length > 0) {
-        const findCommentsByPublicationIdUserCase = new FindCommentsByPublicationIdUserCase();
-        const comments = await findCommentsByPublicationIdUserCase.execute(Number(publication.id));
         const deleteCommentsUseCase = new DeleteCommentsUseCase();
-        await deleteCommentsUseCase.execute(comments);
+        await deleteCommentsUseCase.execute(publication.comments);
+      }
+
+      if(publication.notifications.length > 0) {
+        for (const notification of publication.notifications) {
+          const deleteNotificationByIdUseCase = new DeleteNotificationByIdUseCase();
+          await deleteNotificationByIdUseCase.execute(notification.id);
+        }
       }
     }
 
