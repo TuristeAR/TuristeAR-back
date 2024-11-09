@@ -1210,6 +1210,7 @@ app.put('/expenses/:idExpense', async (req, res) => {
       itineraryId,
       individualAmounts,
       individualPercentages,
+      imageUrls
     } = req.body;
 
     if (!description) return res.status(400).json({ message: 'Description field is missing' });
@@ -1250,6 +1251,7 @@ app.put('/expenses/:idExpense', async (req, res) => {
 
     // Update the many-to-many relationship
     existingExpense.participatingUsers = validUsers;
+    existingExpense.imageUrls = imageUrls
 
     // Save the update
     const response = await saveExpenseUseCase.execute(existingExpense);
