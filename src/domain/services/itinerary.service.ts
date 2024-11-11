@@ -17,9 +17,7 @@ import { Forum } from '../entities/forum';
 import { CreateForumUseCase } from '../../application/use-cases/forum-use-cases/create-forum.use-case';
 import { FindEventByIdUseCase } from '../../application/use-cases/event-use-cases/find-event-by-id.use-case';
 import { FindItineraryWithEventUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-event.use-case';
-import {
-  CreateNotificationUseCase
-} from '../../application/use-cases/notification-use-cases/create-notification.use-case';
+import { CreateNotificationUseCase } from '../../application/use-cases/notification-use-cases/create-notification.use-case';
 import { Notification } from '../entities/notification';
 
 export class ItineraryService {
@@ -40,34 +38,36 @@ export class ItineraryService {
   }
 
   async create(user: User, createItineraryDto: CreateItineraryDto) {
-    const dates = this.getDates(createItineraryDto.fromDate, createItineraryDto.toDate);
+    const totalDays = this.getDates(createItineraryDto.fromDate, createItineraryDto.toDate).length;
 
-    const typesByCompany = this.filterTypesByCompany(
-      createItineraryDto.types,
-      createItineraryDto.company,
-    );
-
-    const provinceName = await this.provinceService.getProvinceNameFromId(
-      createItineraryDto.provinceId,
-    );
+    const daysPerProvince = Math.floor(totalDays / createItineraryDto.provinces.length);
 
     const itinerary = new Itinerary();
 
-    itinerary.name = `Viaje a ${provinceName}`;
+    itinerary.name = '';
     itinerary.fromDate = createItineraryDto.fromDate;
     itinerary.toDate = createItineraryDto.toDate;
     itinerary.user = user;
     itinerary.activities = [];
     itinerary.events = [];
+
     const forum = new Forum();
 
-    forum.name = `Viaje a ${provinceName}`;
+    forum.name = '';
     forum.messages = [];
     forum.isPublic = false;
 
     const createForumUseCase = new CreateForumUseCase();
 
     itinerary.forum = await createForumUseCase.execute(forum);
+
+    let localities: {
+      province: string;
+      locality: string;
+      days: number;
+      fromDate: Date;
+      toDate: Date;
+    }[] = [];
 
     for (const eventId of createItineraryDto.events) {
       const event = await this.findEventByIdUseCase.execute(eventId);
@@ -87,64 +87,116 @@ export class ItineraryService {
 
     let usedPlaces: Place[] = [];
 
-    for (let i = 0; i < dates.length; i++) {
-      const eventForDay = itinerary.events.find((event) =>
-        this.isInDate(event.fromDate, event.toDate, dates[i]),
+    let currentDate = new Date(createItineraryDto.fromDate);
+
+    for (const locality of createItineraryDto.localities) {
+      const localitiesInProvince = createItineraryDto.localities.filter(
+        (loc) => loc.province.id === locality.province.id,
       );
 
-      let activitiesForDay = [];
+      const baseDaysPerLocality = Math.floor(daysPerProvince / localitiesInProvince.length);
 
-      if (eventForDay) {
-        const localityForDay = eventForDay.locality;
+      const extraDays = daysPerProvince % localitiesInProvince.length;
 
-        const previousPlaceType =
-          usedPlaces.length > 0 ? usedPlaces[usedPlaces.length - 1].types : null;
+      const isExtraDay = localitiesInProvince.indexOf(locality) < extraDays;
 
-        const randomType =
-          createItineraryDto.types[Math.floor(Math.random() * createItineraryDto.types.length)];
+      const daysPerLocality = baseDaysPerLocality + (isExtraDay ? 1 : 0);
 
-        const placeType = previousPlaceType ? previousPlaceType : randomType.split(',');
+      const localityStartDate = new Date(currentDate);
 
-        const place = await this.findNextPlace(
-          itineraryPlaces,
-          usedPlaces[usedPlaces.length - 1] || {
-            types: placeType,
-          },
-          createItineraryDto,
-          provinceName as string,
-          localityForDay as string,
-          typesByCompany,
-          usedPlaces,
-          dates[i],
+      const localityEndDate = new Date(currentDate);
+
+      localityEndDate.setDate(localityEndDate.getDate() + daysPerLocality - 1);
+
+      localities.push({
+        province: locality.province.id,
+        locality: locality.name,
+        days: daysPerLocality,
+        fromDate: new Date(localityStartDate),
+        toDate: new Date(localityEndDate),
+      });
+
+      currentDate.setDate(currentDate.getDate() + daysPerLocality);
+    }
+
+    const groupedLocalities = createItineraryDto.provinces.map((province) => ({
+      provinceId: province.georefId,
+      localities: localities.filter((locality) => locality.province === province.georefId),
+    }));
+
+    groupedLocalities.forEach((group) => {
+      group.localities.sort((a, b) => a.fromDate.getTime() - b.fromDate.getTime());
+    });
+
+    const orderedLocalities = groupedLocalities.flatMap((group) => group.localities);
+
+    orderedLocalities.forEach((locality) => {
+      locality.fromDate = new Date(currentDate);
+      locality.toDate = new Date(currentDate);
+      locality.toDate.setDate(locality.toDate.getDate() + locality.days - 1);
+
+      currentDate.setDate(currentDate.getDate() + locality.days);
+    });
+
+    console.log('LOCALIDADES ORDENADAS: ', orderedLocalities);
+
+    for (const province of createItineraryDto.provinces) {
+      const provinceStartDate = new Date(currentDate);
+
+      const provinceEndDate = new Date(currentDate);
+
+      provinceEndDate.setDate(provinceEndDate.getDate() + daysPerProvince - 1);
+
+      const hasEventForProvince = itinerary.events.some((event) => {
+        const eventStartDate = new Date(event.fromDate);
+
+        const eventEndDate = new Date(event.toDate);
+
+        return eventStartDate >= provinceStartDate && eventEndDate <= provinceEndDate;
+      });
+
+      if (hasEventForProvince) {
+        const eventForProvince = itinerary.events.find((event) => {
+          const eventStartDate = new Date(event.fromDate);
+
+          const eventEndDate = new Date(event.toDate);
+
+          return eventStartDate >= provinceStartDate && eventEndDate <= provinceEndDate;
+        });
+
+        if (eventForProvince) {
+          const eventStartDate = new Date(eventForProvince.fromDate);
+
+          const eventEndDate = new Date(eventForProvince.toDate);
+
+          if (eventStartDate < provinceStartDate) {
+            provinceStartDate.setDate(eventStartDate.getDate());
+          }
+
+          if (eventEndDate > provinceEndDate) {
+            provinceEndDate.setDate(eventEndDate.getDate());
+          }
+
+          currentDate = new Date(provinceEndDate);
+
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      }
+
+      for (let i = 0; i < daysPerProvince; i++) {
+        const eventForDay = itinerary.events.find((event) =>
+          this.isInDate(event.fromDate, event.toDate, currentDate),
         );
 
-        if (!place) {
-          continue;
-        }
+        let activitiesForDay = [];
 
-        usedPlaces.push(place);
+        const localityForDay = localities.find(
+          (locality) => locality.fromDate.getTime() === currentDate.getTime(),
+        )?.locality;
 
-        usedPlaces = this.placeService.orderByDistance(usedPlaces, dates);
+        console.log('LOCALITY FOR DAY: ', localityForDay);
 
-        const activityDates = this.activityService.getActivityDates(place.openingHours, dates[i]);
-
-        const createActivityDto: CreateActivityDto = {
-          itinerary: savedItinerary,
-          place,
-          name: this.activityService.formatActivityName(place.name, activityDates[0]),
-          fromDate: activityDates[0],
-          toDate: activityDates[1],
-          images: [],
-        };
-
-        const activity = await this.createActivityUseCase.execute(createActivityDto);
-
-        activitiesForDay.push(activity);
-      } else {
-        const localityForDay =
-          createItineraryDto.localities[i % createItineraryDto.localities.length];
-
-        for (let j = 0; j < 2; j++) {
+        if (eventForDay) {
           const previousPlaceType =
             usedPlaces.length > 0 ? usedPlaces[usedPlaces.length - 1].types : null;
 
@@ -155,46 +207,98 @@ export class ItineraryService {
 
           const place = await this.findNextPlace(
             itineraryPlaces,
-            usedPlaces[usedPlaces.length - 1] || {
-              types: placeType,
-            },
+            usedPlaces[usedPlaces.length - 1] || { types: placeType },
             createItineraryDto,
-            provinceName as string,
+            province.id,
+            province.name,
             localityForDay as string,
-            typesByCompany,
+            this.filterTypesByCompany(createItineraryDto.types, createItineraryDto.company),
             usedPlaces,
-            dates[i],
+            currentDate,
           );
 
-          if (!place) {
-            continue;
-          }
+          if (!place || usedPlaces.some((usedPlace) => usedPlace.id === place.id)) continue;
 
           usedPlaces.push(place);
 
-          usedPlaces = this.placeService.orderByDistance(usedPlaces, dates);
+          usedPlaces = this.placeService.orderByDistance(
+            usedPlaces,
+            this.getDates(currentDate, currentDate),
+          );
 
-          const [startDate, endDate] =
-            j === 0
-              ? this.activityService.getActivityDates(place.openingHours, dates[i])
-              : this.getNextActivityDates(place, activitiesForDay[0].toDate);
-
+          const activityDates = this.activityService.getActivityDates(
+            place.openingHours,
+            currentDate,
+          );
           const createActivityDto: CreateActivityDto = {
             itinerary: savedItinerary,
             place,
-            name: this.activityService.formatActivityName(place.name, startDate),
-            fromDate: startDate,
-            toDate: endDate,
+            name: this.activityService.formatActivityName(place.name, activityDates[0]),
+            fromDate: activityDates[0],
+            toDate: activityDates[1],
             images: [],
           };
 
           const activity = await this.createActivityUseCase.execute(createActivityDto);
 
           activitiesForDay.push(activity);
+        } else {
+          for (let j = 0; j < 2; j++) {
+            const previousPlaceType =
+              usedPlaces.length > 0 ? usedPlaces[usedPlaces.length - 1].types : null;
+
+            const randomType =
+              createItineraryDto.types[Math.floor(Math.random() * createItineraryDto.types.length)];
+
+            const placeType = previousPlaceType ? previousPlaceType : randomType.split(',');
+
+            const place = await this.findNextPlace(
+              itineraryPlaces,
+              usedPlaces[usedPlaces.length - 1] || { types: placeType },
+              createItineraryDto,
+              province.id,
+              province.name,
+              localityForDay as string,
+              this.filterTypesByCompany(createItineraryDto.types, createItineraryDto.company),
+              usedPlaces,
+              currentDate,
+            );
+
+            if (!place || usedPlaces.some((usedPlace) => usedPlace.id === place.id)) continue;
+
+            usedPlaces.push(place);
+
+            usedPlaces = this.placeService.orderByDistance(
+              usedPlaces,
+              this.getDates(currentDate, currentDate),
+            );
+
+            const [startDate, endDate] =
+              j === 0
+                ? this.activityService.getActivityDates(place.openingHours, currentDate)
+                : this.getNextActivityDates(place, activitiesForDay[0].toDate);
+
+            const createActivityDto: CreateActivityDto = {
+              itinerary: savedItinerary,
+              place,
+              name: this.activityService.formatActivityName(place.name, startDate),
+              fromDate: startDate,
+              toDate: endDate,
+              images: [],
+            };
+
+            const activity = await this.createActivityUseCase.execute(createActivityDto);
+
+            activitiesForDay.push(activity);
+          }
         }
+
+        savedItinerary.activities.push(...activitiesForDay);
+
+        currentDate.setDate(currentDate.getDate() + 1);
       }
 
-      savedItinerary.activities.push(...activitiesForDay);
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
     return savedItinerary;
@@ -597,6 +701,7 @@ export class ItineraryService {
     itineraryPlaces: Place[],
     currentPlace: Place,
     createItineraryDto: CreateItineraryDto,
+    provinceId: number,
     provinceName: string,
     locality: string,
     typesByCompany: string[],
@@ -616,7 +721,7 @@ export class ItineraryService {
         itineraryPlaces,
         typesArray,
         createItineraryDto.priceLevel,
-        createItineraryDto.provinceId,
+        provinceId,
         provinceName,
         locality,
         date,
