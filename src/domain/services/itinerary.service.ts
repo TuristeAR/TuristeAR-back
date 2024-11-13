@@ -61,7 +61,6 @@ export class ItineraryService {
     let localities: {
       province: string;
       locality: string;
-      days: number;
       fromDate: Date;
       toDate: Date;
     }[] = [];
@@ -103,50 +102,58 @@ export class ItineraryService {
 
       const isExtraDay = localitiesInProvince.indexOf(locality) < extraDays;
 
-      const eventForLocality = itinerary.events.find((event) => event.locality === locality.name);
+      daysPerLocality = baseDaysPerLocality + (isExtraDay ? 1 : 0);
 
-      if (eventForLocality) {
-        localityStartDate = eventForLocality.fromDate;
+      localityStartDate = new Date(currentDate);
 
-        localityEndDate = eventForLocality.toDate;
+      localityEndDate = new Date(currentDate);
 
-        daysPerLocality =
-          Math.ceil(
-            (localityEndDate.getTime() - localityStartDate.getTime()) / (1000 * 60 * 60 * 24),
-          ) + 1;
-      } else {
-        daysPerLocality = baseDaysPerLocality + (isExtraDay ? 1 : 0);
+      localityEndDate.setDate(localityEndDate.getDate() + daysPerLocality - 1);
 
-        localityStartDate = new Date(currentDate);
-
-        localityEndDate = new Date(currentDate);
-
-        localityEndDate.setDate(localityEndDate.getDate() + daysPerLocality - 1);
-
-        currentDate.setDate(currentDate.getDate() + daysPerLocality);
-      }
+      currentDate.setDate(currentDate.getDate() + daysPerLocality);
 
       localities.push({
         province: locality.province.id,
         locality: locality.name,
-        days: daysPerLocality,
         fromDate: new Date(localityStartDate),
         toDate: new Date(localityEndDate),
       });
     }
 
-    const groupedLocalities = createItineraryDto.provinces.map((province) => ({
-      provinceId: province.georefId,
-      localities: localities.filter((locality) => locality.province === province.georefId),
-    }));
+    const allDates = this.getDatesAsString(
+      new Date(createItineraryDto.fromDate).toISOString().split('T')[0],
+      new Date(createItineraryDto.toDate).toISOString().split('T')[0],
+    );
 
-    groupedLocalities.forEach((group) => {
-      group.localities.sort((a, b) => a.fromDate.getTime() - b.fromDate.getTime());
-    });
+    const assignedDates = localities.flatMap((locality) =>
+      this.getDatesAsString(
+        locality.fromDate.toISOString().split('T')[0],
+        locality.toDate.toISOString().split('T')[0],
+      ),
+    );
 
-    const orderedLocalities = groupedLocalities.flatMap((group) => group.localities);
+    const unassignedDates = allDates.filter((date) => !assignedDates.includes(date));
 
-    orderedLocalities.forEach((locality) => {
+    const unassignedDays = unassignedDates.length;
+
+    if (unassignedDays > 0) {
+      for (const unassignedDate of unassignedDates) {
+        const closestLocality = localities.reduce((prev, curr) =>
+          Math.abs(curr.fromDate.getTime() - unassignedDate.getTime()) <
+          Math.abs(prev.fromDate.getTime() - unassignedDate.getTime())
+            ? curr
+            : prev,
+        );
+
+        if (unassignedDate.getTime() < closestLocality.fromDate.getTime()) {
+          closestLocality.fromDate = unassignedDate;
+        } else {
+          closestLocality.toDate = unassignedDate;
+        }
+      }
+    }
+
+    localities.forEach((locality) => {
       const eventForLocality = itinerary.events.find(
         (event) =>
           event.locality === locality.locality &&
@@ -158,12 +165,7 @@ export class ItineraryService {
 
         locality.toDate = new Date(eventForLocality.toDate);
 
-        locality.days =
-          Math.ceil(
-            (locality.toDate.getTime() - locality.fromDate.getTime()) / (1000 * 60 * 60 * 24),
-          ) + 1;
-
-        orderedLocalities.forEach((loc) => {
+        localities.forEach((loc) => {
           if (loc.province === locality.province && loc.locality !== locality.locality) {
             loc.fromDate = new Date(locality.toDate);
 
@@ -171,19 +173,9 @@ export class ItineraryService {
 
             loc.toDate = new Date(locality.toDate);
 
-            loc.toDate.setDate(loc.toDate.getDate() + loc.days - 1);
-
-            loc.days =
-              Math.ceil((loc.toDate.getTime() - loc.fromDate.getTime()) / (1000 * 60 * 60 * 24)) +
-              1;
-
             const maxDate = new Date(createItineraryDto.toDate);
 
             if (loc.toDate > maxDate) {
-              loc.days = Math.ceil(
-                (maxDate.getTime() - loc.fromDate.getTime()) / (1000 * 60 * 60 * 24),
-              );
-
               loc.toDate = new Date(createItineraryDto.toDate);
             }
           }
@@ -191,118 +183,74 @@ export class ItineraryService {
       }
     });
 
-    orderedLocalities.sort((a, b) => a.fromDate.getTime() - b.fromDate.getTime());
+    currentDate = new Date(createItineraryDto.fromDate);
 
-    const totalAssignedDays = orderedLocalities.reduce((sum, locality) => sum + locality.days, 0);
-
-    const unassignedDays = totalDays - totalAssignedDays;
-
-    if (unassignedDays > 0) {
-      const allDates = this.getDatesAsString(
-        new Date(createItineraryDto.fromDate).toISOString().split('T')[0],
-        new Date(createItineraryDto.toDate).toISOString().split('T')[0],
+    for (let i = 0; i < totalDays; i++) {
+      const eventForDay = itinerary.events.find((event) =>
+        this.isInDate(event.fromDate, event.toDate, currentDate),
       );
 
-      const assignedDates: Date[] = [];
+      let activitiesForDay = [];
 
-      orderedLocalities.forEach((locality) => {
-        const dates = this.getDatesAsString(
-          locality.fromDate.toISOString().split('T')[0],
-          locality.toDate.toISOString().split('T')[0],
-        );
-
-        console.log(dates);
-
-        dates.forEach((date) => {
-          assignedDates.push(date);
-        });
-      });
-
-      const unassignedDates = allDates.filter(
-        (date) => !assignedDates.some((assignedDate) => assignedDate.getTime() === date.getTime()),
+      const localityForDay = localities.find(
+        (locality) =>
+          currentDate.toISOString().split('T')[0] >=
+            locality.fromDate.toISOString().split('T')[0] &&
+          currentDate.toISOString().split('T')[0] <= locality.toDate.toISOString().split('T')[0],
       );
 
-      if (unassignedDates.length > 0) {
-        for (const unassignedDate of unassignedDates) {
-          const closestLocality = orderedLocalities.reduce((prev, curr) =>
-            Math.abs(curr.fromDate.getTime() - unassignedDate.getTime()) <
-            Math.abs(prev.fromDate.getTime() - unassignedDate.getTime())
-              ? curr
-              : prev,
-          );
+      const province = createItineraryDto.provinces.find(
+        (province) => province.georefId === localityForDay?.province,
+      );
 
-          closestLocality.days += 1;
+      if (eventForDay) {
+        const previousPlaceType =
+          usedPlaces.length > 0 ? usedPlaces[usedPlaces.length - 1].types : null;
 
-          if (unassignedDate.getTime() < closestLocality.fromDate.getTime()) {
-            closestLocality.fromDate = unassignedDate;
-          } else {
-            closestLocality.toDate = unassignedDate;
-          }
-        }
-      }
-    }
+        const randomType =
+          createItineraryDto.types[Math.floor(Math.random() * createItineraryDto.types.length)];
 
-    console.log('LOCALIDADES ORDENADAS: ', orderedLocalities);
+        const placeType = previousPlaceType ? previousPlaceType : randomType.split(',');
 
-    /**************************************************************************************/
-
-    for (const province of createItineraryDto.provinces) {
-      const provinceStartDate = new Date(currentDate);
-
-      const provinceEndDate = new Date(currentDate);
-
-      provinceEndDate.setDate(provinceEndDate.getDate() + daysPerProvince - 1);
-
-      const hasEventForProvince = itinerary.events.some((event) => {
-        const eventStartDate = new Date(event.fromDate);
-
-        const eventEndDate = new Date(event.toDate);
-
-        return eventStartDate >= provinceStartDate && eventEndDate <= provinceEndDate;
-      });
-
-      if (hasEventForProvince) {
-        const eventForProvince = itinerary.events.find((event) => {
-          const eventStartDate = new Date(event.fromDate);
-
-          const eventEndDate = new Date(event.toDate);
-
-          return eventStartDate >= provinceStartDate && eventEndDate <= provinceEndDate;
-        });
-
-        if (eventForProvince) {
-          const eventStartDate = new Date(eventForProvince.fromDate);
-
-          const eventEndDate = new Date(eventForProvince.toDate);
-
-          if (eventStartDate < provinceStartDate) {
-            provinceStartDate.setDate(eventStartDate.getDate());
-          }
-
-          if (eventEndDate > provinceEndDate) {
-            provinceEndDate.setDate(eventEndDate.getDate());
-          }
-
-          currentDate = new Date(provinceEndDate);
-
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-      }
-
-      for (let i = 0; i < daysPerProvince; i++) {
-        const eventForDay = itinerary.events.find((event) =>
-          this.isInDate(event.fromDate, event.toDate, currentDate),
+        const place = await this.findNextPlace(
+          itineraryPlaces,
+          usedPlaces[usedPlaces.length - 1] || { types: placeType },
+          createItineraryDto,
+          province?.id as number,
+          province?.name as string,
+          localityForDay?.locality as string,
+          this.filterTypesByCompany(createItineraryDto.types, createItineraryDto.company),
+          usedPlaces,
+          currentDate,
         );
 
-        let activitiesForDay = [];
+        if (!place || usedPlaces.some((usedPlace) => usedPlace.id === place.id)) continue;
 
-        const localityForDay = localities.find(
-          (locality) => locality.fromDate.getTime() === currentDate.getTime(),
-        )?.locality;
+        usedPlaces.push(place);
 
-        console.log('LOCALITY FOR DAY: ', localityForDay);
+        usedPlaces = this.placeService.orderByDistance(
+          usedPlaces,
+          this.getDates(currentDate, currentDate),
+        );
 
-        if (eventForDay) {
+        const activityDates = this.activityService.getActivityDates(
+          place.openingHours,
+          currentDate,
+        );
+        const createActivityDto: CreateActivityDto = {
+          itinerary: savedItinerary,
+          place,
+          name: this.activityService.formatActivityName(place.name, activityDates[0]),
+          fromDate: activityDates[0],
+          toDate: activityDates[1],
+          images: [],
+        };
+
+        const activity = await this.createActivityUseCase.execute(createActivityDto);
+
+        activitiesForDay.push(activity);
+      } else {
+        for (let j = 0; j < 2; j++) {
           const previousPlaceType =
             usedPlaces.length > 0 ? usedPlaces[usedPlaces.length - 1].types : null;
 
@@ -315,9 +263,9 @@ export class ItineraryService {
             itineraryPlaces,
             usedPlaces[usedPlaces.length - 1] || { types: placeType },
             createItineraryDto,
-            province.id,
-            province.name,
-            localityForDay as string,
+            province?.id as number,
+            province?.name as string,
+            localityForDay?.locality as string,
             this.filterTypesByCompany(createItineraryDto.types, createItineraryDto.company),
             usedPlaces,
             currentDate,
@@ -332,77 +280,27 @@ export class ItineraryService {
             this.getDates(currentDate, currentDate),
           );
 
-          const activityDates = this.activityService.getActivityDates(
-            place.openingHours,
-            currentDate,
-          );
+          const [startDate, endDate] =
+            j === 0
+              ? this.activityService.getActivityDates(place.openingHours, currentDate)
+              : this.getNextActivityDates(place, activitiesForDay[0].toDate);
+
           const createActivityDto: CreateActivityDto = {
             itinerary: savedItinerary,
             place,
-            name: this.activityService.formatActivityName(place.name, activityDates[0]),
-            fromDate: activityDates[0],
-            toDate: activityDates[1],
+            name: this.activityService.formatActivityName(place.name, startDate),
+            fromDate: startDate,
+            toDate: endDate,
             images: [],
           };
 
           const activity = await this.createActivityUseCase.execute(createActivityDto);
 
           activitiesForDay.push(activity);
-        } else {
-          for (let j = 0; j < 2; j++) {
-            const previousPlaceType =
-              usedPlaces.length > 0 ? usedPlaces[usedPlaces.length - 1].types : null;
-
-            const randomType =
-              createItineraryDto.types[Math.floor(Math.random() * createItineraryDto.types.length)];
-
-            const placeType = previousPlaceType ? previousPlaceType : randomType.split(',');
-
-            const place = await this.findNextPlace(
-              itineraryPlaces,
-              usedPlaces[usedPlaces.length - 1] || { types: placeType },
-              createItineraryDto,
-              province.id,
-              province.name,
-              localityForDay as string,
-              this.filterTypesByCompany(createItineraryDto.types, createItineraryDto.company),
-              usedPlaces,
-              currentDate,
-            );
-
-            if (!place || usedPlaces.some((usedPlace) => usedPlace.id === place.id)) continue;
-
-            usedPlaces.push(place);
-
-            usedPlaces = this.placeService.orderByDistance(
-              usedPlaces,
-              this.getDates(currentDate, currentDate),
-            );
-
-            const [startDate, endDate] =
-              j === 0
-                ? this.activityService.getActivityDates(place.openingHours, currentDate)
-                : this.getNextActivityDates(place, activitiesForDay[0].toDate);
-
-            const createActivityDto: CreateActivityDto = {
-              itinerary: savedItinerary,
-              place,
-              name: this.activityService.formatActivityName(place.name, startDate),
-              fromDate: startDate,
-              toDate: endDate,
-              images: [],
-            };
-
-            const activity = await this.createActivityUseCase.execute(createActivityDto);
-
-            activitiesForDay.push(activity);
-          }
         }
-
-        savedItinerary.activities.push(...activitiesForDay);
-
-        currentDate.setDate(currentDate.getDate() + 1);
       }
+
+      savedItinerary.activities.push(...activitiesForDay);
 
       currentDate.setDate(currentDate.getDate() + 1);
     }
