@@ -1,4 +1,3 @@
-import { ProvinceService } from './province.service';
 import { PlaceService } from './place.service';
 import { Itinerary } from '../entities/itinerary';
 import { CreateItineraryDto } from '../../infrastructure/dtos/create-itinerary.dto';
@@ -21,7 +20,6 @@ import { CreateNotificationUseCase } from '../../application/use-cases/notificat
 import { Notification } from '../entities/notification';
 
 export class ItineraryService {
-  private provinceService: ProvinceService;
   private placeService: PlaceService;
   private activityService: ActivityService;
   private createActivityUseCase: CreateActivityUseCase;
@@ -29,7 +27,6 @@ export class ItineraryService {
   private findEventByIdUseCase: FindEventByIdUseCase;
 
   constructor() {
-    this.provinceService = new ProvinceService();
     this.placeService = new PlaceService();
     this.activityService = new ActivityService();
     this.createActivityUseCase = new CreateActivityUseCase();
@@ -90,6 +87,12 @@ export class ItineraryService {
     let currentDate = new Date(createItineraryDto.fromDate);
 
     for (const locality of createItineraryDto.localities) {
+      let localityStartDate: Date;
+
+      let localityEndDate: Date;
+
+      let daysPerLocality: number;
+
       const localitiesInProvince = createItineraryDto.localities.filter(
         (loc) => loc.province.id === locality.province.id,
       );
@@ -100,13 +103,28 @@ export class ItineraryService {
 
       const isExtraDay = localitiesInProvince.indexOf(locality) < extraDays;
 
-      const daysPerLocality = baseDaysPerLocality + (isExtraDay ? 1 : 0);
+      const eventForLocality = itinerary.events.find((event) => event.locality === locality.name);
 
-      const localityStartDate = new Date(currentDate);
+      if (eventForLocality) {
+        localityStartDate = eventForLocality.fromDate;
 
-      const localityEndDate = new Date(currentDate);
+        localityEndDate = eventForLocality.toDate;
 
-      localityEndDate.setDate(localityEndDate.getDate() + daysPerLocality - 1);
+        daysPerLocality =
+          Math.ceil(
+            (localityEndDate.getTime() - localityStartDate.getTime()) / (1000 * 60 * 60 * 24),
+          ) + 1;
+      } else {
+        daysPerLocality = baseDaysPerLocality + (isExtraDay ? 1 : 0);
+
+        localityStartDate = new Date(currentDate);
+
+        localityEndDate = new Date(currentDate);
+
+        localityEndDate.setDate(localityEndDate.getDate() + daysPerLocality - 1);
+
+        currentDate.setDate(currentDate.getDate() + daysPerLocality);
+      }
 
       localities.push({
         province: locality.province.id,
@@ -115,8 +133,6 @@ export class ItineraryService {
         fromDate: new Date(localityStartDate),
         toDate: new Date(localityEndDate),
       });
-
-      currentDate.setDate(currentDate.getDate() + daysPerLocality);
     }
 
     const groupedLocalities = createItineraryDto.provinces.map((province) => ({
@@ -131,14 +147,104 @@ export class ItineraryService {
     const orderedLocalities = groupedLocalities.flatMap((group) => group.localities);
 
     orderedLocalities.forEach((locality) => {
-      locality.fromDate = new Date(currentDate);
-      locality.toDate = new Date(currentDate);
-      locality.toDate.setDate(locality.toDate.getDate() + locality.days - 1);
+      const eventForLocality = itinerary.events.find(
+        (event) =>
+          event.locality === locality.locality &&
+          this.isInDate(event.fromDate, event.toDate, locality.fromDate),
+      );
 
-      currentDate.setDate(currentDate.getDate() + locality.days);
+      if (eventForLocality) {
+        locality.fromDate = new Date(eventForLocality.fromDate);
+
+        locality.toDate = new Date(eventForLocality.toDate);
+
+        locality.days =
+          Math.ceil(
+            (locality.toDate.getTime() - locality.fromDate.getTime()) / (1000 * 60 * 60 * 24),
+          ) + 1;
+
+        orderedLocalities.forEach((loc) => {
+          if (loc.province === locality.province && loc.locality !== locality.locality) {
+            loc.fromDate = new Date(locality.toDate);
+
+            loc.fromDate.setDate(loc.fromDate.getDate() + 1);
+
+            loc.toDate = new Date(locality.toDate);
+
+            loc.toDate.setDate(loc.toDate.getDate() + loc.days - 1);
+
+            loc.days =
+              Math.ceil((loc.toDate.getTime() - loc.fromDate.getTime()) / (1000 * 60 * 60 * 24)) +
+              1;
+
+            const maxDate = new Date(createItineraryDto.toDate);
+
+            if (loc.toDate > maxDate) {
+              loc.days = Math.ceil(
+                (maxDate.getTime() - loc.fromDate.getTime()) / (1000 * 60 * 60 * 24),
+              );
+
+              loc.toDate = new Date(createItineraryDto.toDate);
+            }
+          }
+        });
+      }
     });
 
+    orderedLocalities.sort((a, b) => a.fromDate.getTime() - b.fromDate.getTime());
+
+    const totalAssignedDays = orderedLocalities.reduce((sum, locality) => sum + locality.days, 0);
+
+    const unassignedDays = totalDays - totalAssignedDays;
+
+    if (unassignedDays > 0) {
+      const allDates = this.getDatesAsString(
+        new Date(createItineraryDto.fromDate).toISOString().split('T')[0],
+        new Date(createItineraryDto.toDate).toISOString().split('T')[0],
+      );
+
+      const assignedDates: Date[] = [];
+
+      orderedLocalities.forEach((locality) => {
+        const dates = this.getDatesAsString(
+          locality.fromDate.toISOString().split('T')[0],
+          locality.toDate.toISOString().split('T')[0],
+        );
+
+        console.log(dates);
+
+        dates.forEach((date) => {
+          assignedDates.push(date);
+        });
+      });
+
+      const unassignedDates = allDates.filter(
+        (date) => !assignedDates.some((assignedDate) => assignedDate.getTime() === date.getTime()),
+      );
+
+      if (unassignedDates.length > 0) {
+        for (const unassignedDate of unassignedDates) {
+          const closestLocality = orderedLocalities.reduce((prev, curr) =>
+            Math.abs(curr.fromDate.getTime() - unassignedDate.getTime()) <
+            Math.abs(prev.fromDate.getTime() - unassignedDate.getTime())
+              ? curr
+              : prev,
+          );
+
+          closestLocality.days += 1;
+
+          if (unassignedDate.getTime() < closestLocality.fromDate.getTime()) {
+            closestLocality.fromDate = unassignedDate;
+          } else {
+            closestLocality.toDate = unassignedDate;
+          }
+        }
+      }
+    }
+
     console.log('LOCALIDADES ORDENADAS: ', orderedLocalities);
+
+    /**************************************************************************************/
 
     for (const province of createItineraryDto.provinces) {
       const provinceStartDate = new Date(currentDate);
@@ -545,6 +651,24 @@ export class ItineraryService {
 
     while (currentDate <= endDate) {
       dates.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return dates;
+  }
+
+  private getDatesAsString(fromDateStr: string, toDateStr: string): Date[] {
+    const dates = [];
+
+    const currentDate = new Date(fromDateStr);
+
+    const endDate = new Date(toDateStr);
+
+    while (currentDate <= endDate) {
+      const dateWithTime = new Date(currentDate);
+
+      dates.push(dateWithTime);
+
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
