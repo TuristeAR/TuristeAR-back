@@ -1,12 +1,27 @@
-import { IsArray, IsDate, IsNumber, IsString } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsDate, IsNumber, IsString } from 'class-validator';
+
+interface Province {
+  id: number;
+  name: string;
+  georefId: string;
+}
+
+export interface Locality {
+  name: string;
+  province: {
+    id: string;
+    nombre: string;
+  };
+}
 
 export class CreateItineraryDto {
-  @IsNumber()
-  provinceId: number;
+  @IsArray()
+  @ArrayNotEmpty()
+  provinces: Province[];
 
   @IsArray()
   @IsString({ each: true })
-  localities: string[];
+  localities: Locality[];
 
   @IsArray()
   @IsNumber({}, { each: true })
