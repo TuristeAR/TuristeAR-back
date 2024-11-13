@@ -4,6 +4,7 @@ import { User } from './user';
 import { Category } from './category';
 import { Comment } from './comment';
 import { Activity } from './activity';
+import { Notification } from './notification';
 
 @Entity()
 export class Publication extends AbstractEntity {
@@ -48,4 +49,7 @@ export class Publication extends AbstractEntity {
 
   @OneToMany(()=> Comment, (comment) => comment.publication)
   comments: Comment[];
+
+  @OneToMany(()=> Notification, (notification) => notification.publication)
+  notifications: Notification[];
 }
