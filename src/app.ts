@@ -87,6 +87,8 @@ import { FindNotificationsByUserUseCase } from './application/use-cases/notifica
 import { FindNotificationsDetailByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
 import { UpdateNotificationUseCase } from './application/use-cases/notification-use-cases/update-notification.use-case';
 import { ParticipationRequestService } from './domain/services/participationRequest.service';
+import { NotificationService } from './domain/services/notification.service';
+import { DeleteNotificationByIdUseCase } from './application/use-cases/notification-use-cases/delete-notification-by-id.use-case';
 
 dotenv.config();
 
@@ -224,6 +226,7 @@ const deleteItineraryByIdUseCase = new DeleteItineraryByIdUseCase();
 const deleteMessagesUseCase = new DeleteMessageUseCase();
 const deletePublicationUseCase = new DeletePublicationUseCase();
 const deletePublicationsByActivitiesUseCase = new DeletePublicationsByActivitiesUseCase();
+const deleteNotificationByIdUseCase = new DeleteNotificationByIdUseCase();
 
 const updateActivityUseCase = new UpdateActivityUseCase();
 
@@ -1422,8 +1425,10 @@ app.post('/participation-request/accept', async (req: Request, res: Response) =>
 });
 
 app.post('/participation-request/reject', async (req: Request, res: Response) => {
-  const { requestId } = req.body;
+  const { requestId, notificationId } = req.body;
+  
   try {
+    deleteNotificationByIdUseCase.execute(notificationId)
     const rejectedRequest = await participationRequestService.rejectParticipationRequest(requestId);
 
     return res.status(200).json({
