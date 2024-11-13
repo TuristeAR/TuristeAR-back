@@ -17,10 +17,10 @@ import { Forum } from '../entities/forum';
 import { CreateForumUseCase } from '../../application/use-cases/forum-use-cases/create-forum.use-case';
 import { FindEventByIdUseCase } from '../../application/use-cases/event-use-cases/find-event-by-id.use-case';
 import { FindItineraryWithEventUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-event.use-case';
-import {
-  CreateNotificationUseCase
-} from '../../application/use-cases/notification-use-cases/create-notification.use-case';
+import { CreateNotificationUseCase } from '../../application/use-cases/notification-use-cases/create-notification.use-case';
 import { Notification } from '../entities/notification';
+import { ParticipationRequest } from '../entities/participationRequest';
+import { ParticipationRequestService } from './participationRequest.service';
 
 export class ItineraryService {
   private provinceService: ProvinceService;
@@ -305,8 +305,30 @@ export class ItineraryService {
     return updateItineraryUseCase.execute(itinerary);
   }
 
-  async addUserToItinerary(itineraryId: number, userId: number): Promise<Itinerary> {
+  async addUserToItinerary(
+    itineraryId: number,
+    userId: number,
+    participationRequestId: number,
+  ): Promise<Itinerary> {
+    const participationRequestService = new ParticipationRequestService();
     const findItineraryWithParticipantsUseCase = new FindItineraryWithParticipantsUseCase();
+
+    const participationRequest: ParticipationRequest | null =
+      await participationRequestService.getOneParticipationRequestsByParticipantIdUseCase(
+        participationRequestId,
+      );
+
+    if (!participationRequest) {
+      throw new Error('Participation request not found');
+    }
+
+    if (participationRequest.participant.id !== userId) {
+      throw new Error('User is not the participant in this request');
+    }
+
+    if (participationRequest.itinerary.id !== itineraryId) {
+      throw new Error('Itinerary does not match the request');
+    }
 
     const itinerary = await findItineraryWithParticipantsUseCase.execute(itineraryId);
 
@@ -318,30 +340,33 @@ export class ItineraryService {
       throw new Error('Owner cannot be added as a participant');
     }
 
-    const user = await this.findUserByIdUseCase.execute(userId);
-
-    if (!user) {
-      throw new Error('User not found');
+    if (itinerary.participants.some((u) => u.id === userId)) {
+      return Promise.resolve(itinerary); 
     }
 
-    if (!itinerary.participants.some((u) => u.id === user.id)) {
-      itinerary.participants.push(user);
+    itinerary.participants.push(participationRequest.participant);
 
+    const updateItineraryUseCase = new UpdateItineraryUseCase();
+    const updatedItinerary = await updateItineraryUseCase.execute(itinerary);
+
+    if (!updatedItinerary) {
+      throw new Error('Failed to update the itinerary');
+    }
+
+    await participationRequestService.acceptParticipationRequest(participationRequestId);
+
+    itinerary.participants.map(async (participant) => {
       const createNotificationUseCase = new CreateNotificationUseCase();
       const notification = new Notification();
-      notification.itinerary = itinerary;
-      notification.user = user;
-      notification.description = itinerary.user.name + ' te agregó a su viaje!';
-      notification.publication = null;
+      notification.itinerary = updatedItinerary;
+      notification.user = participant;
+      notification.description = `${participationRequest.participant.name} se agregó a tu viaje!`;
       notification.isRead = false;
 
       await createNotificationUseCase.execute(notification);
+    });
 
-      const updateItineraryUseCase = new UpdateItineraryUseCase();
-      return updateItineraryUseCase.execute(itinerary);
-    } else {
-      return Promise.resolve(itinerary);
-    }
+    return updatedItinerary;
   }
 
   async removeUserFromItinerary(itineraryId: number, participantId: number): Promise<Itinerary> {

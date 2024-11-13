@@ -86,6 +86,7 @@ import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-ca
 import { FindNotificationsByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
 import { FindNotificationsDetailByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
 import { UpdateNotificationUseCase } from './application/use-cases/notification-use-cases/update-notification.use-case';
+import { ParticipationRequestService } from './domain/services/participationRequest.service';
 
 dotenv.config();
 
@@ -167,6 +168,7 @@ const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
 const userService = new UserService();
 const eventTempService = new EventTempService();
+const participationRequestService = new ParticipationRequestService();
 
 const createCommentUseCase = new CreateCommentUseCase();
 const createMessageUseCase = new CreateMessageUseCase();
@@ -564,13 +566,16 @@ app.get('/fetch-reviews', async (_req, res) => {
 });
 
 app.post('/itinerary/add-user', authMiddleware, (req, res) => {
-  const { itineraryId, participantId } = req.body;
+  const { itineraryId, participantId, participationRequestId } = req.body;
 
   itineraryService
-    .addUserToItinerary(itineraryId, participantId)
-    .then((updatedItinerary) => {
+    .addUserToItinerary(itineraryId, participantId, participationRequestId)
+    .then(async (updatedItinerary) => {
       io.emit('usersAddItinerary', { updatedItinerary });
-      return res.status(200).json({ status: 'success', data: updatedItinerary });
+      participationRequestService.acceptParticipationRequest(
+        Number(participationRequestId),
+      );
+      return res.status(200).json({ status: 'success', data: {updatedItinerary} });
     })
     .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to itinerary' });
@@ -1135,7 +1140,7 @@ app.post('/expenses', async (req, res) => {
       itineraryId,
       individualAmounts,
       individualPercentages,
-      imageUrls
+      imageUrls,
     } = req.body;
 
     if (!description) {
@@ -1185,7 +1190,7 @@ app.post('/expenses', async (req, res) => {
     expense.individualAmounts = individualAmounts || {};
     expense.participatingUsers = validUsers;
     expense.individualPercentages = individualPercentages || {};
-    expense.imageUrls = imageUrls
+    expense.imageUrls = imageUrls;
 
     const response = await createExpenseUseCase.execute(expense);
 
@@ -1210,7 +1215,7 @@ app.put('/expenses/:idExpense', async (req, res) => {
       itineraryId,
       individualAmounts,
       individualPercentages,
-      imageUrls
+      imageUrls,
     } = req.body;
 
     if (!description) return res.status(400).json({ message: 'Description field is missing' });
@@ -1251,7 +1256,7 @@ app.put('/expenses/:idExpense', async (req, res) => {
 
     // Update the many-to-many relationship
     existingExpense.participatingUsers = validUsers;
-    existingExpense.imageUrls = imageUrls
+    existingExpense.imageUrls = imageUrls;
 
     // Save the update
     const response = await saveExpenseUseCase.execute(existingExpense);
@@ -1316,7 +1321,7 @@ app.put('/markNotificationsAsRead', authMiddleware, async (req, res) => {
   try {
     const notifications = await findNotificationsDetailByUserIdUseCase.execute(Number(user.id));
     const updateNotificationUseCase = new UpdateNotificationUseCase();
-    const filteredNotifications = notifications.filter(notification => !notification.isRead)
+    const filteredNotifications = notifications.filter((notification) => !notification.isRead);
 
     for (const notification of filteredNotifications) {
       notification.isRead = true;
@@ -1352,6 +1357,86 @@ app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Respon
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: 'Error loading images', error });
+  }
+});
+
+app.get('/participation-request/:participantId', async (req: Request, res: Response) => {
+  const { participantId } = req.params;
+
+  try {
+    const participationRequests =
+      await participationRequestService.getParticipationRequestsByParticipant(
+        Number(participantId),
+      );
+
+    return res.status(200).json({
+      status: 'success',
+      data: participationRequests,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Error fetching participation requests',
+    });
+  }
+});
+
+app.post('/participation-request', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { itineraryId, participantId } = req.body;
+    const user = req.user as User;
+
+    const participationRequest = await participationRequestService.sendParticipationRequest(
+      itineraryId,
+      participantId,
+      user,
+    );
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Participation request sent successfully',
+      data: participationRequest,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error instanceof Error ? error.message : 'Error sending participation request',
+    });
+  }
+});
+
+app.post('/participation-request/accept', async (req: Request, res: Response) => {
+  try {
+    const { requestId } = req.body;
+    const participationRequest = await participationRequestService.acceptParticipationRequest(
+      Number(requestId),
+    );
+    res.status(200).json({
+      status: 'success',
+      data: participationRequest,
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: error instanceof Error ? error.message : 'Error accept participation request',
+    });
+  }
+});
+
+app.post('/participation-request/reject', async (req: Request, res: Response) => {
+  const { requestId } = req.body;
+  try {
+    const rejectedRequest = await participationRequestService.rejectParticipationRequest(requestId);
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Participation request rejected successfully',
+      data: rejectedRequest,
+    });
+  } catch (error) {
+    console.error('Error rejecting participation request:', error);
+
+    return res.status(400).json({
+      message: error instanceof Error ? error.message : 'Error rejecting participation request',
+    });
   }
 });
 

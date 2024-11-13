@@ -3,6 +3,7 @@ import { AbstractEntity } from './abstract.entity';
 import { User } from './user';
 import { Publication } from './publication';
 import { Itinerary } from './itinerary';
+import { ParticipationRequest } from './participationRequest';
 
 @Entity()
 export class Notification extends AbstractEntity {
@@ -24,4 +25,7 @@ export class Notification extends AbstractEntity {
     @JoinColumn({ name: 'itineraryId' })
     itinerary: Itinerary | null;
 
+    @ManyToOne(() => ParticipationRequest)
+    @JoinColumn({ name: 'participationRequestId' })
+    participationRequest: ParticipationRequest | null;
 }
