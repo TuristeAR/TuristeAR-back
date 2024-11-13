@@ -87,6 +87,7 @@ import { FindNotificationsByUserUseCase } from './application/use-cases/notifica
 import { FindNotificationsDetailByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
 import { UpdateNotificationUseCase } from './application/use-cases/notification-use-cases/update-notification.use-case';
 import { ParticipationRequestService } from './domain/services/participationRequest.service';
+import { UpdateForumUseCase } from './application/use-cases/forum-use-cases/update-forum.use-case';
 
 dotenv.config();
 
@@ -207,7 +208,6 @@ const findReviewByGoogleIdUseCase = new FindReviewByGoogleIdUseCase();
 const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
 const findUserByIdUseCase = new FindUserByIdUseCase();
 const findUserByNameUseCase = new FindUserByNameUseCase();
-const updateUserUseCase = new UpdateUserUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
 const findNotificationsByUserIdUseCase = new FindNotificationsByUserUseCase();
@@ -224,8 +224,9 @@ const deleteItineraryByIdUseCase = new DeleteItineraryByIdUseCase();
 const deleteMessagesUseCase = new DeleteMessageUseCase();
 const deletePublicationUseCase = new DeletePublicationUseCase();
 const deletePublicationsByActivitiesUseCase = new DeletePublicationsByActivitiesUseCase();
-
 const updateActivityUseCase = new UpdateActivityUseCase();
+const updateUserUseCase = new UpdateUserUseCase();
+const updateForumUseCase = new UpdateForumUseCase();
 
 app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
   const { latitude, longitude, province } = req.body;
@@ -957,7 +958,7 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
   }
 });
 
-app.put('/editProfile', async (req: Request, res: Response) => {
+app.put('/editProfile', authMiddleware, async (req: Request, res: Response) => {
   const { description, location, birthdate, profilePicture, coverPicture } = req.body;
 
   try {
@@ -976,6 +977,33 @@ app.put('/editProfile', async (req: Request, res: Response) => {
     await updateUserUseCase.execute(user);
 
     return res.json({ message: 'Data modified successfully', user });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error modifying data', error });
+  }
+});
+
+app.put('/editForum', authMiddleware, async (req: Request, res: Response) => {
+  const { name, description, categoryId, forumId } = req.body;
+
+  try {
+    let user = req.user as User;
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const forum = await findForumByIdUseCase.execute(Number(forumId));
+
+    if(forum && forum.messages.length < 1) {
+      forum.category = await findCategoryByIdUseCase.execute(Number(categoryId));
+      forum.description = description;
+      forum.name = name;
+      await updateForumUseCase.execute(forum);
+    }else{
+      return res.status(404).json({ message: 'Can\'t delete the forum' });
+    }
+
+    return res.json({ message: 'Data modified successfully', forum });
   } catch (error) {
     return res.status(500).json({ message: 'Error modifying data', error });
   }
@@ -1028,6 +1056,7 @@ app.post('/createForum', authMiddleware, async (req: Request, res: Response) => 
       forum.description = description;
       forum.messages = [];
       forum.isPublic = true;
+      forum.user = req.user as User;
 
       await createForumUserCase.execute(forum);
     } catch (error) {
