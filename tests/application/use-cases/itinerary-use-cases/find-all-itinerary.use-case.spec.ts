@@ -15,6 +15,7 @@ describe('FindAllItineraryUseCase', () => {
       findMany: jest.fn(),
       save: jest.fn(),
       deleteOne: jest.fn(),
+      update: jest.fn(),
     };
 
     findAllItineraryUseCase = new FindAllItineraryUseCase();
@@ -31,7 +32,7 @@ describe('FindAllItineraryUseCase', () => {
         name: 'Trip to Paris',
         fromDate: new Date(),
         toDate: new Date(),
-        user: {} as any, 
+        user: {} as any,
         participants: [],
         forum: null,
         createdAt: new Date(),
@@ -63,8 +64,6 @@ describe('FindAllItineraryUseCase', () => {
   it('should throw an error if itineraries cannot be fetched', async () => {
     mockItineraryRepository.findMany.mockRejectedValue(new Error('Failed to fetch itineraries'));
 
-    await expect(findAllItineraryUseCase.execute())
-      .rejects
-      .toThrow('Failed to fetch itineraries');
+    await expect(findAllItineraryUseCase.execute()).rejects.toThrow('Failed to fetch itineraries');
   });
 });
