@@ -9,7 +9,7 @@ jest.mock('../../../../src/infrastructure/repositories/itinerary.repository');
 
 describe('CreateItineraryUseCase', () => {
     let createItineraryUseCase: CreateItineraryUseCase;
-    let mockItineraryRepository: jest.Mocked<ItineraryRepositoryInterface>; // Usamos el tipo correcto para el mock
+    let mockItineraryRepository: jest.Mocked<ItineraryRepositoryInterface>;
   
     beforeEach(() => {
         mockItineraryRepository = {

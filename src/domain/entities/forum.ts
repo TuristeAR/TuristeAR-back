@@ -27,8 +27,6 @@ export class Forum extends AbstractEntity {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-
-
   @Column()
   isPublic: boolean;
 }
