@@ -1,58 +1,65 @@
-import { CreateForumUseCase } from '../../../../src/application/use-cases/forum-use-cases/create-forum.use-case';
 import { ForumRepositoryInterface } from '../../../../src/domain/repositories/forum.repository.interface';
 import { User } from '../../../../src/domain/entities/user';
-import { Forum } from '../../../../src/domain/entities/forum';
-import { Category } from '../../../../src/domain/entities/category';
 import { DeleteForumUseCase } from '../../../../src/application/use-cases/forum-use-cases/delete-forum.use-case';
 import { DeleteResult } from 'typeorm';
+import { Notification } from '../../../../src/domain/entities/notification';
+import { Publication } from '../../../../src/domain/entities/publication';
+import { Itinerary } from '../../../../src/domain/entities/itinerary';
+import { ParticipationRequest } from '../../../../src/domain/entities/participationRequest';
+import { NotificationRepositoryInterface } from '../../../../src/domain/repositories/notification.repository.interface';
+import {
+  CreateNotificationUseCase
+} from '../../../../src/application/use-cases/notification-use-cases/create-notification.use-case';
+import {
+  DeleteNotificationByIdUseCase
+} from '../../../../src/application/use-cases/notification-use-cases/delete-notification-by-id.use-case';
 jest.mock('../../../../src/infrastructure/repositories/forum.repository');
 
 
 const user = new User();
 user.id = 1;
 
-const category = new Category();
-category.id = 1;
-
-const mockForum : Forum = {
+const mockNotification : Notification = {
   id: 1,
   createdAt: new Date(),
-  name: 'El monumental',
   description: 'Foro del Estadio Monumental',
-  messages: [],
-  category: category,
+  isRead: true,
   user: user,
-  isPublic: true
+  publication: new Publication(),
+  itinerary: new Itinerary(),
+  participationRequest: new ParticipationRequest(),
 }
 
-describe('DeleteForumUseCase', () => {
-  let deleteForumUseCase : DeleteForumUseCase;
-  let mockForumRepository: jest.Mocked<ForumRepositoryInterface>;
+
+describe('DeleteNotificationUseCase', () => {
+  let deleteNotificationByIdUseCase : DeleteNotificationByIdUseCase;
+  let mockNotificationRepository: jest.Mocked<NotificationRepositoryInterface>;
 
   beforeEach(() => {
-    mockForumRepository = {
+    mockNotificationRepository = {
       findOne: jest.fn(),
       findMany: jest.fn(),
       save: jest.fn(),
+      create: jest.fn(),
       deleteOne: jest.fn(),
     };
 
-    deleteForumUseCase = new DeleteForumUseCase();
-    (deleteForumUseCase as any).forumRepository = mockForumRepository;
+    deleteNotificationByIdUseCase = new DeleteNotificationByIdUseCase();
+    (deleteNotificationByIdUseCase as any).notificationRepository = mockNotificationRepository;
   });
 
   it('should delete an forum successfully', async () => {
     const deleteResult : DeleteResult = {affected: 1, raw: {}};
-    mockForumRepository.deleteOne.mockResolvedValue(deleteResult);
-    const result = await deleteForumUseCase.execute(mockForum);
-    expect(mockForumRepository.deleteOne).toHaveBeenCalledWith(mockForum.id);
+    mockNotificationRepository.deleteOne.mockResolvedValue(deleteResult);
+    const result = await deleteNotificationByIdUseCase.execute(mockNotification.id);
+    expect(mockNotificationRepository.deleteOne).toHaveBeenCalledWith(mockNotification.id);
     expect(result).toEqual(deleteResult);
   })
 
   it('should throw an error if forum cannot be deleted', async () => {
-    mockForumRepository.deleteOne.mockRejectedValue(new Error('Failed to delete forum'));
+    mockNotificationRepository.deleteOne.mockRejectedValue(new Error('Failed to delete notification'));
 
-    await expect(deleteForumUseCase.execute(mockForum)).rejects.toThrow('Failed to delete forum');
+    await expect(deleteNotificationByIdUseCase.execute(mockNotification.id)).rejects.toThrow('Failed to delete notification');
   })
 
 })

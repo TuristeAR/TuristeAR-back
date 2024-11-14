@@ -1,56 +1,58 @@
-import { CreateForumUseCase } from '../../../../src/application/use-cases/forum-use-cases/create-forum.use-case';
-import { ForumRepositoryInterface } from '../../../../src/domain/repositories/forum.repository.interface';
 import { User } from '../../../../src/domain/entities/user';
-import { Forum } from '../../../../src/domain/entities/forum';
-import { Category } from '../../../../src/domain/entities/category';
-jest.mock('../../../../src/infrastructure/repositories/message.repository');
+import { Notification } from '../../../../src/domain/entities/notification';
+import { Publication } from '../../../../src/domain/entities/publication';
+import { Itinerary } from '../../../../src/domain/entities/itinerary';
+import { ParticipationRequest } from '../../../../src/domain/entities/participationRequest';
+import {
+  CreateNotificationUseCase
+} from '../../../../src/application/use-cases/notification-use-cases/create-notification.use-case';
+import { NotificationRepositoryInterface } from '../../../../src/domain/repositories/notification.repository.interface';
+jest.mock('../../../../src/infrastructure/repositories/notification.repository');
 
 
 const user = new User();
 user.id = 1;
 
-const category = new Category();
-category.id = 1;
-
-const mockForum : Forum = {
+const mockNotification : Notification = {
   id: 1,
   createdAt: new Date(),
-  name: 'El monumental',
   description: 'Foro del Estadio Monumental',
-  messages: [],
-  category: category,
+  isRead: true,
   user: user,
-  isPublic: true
+  publication: new Publication(),
+  itinerary: new Itinerary(),
+  participationRequest: new ParticipationRequest(),
 }
 
-describe('CreateForumUseCase', () => {
-  let createForumUseCase : CreateForumUseCase;
-  let mockForumRepository: jest.Mocked<ForumRepositoryInterface>;
+describe('CreateNotificationUseCase', () => {
+  let createNotificationUseCase : CreateNotificationUseCase;
+  let mockNotificationRepository: jest.Mocked<NotificationRepositoryInterface>;
 
   beforeEach(() => {
-    mockForumRepository = {
+    mockNotificationRepository = {
       findOne: jest.fn(),
       findMany: jest.fn(),
       save: jest.fn(),
+      create: jest.fn(),
       deleteOne: jest.fn(),
     };
 
-    createForumUseCase = new CreateForumUseCase();
-    (createForumUseCase as any).forumRepository = mockForumRepository;
+    createNotificationUseCase = new CreateNotificationUseCase();
+    (createNotificationUseCase as any).notificationRepository = mockNotificationRepository;
   });
 
-  it('should create an forum successfully', async () => {
-    mockForumRepository.save.mockResolvedValue(mockForum);
-    const result = await createForumUseCase.execute(mockForum);
-    expect(mockForumRepository.save).toHaveBeenCalledWith(mockForum);
+  it('should create an notification successfully', async () => {
+    mockNotificationRepository.create.mockResolvedValue(mockNotification);
+    const result = await createNotificationUseCase.execute(mockNotification);
+    expect(mockNotificationRepository.create).toHaveBeenCalledWith(mockNotification);
 
-    expect(result).toEqual(mockForum);
+    expect(result).toEqual(mockNotification);
   })
 
-  it('should throw an error if forum is invalid', async () => {
-    mockForumRepository.save.mockRejectedValue(new Error('Invalid forum'));
+  it('should throw an error if notification is invalid', async () => {
+    mockNotificationRepository.create.mockRejectedValue(new Error('Invalid notification'));
 
-    await expect(createForumUseCase.execute(mockForum)).rejects.toThrow('Invalid forum');
+    await expect(createNotificationUseCase.execute(mockNotification)).rejects.toThrow('Invalid notification');
 
   })
 

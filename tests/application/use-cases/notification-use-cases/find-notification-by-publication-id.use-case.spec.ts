@@ -1,75 +1,74 @@
-import { CreateForumUseCase } from '../../../../src/application/use-cases/forum-use-cases/create-forum.use-case';
-import { ForumRepositoryInterface } from '../../../../src/domain/repositories/forum.repository.interface';
 import { User } from '../../../../src/domain/entities/user';
-import { Forum } from '../../../../src/domain/entities/forum';
-import { Category } from '../../../../src/domain/entities/category';
-import { FindForumByIdUseCase } from '../../../../src/application/use-cases/forum-use-cases/find-forum-by-id.use-case';
-import { Message } from '../../../../src/domain/entities/message';
+import { ParticipationRequest } from '../../../../src/domain/entities/participationRequest';
+import { Itinerary } from '../../../../src/domain/entities/itinerary';
+import { Publication } from '../../../../src/domain/entities/publication';
+import { Notification } from '../../../../src/domain/entities/notification';
+import {
+  FindNotificationByPublicationIdAndTypeUseCase
+} from '../../../../src/application/use-cases/notification-use-cases/find-notification-by-publication-id-and-type.use-case';
+import { NotificationRepositoryInterface } from '../../../../src/domain/repositories/notification.repository.interface';
+import { Like } from 'typeorm';
 jest.mock('../../../../src/infrastructure/repositories/forum.repository');
 
 
 const user = new User();
 user.id = 1;
 
-const category = new Category();
-category.id = 1;
+const publication = new Publication();
+publication.id = 1;
 
-const message = new Message();
-message.id = 1;
-message.user = user;
-
-const mockForum : Forum = {
+const mockNotification : Notification = {
   id: 1,
   createdAt: new Date(),
-  name: 'El monumental',
-  description: 'Foro del Estadio Monumental',
-  messages: [message],
-  category: category,
+  description: 'Notificación del Estadio Monumental',
+  isRead: true,
   user: user,
-  isPublic: true
+  publication: publication,
+  itinerary: new Itinerary(),
+  participationRequest: new ParticipationRequest(),
 }
 
-describe('FindForumByIdUseCase', () => {
-  let findForumByIdUseCase : FindForumByIdUseCase;
-  let mockForumRepository: jest.Mocked<ForumRepositoryInterface>;
+describe('FindNotificationByPublicationIdAndTypeUseCase', () => {
+  let findNotificationByPublicationIdAndTypeUseCase : FindNotificationByPublicationIdAndTypeUseCase;
+  let mockNotificationRepository: jest.Mocked<NotificationRepositoryInterface>;
 
   beforeEach(() => {
-    mockForumRepository = {
+    mockNotificationRepository = {
       findOne: jest.fn(),
       findMany: jest.fn(),
       save: jest.fn(),
+      create: jest.fn(),
       deleteOne: jest.fn(),
     };
 
-    findForumByIdUseCase = new FindForumByIdUseCase();
-    (findForumByIdUseCase as any).forumRepository = mockForumRepository;
+    findNotificationByPublicationIdAndTypeUseCase = new FindNotificationByPublicationIdAndTypeUseCase();
+    (findNotificationByPublicationIdAndTypeUseCase as any).notificationRepository = mockNotificationRepository;
   });
 
-  it('should return an forum by id', async () => {
-    mockForumRepository.findOne.mockResolvedValue(mockForum);
+  it('should return an notification by publication id and type', async () => {
+    mockNotificationRepository.findOne.mockResolvedValue(mockNotification);
 
-    const result = await findForumByIdUseCase.execute(1);
+    const result = await findNotificationByPublicationIdAndTypeUseCase.execute(1,'me gusta');
 
-    expect(mockForumRepository.findOne).toHaveBeenCalledWith({
-      where: { id : 1 },
-      relations: ['category','messages', 'messages.user']
+    expect(mockNotificationRepository.findOne).toHaveBeenCalledWith({
+      where: { publication : {id: publication.id }, description: Like(`%me gusta%`), },
     });
 
-    expect(result).toEqual(mockForum);
+    expect(result).toEqual(mockNotification);
   })
 
-  it('should return null if no forum is found', async () => {
-    mockForumRepository.findOne.mockResolvedValue(null);
+  it('should return null if no notification is found', async () => {
+    mockNotificationRepository.findOne.mockResolvedValue(null);
 
-    const result = await findForumByIdUseCase.execute(10);
+    const result = await findNotificationByPublicationIdAndTypeUseCase.execute(10,'me gusta');
 
     expect(result).toBeNull();
   })
 
   it('should throw an error if there is an issue with the repository', async () => {
-    mockForumRepository.findOne.mockRejectedValue(new Error('Repository error'));
+    mockNotificationRepository.findOne.mockRejectedValue(new Error('Repository error'));
 
-    await expect(findForumByIdUseCase.execute(1))
+    await expect(findNotificationByPublicationIdAndTypeUseCase.execute(1,'me gusta'))
       .rejects
       .toThrow('Repository error');
   });

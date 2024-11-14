@@ -1,53 +1,58 @@
-import { CreateForumUseCase } from '../../../../src/application/use-cases/forum-use-cases/create-forum.use-case';
-import { ForumRepositoryInterface } from '../../../../src/domain/repositories/forum.repository.interface';
 import { User } from '../../../../src/domain/entities/user';
-import { Forum } from '../../../../src/domain/entities/forum';
-import { Category } from '../../../../src/domain/entities/category';
-import { DeleteForumUseCase } from '../../../../src/application/use-cases/forum-use-cases/delete-forum.use-case';
-import { DeleteResult } from 'typeorm';
-import { UpdateForumUseCase } from '../../../../src/application/use-cases/forum-use-cases/update-forum.use-case';
+import { ParticipationRequest } from '../../../../src/domain/entities/participationRequest';
+import { Itinerary } from '../../../../src/domain/entities/itinerary';
+import { Publication } from '../../../../src/domain/entities/publication';
+import { Notification } from '../../../../src/domain/entities/notification';
+import { NotificationRepositoryInterface } from '../../../../src/domain/repositories/notification.repository.interface';
+import {
+  FindNotificationsDetailByUserUseCase
+} from '../../../../src/application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
+import {
+  UpdateNotificationUseCase
+} from '../../../../src/application/use-cases/notification-use-cases/update-notification.use-case';
 jest.mock('../../../../src/infrastructure/repositories/forum.repository');
 
 
 const user = new User();
 user.id = 1;
 
-const category = new Category();
-category.id = 1;
+const publication = new Publication();
+publication.id = 1;
 
-const mockForum : Forum = {
+const mockNotification : Notification = {
   id: 1,
   createdAt: new Date(),
-  name: 'El monumental',
-  description: 'Foro del Estadio Monumental',
-  messages: [],
-  category: category,
+  description: 'Notificación del Estadio Monumental',
+  isRead: true,
   user: user,
-  isPublic: true
+  publication: publication,
+  itinerary: new Itinerary(),
+  participationRequest: new ParticipationRequest(),
 }
 
-describe('UpdateForumUseCase', () => {
-  let updateForumUseCase : UpdateForumUseCase;
-  let mockForumRepository: jest.Mocked<ForumRepositoryInterface>;
+describe('FindNotificationDetailByUserUseCase', () => {
+  let updateNotificationUseCase : UpdateNotificationUseCase;
+  let mockNotificationRepository: jest.Mocked<NotificationRepositoryInterface>;
 
   beforeEach(() => {
-    mockForumRepository = {
+    mockNotificationRepository = {
       findOne: jest.fn(),
       findMany: jest.fn(),
       save: jest.fn(),
+      create: jest.fn(),
       deleteOne: jest.fn(),
     };
 
-    updateForumUseCase = new UpdateForumUseCase();
-    (updateForumUseCase as any).forumRepository = mockForumRepository;
+    updateNotificationUseCase = new UpdateNotificationUseCase();
+    (updateNotificationUseCase as any).notificationRepository = mockNotificationRepository;
   });
 
   it('should update forum successfully', async () => {
-    mockForumRepository.save.mockResolvedValue(mockForum);
+    mockNotificationRepository.save.mockResolvedValue(mockNotification);
 
-    const result = await updateForumUseCase.execute(mockForum);
-    expect(result).toEqual(mockForum);
-    expect(mockForumRepository.save).toHaveBeenCalledWith(mockForum);
+    const result = await updateNotificationUseCase.execute(mockNotification);
+    expect(result).toEqual(mockNotification);
+    expect(mockNotificationRepository.save).toHaveBeenCalledWith(mockNotification);
   })
 
 })
