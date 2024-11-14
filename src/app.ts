@@ -567,13 +567,13 @@ app.get('/fetch-reviews', async (_req, res) => {
   }
 });
 
-app.put('/itinerary/:itineraryId/name', authMiddleware, async (req, res) => {
+app.put('/itinerary/:itineraryId/name', authMiddleware, (req: Request, res: Response) => {
   try {
     const itineraryId = req.params.itineraryId;
 
     const { name } = req.body;
 
-    return await updateItineraryNameUseCase.execute(Number(itineraryId), name);
+    return updateItineraryNameUseCase.execute(Number(itineraryId), name);
   } catch (error) {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
