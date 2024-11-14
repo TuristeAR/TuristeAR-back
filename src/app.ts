@@ -86,6 +86,9 @@ import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-ca
 import { FindNotificationsByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
 import { FindNotificationsDetailByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
 import { UpdateNotificationUseCase } from './application/use-cases/notification-use-cases/update-notification.use-case';
+import { ParticipationRequestService } from './domain/services/participationRequest.service';
+import { DeleteNotificationByIdUseCase } from './application/use-cases/notification-use-cases/delete-notification-by-id.use-case';
+import { UpdateForumUseCase } from './application/use-cases/forum-use-cases/update-forum.use-case';
 
 dotenv.config();
 
@@ -167,6 +170,7 @@ const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
 const userService = new UserService();
 const eventTempService = new EventTempService();
+const participationRequestService = new ParticipationRequestService();
 
 const createCommentUseCase = new CreateCommentUseCase();
 const createMessageUseCase = new CreateMessageUseCase();
@@ -205,7 +209,6 @@ const findReviewByGoogleIdUseCase = new FindReviewByGoogleIdUseCase();
 const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
 const findUserByIdUseCase = new FindUserByIdUseCase();
 const findUserByNameUseCase = new FindUserByNameUseCase();
-const updateUserUseCase = new UpdateUserUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
 const findNotificationsByUserIdUseCase = new FindNotificationsByUserUseCase();
@@ -222,8 +225,10 @@ const deleteItineraryByIdUseCase = new DeleteItineraryByIdUseCase();
 const deleteMessagesUseCase = new DeleteMessageUseCase();
 const deletePublicationUseCase = new DeletePublicationUseCase();
 const deletePublicationsByActivitiesUseCase = new DeletePublicationsByActivitiesUseCase();
-
+const deleteNotificationByIdUseCase = new DeleteNotificationByIdUseCase();
 const updateActivityUseCase = new UpdateActivityUseCase();
+const updateUserUseCase = new UpdateUserUseCase();
+const updateForumUseCase = new UpdateForumUseCase();
 
 app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
   const { latitude, longitude, province } = req.body;
@@ -564,13 +569,16 @@ app.get('/fetch-reviews', async (_req, res) => {
 });
 
 app.post('/itinerary/add-user', authMiddleware, (req, res) => {
-  const { itineraryId, participantId } = req.body;
+  const { itineraryId, participantId, participationRequestId } = req.body;
 
   itineraryService
-    .addUserToItinerary(itineraryId, participantId)
-    .then((updatedItinerary) => {
+    .addUserToItinerary(itineraryId, participantId, participationRequestId)
+    .then(async (updatedItinerary) => {
       io.emit('usersAddItinerary', { updatedItinerary });
-      return res.status(200).json({ status: 'success', data: updatedItinerary });
+      participationRequestService.acceptParticipationRequest(
+        Number(participationRequestId),
+      );
+      return res.status(200).json({ status: 'success', data: {updatedItinerary} });
     })
     .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to itinerary' });
@@ -972,7 +980,7 @@ app.get('/place/:idGoogle', async (req: Request, res: Response) => {
   }
 });
 
-app.put('/editProfile', async (req: Request, res: Response) => {
+app.put('/editProfile', authMiddleware, async (req: Request, res: Response) => {
   const { description, location, birthdate, profilePicture, coverPicture } = req.body;
 
   try {
@@ -991,6 +999,33 @@ app.put('/editProfile', async (req: Request, res: Response) => {
     await updateUserUseCase.execute(user);
 
     return res.json({ message: 'Data modified successfully', user });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error modifying data', error });
+  }
+});
+
+app.put('/editForum', authMiddleware, async (req: Request, res: Response) => {
+  const { name, description, categoryId, forumId } = req.body;
+
+  try {
+    let user = req.user as User;
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const forum = await findForumByIdUseCase.execute(Number(forumId));
+
+    if(forum && forum.messages.length < 1) {
+      forum.category = await findCategoryByIdUseCase.execute(Number(categoryId));
+      forum.description = description;
+      forum.name = name;
+      await updateForumUseCase.execute(forum);
+    }else{
+      return res.status(404).json({ message: 'Can\'t delete the forum' });
+    }
+
+    return res.json({ message: 'Data modified successfully', forum });
   } catch (error) {
     return res.status(500).json({ message: 'Error modifying data', error });
   }
@@ -1043,6 +1078,7 @@ app.post('/createForum', authMiddleware, async (req: Request, res: Response) => 
       forum.description = description;
       forum.messages = [];
       forum.isPublic = true;
+      forum.user = req.user as User;
 
       await createForumUserCase.execute(forum);
     } catch (error) {
@@ -1155,6 +1191,7 @@ app.post('/expenses', async (req, res) => {
       itineraryId,
       individualAmounts,
       individualPercentages,
+      imageUrls,
     } = req.body;
 
     if (!description) {
@@ -1204,6 +1241,7 @@ app.post('/expenses', async (req, res) => {
     expense.individualAmounts = individualAmounts || {};
     expense.participatingUsers = validUsers;
     expense.individualPercentages = individualPercentages || {};
+    expense.imageUrls = imageUrls;
 
     const response = await createExpenseUseCase.execute(expense);
 
@@ -1228,6 +1266,7 @@ app.put('/expenses/:idExpense', async (req, res) => {
       itineraryId,
       individualAmounts,
       individualPercentages,
+      imageUrls,
     } = req.body;
 
     if (!description) return res.status(400).json({ message: 'Description field is missing' });
@@ -1268,6 +1307,7 @@ app.put('/expenses/:idExpense', async (req, res) => {
 
     // Update the many-to-many relationship
     existingExpense.participatingUsers = validUsers;
+    existingExpense.imageUrls = imageUrls;
 
     // Save the update
     const response = await saveExpenseUseCase.execute(existingExpense);
@@ -1332,7 +1372,7 @@ app.put('/markNotificationsAsRead', authMiddleware, async (req, res) => {
   try {
     const notifications = await findNotificationsDetailByUserIdUseCase.execute(Number(user.id));
     const updateNotificationUseCase = new UpdateNotificationUseCase();
-    const filteredNotifications = notifications.filter(notification => !notification.isRead)
+    const filteredNotifications = notifications.filter((notification) => !notification.isRead);
 
     for (const notification of filteredNotifications) {
       notification.isRead = true;
@@ -1371,6 +1411,88 @@ app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Respon
   }
 });
 
+app.get('/participation-request/:participantId', async (req: Request, res: Response) => {
+  const { participantId } = req.params;
+
+  try {
+    const participationRequests =
+      await participationRequestService.getParticipationRequestsByParticipant(
+        Number(participantId),
+      );
+
+    return res.status(200).json({
+      status: 'success',
+      data: participationRequests,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Error fetching participation requests',
+    });
+  }
+});
+
+app.post('/participation-request', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { itineraryId, participantId } = req.body;
+    const user = req.user as User;
+
+    const participationRequest = await participationRequestService.sendParticipationRequest(
+      itineraryId,
+      participantId,
+      user,
+    );
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Participation request sent successfully',
+      data: participationRequest,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error instanceof Error ? error.message : 'Error sending participation request',
+    });
+  }
+});
+
+app.post('/participation-request/accept', async (req: Request, res: Response) => {
+  try {
+    const { requestId } = req.body;
+    const participationRequest = await participationRequestService.acceptParticipationRequest(
+      Number(requestId),
+    );
+    res.status(200).json({
+      status: 'success',
+      data: participationRequest,
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: error instanceof Error ? error.message : 'Error accept participation request',
+    });
+  }
+});
+
+app.post('/participation-request/reject', async (req: Request, res: Response) => {
+  const { requestId, notificationId } = req.body;
+  
+  try {
+    deleteNotificationByIdUseCase.execute(notificationId)
+    const rejectedRequest = await participationRequestService.rejectParticipationRequest(requestId);
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Participation request rejected successfully',
+      data: rejectedRequest,
+    });
+  } catch (error) {
+    console.error('Error rejecting participation request:', error);
+
+    return res.status(400).json({
+      message: error instanceof Error ? error.message : 'Error rejecting participation request',
+    });
+  }
+});
+
 io.on('connection', (socket) => {
   socket.on('createMessage', async (data) => {
     try {
@@ -1397,6 +1519,7 @@ io.on('connection', (socket) => {
         images: message.images,
         user: message.user,
         createdAt: message.createdAt,
+        forumId: message.forum.id
       });
     } catch (error) {
       socket.emit('error', { message: 'Error creating message', error });

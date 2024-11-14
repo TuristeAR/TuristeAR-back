@@ -68,38 +68,58 @@ export class PublicationService {
     }
   }
 
-  async handleLike(publication: Publication | null, user: User) {
+  async handleInteraction(publication: Publication | null, user: User, interactionType: 'like' | 'saved' | 'repost') {
     if (!publication) {
       throw new Error('La publicación es nula o no se encontró.');
     }
 
-    const userAlreadyLiked = publication.likes.some((likedUser) => likedUser.id === user.id);
+    const interactionMap = {
+      like: {
+        list: publication.likes,
+        notificationType: 'me gusta',
+        descriptionPrefixSingular: 'le dio me gusta a tu publicación',
+        descriptionPrefixPlural: 'le dieron me gusta a tu publicación'
+      },
+      saved: {
+        list: publication.saved,
+        notificationType: 'guardado',
+        descriptionPrefixSingular: 'ha guardado tu publicación',
+        descriptionPrefixPlural: 'han guardado tu publicación'
+      },
+      repost: {
+        list: publication.reposts,
+        notificationType: 'compartido',
+        descriptionPrefixSingular: 'ha compartido tu publicación',
+        descriptionPrefixPlural: 'han compartido tu publicación'
+      }
+    };
+
+    const { list, notificationType, descriptionPrefixSingular, descriptionPrefixPlural } = interactionMap[interactionType];
+    const userAlreadyInteracted = list.some((item) => item.id === user.id);
 
     const findNotificationByPublicationIdUseCase = new FindNotificationByPublicationIdAndTypeUseCase();
     const deleteNotificationByIdUseCase = new DeleteNotificationByIdUseCase();
     const updateNotificationUseCase = new UpdateNotificationUseCase();
-    const existingNotification = await findNotificationByPublicationIdUseCase.execute(publication.id, 'me gusta');
+    const existingNotification = await findNotificationByPublicationIdUseCase.execute(publication.id, notificationType);
 
     const getNotificationDescription = () => {
-      const topLikesNames = publication.likes.slice(0, 3).map((likedUser) => likedUser.name);
-      let description = '';
-
-      if (publication.likes.length > 2) {
-        description = `${topLikesNames.join(', ')} y otros le dieron me gusta a tu publicación.`;
-      } else if (publication.likes.length === 2) {
-        description = `${topLikesNames.join(' y ')} le dieron me gusta a tu publicación.`;
-      } else if (publication.likes.length === 1) {
-        description = `${topLikesNames.join(', ')} le dio me gusta a tu publicación.`;
+      const topNames = list.slice(0, 3).map((item) => item.name);
+      if (list.length > 2) {
+        return `${topNames.join(', ')} y otros ${descriptionPrefixPlural}.`;
+      } else if (list.length === 2) {
+        return `${topNames.join(' y ')} ${descriptionPrefixPlural}.`;
+      } else if (list.length === 1) {
+        return `${topNames[0]} ${descriptionPrefixSingular}.`;
       }
-      return description;
+      return '';
     };
 
-    if (userAlreadyLiked) {
-      publication.likes = publication.likes.filter((likedUser) => likedUser.id !== user.id);
+    if (userAlreadyInteracted) {
+      list.splice(list.findIndex((item) => item.id === user.id), 1);
 
       if (existingNotification) {
         const updatedDescription = getNotificationDescription();
-        if (updatedDescription !== '') {
+        if (updatedDescription) {
           existingNotification.description = updatedDescription;
           await updateNotificationUseCase.execute(existingNotification);
         } else {
@@ -107,7 +127,7 @@ export class PublicationService {
         }
       }
     } else {
-      publication.likes.push(user);
+      list.push(user);
 
       if (!existingNotification) {
         const notification = new Notification();
@@ -120,43 +140,10 @@ export class PublicationService {
         const createNotificationUseCase = new CreateNotificationUseCase();
         await createNotificationUseCase.execute(notification);
       } else {
-        existingNotification.isRead=false;
+        existingNotification.isRead = false;
         existingNotification.description = getNotificationDescription();
         await updateNotificationUseCase.execute(existingNotification);
       }
-    }
-    return this.updatePublication(publication);
-  }
-
-
-
-  handleSaved(publication: Publication | null, user: User) {
-    if (!publication) {
-      throw new Error('La publicación es nula o no se encontró.');
-    }
-
-    const userAlreadySaved = publication.saved.some((savedUser) => savedUser.id === user.id);
-
-    if (userAlreadySaved) {
-      publication.saved = publication.saved.filter((savedUser) => savedUser.id !== user.id);
-    } else {
-      publication.saved.push(user);
-    }
-
-    return this.updatePublication(publication);
-  }
-
-  handleReposts(publication: Publication | null, user: User) {
-    if (!publication) {
-      throw new Error('La publicación es nula o no se encontró.');
-    }
-
-    const userAlreadyRepost = publication.reposts.some((repostUser) => repostUser.id === user.id);
-
-    if (userAlreadyRepost) {
-      publication.reposts = publication.reposts.filter((repostUser) => repostUser.id !== user.id);
-    } else {
-      publication.reposts.push(user);
     }
 
     return this.updatePublication(publication);
@@ -164,7 +151,19 @@ export class PublicationService {
 
   private updatePublication(publication: Publication) {
     const updatePublicationUseCase = new UpdatePublicationUseCase();
-
     return updatePublicationUseCase.execute(publication);
   }
+
+  async handleLike(publication: Publication | null, user: User) {
+    return this.handleInteraction(publication, user, 'like');
+  }
+
+  async handleSaved(publication: Publication | null, user: User) {
+    return this.handleInteraction(publication, user, 'saved');
+  }
+
+  async handleReposts(publication: Publication | null, user: User) {
+    return this.handleInteraction(publication, user, 'repost');
+  }
+
 }

@@ -16,6 +16,7 @@ import { Expense } from '../../domain/entities/expense';
 import { Comment } from '../../domain/entities/comment';
 import { Notification } from '../../domain/entities/notification';
 import { EventTemp } from '../../domain/entities/event_temp';
+import { ParticipationRequest } from '../../domain/entities/participationRequest';
 
 dotenv.config();
 
@@ -42,7 +43,8 @@ export const AppDataSource = new DataSource({
     Message,
     Comment,
     Expense,
-    Notification
+    Notification, 
+    ParticipationRequest
   ],
   synchronize: true,
   logging: true,

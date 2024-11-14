@@ -4,6 +4,7 @@ import { Place } from './place';
 import { Message } from './message';
 import { Category } from './category';
 import { Itinerary } from './itinerary';
+import { User } from './user';
 
 @Entity()
 export class Forum extends AbstractEntity {
@@ -21,6 +22,12 @@ export class Forum extends AbstractEntity {
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'categoryId' })
   category: Category | null;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+
 
   @Column()
   isPublic: boolean;
