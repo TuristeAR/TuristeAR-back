@@ -16,6 +16,7 @@ describe('FindItineraryByUserUseCase', () => {
       findMany: jest.fn(),
       save: jest.fn(),
       deleteOne: jest.fn(),
+      update: jest.fn(),
     };
 
     findItineraryByUserUseCase = new FindItineraryByUserUseCase();
@@ -122,8 +123,6 @@ describe('FindItineraryByUserUseCase', () => {
 
     mockItineraryRepository.findMany.mockRejectedValue(new Error('Repository error'));
 
-    await expect(findItineraryByUserUseCase.execute(mockUser))
-      .rejects
-      .toThrow('Repository error');
+    await expect(findItineraryByUserUseCase.execute(mockUser)).rejects.toThrow('Repository error');
   });
 });

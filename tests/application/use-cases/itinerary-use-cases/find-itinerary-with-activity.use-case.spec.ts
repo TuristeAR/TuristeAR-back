@@ -18,6 +18,7 @@ describe('FindItineraryWithActivityUseCase', () => {
       findMany: jest.fn(),
       save: jest.fn(),
       deleteOne: jest.fn(),
+      update: jest.fn(),
     };
 
     findItineraryWithActivityUseCase = new FindItineraryWithActivityUseCase();
@@ -26,17 +27,17 @@ describe('FindItineraryWithActivityUseCase', () => {
 
   it('should return an itinerary with activities', async () => {
     const mockProvince: Province = {
-        id: 1,
-        name: 'Paris Province',
-        description: 'The province around Paris',
-        createdAt: new Date(),
-        places: [],
-        georefId: '',
-        weather: new Weather,
-        images: [],
-        category: null
+      id: 1,
+      name: 'Paris Province',
+      description: 'The province around Paris',
+      createdAt: new Date(),
+      places: [],
+      georefId: '',
+      weather: new Weather(),
+      images: [],
+      category: null,
     };
-  
+
     const mockPlace: Place = {
       id: 1,
       name: 'Orale juanito',
@@ -52,47 +53,46 @@ describe('FindItineraryWithActivityUseCase', () => {
       openingHours: ['9:00 AM - 6:00 PM'],
       priceLevel: 'high',
       phoneNumber: '+54 11 4658-0381',
-      activities: [], 
+      activities: [],
       createdAt: new Date(),
     };
-  
+
     const mockItinerary: Itinerary = {
-        id: 1,
-        activities: [
-            {
-                id: 1,
-                name: 'Visit Eiffel Tower',
-                place: mockPlace, // Usamos el mock de Place
-                fromDate: new Date(),
-                toDate: new Date(),
-                images: ['image1.jpg', 'image2.jpg'],
-                itinerary: {} as Itinerary, // Assign an empty object of type 'Itinerary'
-                createdAt: new Date(), // Add the 'createdAt' property
-            },
-        ],
-        events: [],
-        expenses: [],
-        name: 'Trip to Paris',
-        fromDate: new Date(),
-        toDate: new Date(),
-        user: {} as any,
-        participants: [],
-        forum: null,
-        createdAt: new Date(),
+      id: 1,
+      activities: [
+        {
+          id: 1,
+          name: 'Visit Eiffel Tower',
+          place: mockPlace, // Usamos el mock de Place
+          fromDate: new Date(),
+          toDate: new Date(),
+          images: ['image1.jpg', 'image2.jpg'],
+          itinerary: {} as Itinerary, // Assign an empty object of type 'Itinerary'
+          createdAt: new Date(), // Add the 'createdAt' property
+        },
+      ],
+      events: [],
+      expenses: [],
+      name: 'Trip to Paris',
+      fromDate: new Date(),
+      toDate: new Date(),
+      user: {} as any,
+      participants: [],
+      forum: null,
+      createdAt: new Date(),
     };
-  
+
     mockItineraryRepository.findOne.mockResolvedValue(mockItinerary);
-  
+
     const result = await findItineraryWithActivityUseCase.execute(1);
-  
+
     expect(mockItineraryRepository.findOne).toHaveBeenCalledWith({
       where: { id: 1 },
       relations: ['activities', 'activities.place'],
     });
-  
+
     expect(result).toEqual(mockItinerary);
   });
-  
 
   it('should return null if no itinerary is found', async () => {
     mockItineraryRepository.findOne.mockResolvedValue(null);
@@ -105,8 +105,6 @@ describe('FindItineraryWithActivityUseCase', () => {
   it('should throw an error if there is an issue with the repository', async () => {
     mockItineraryRepository.findOne.mockRejectedValue(new Error('Repository error'));
 
-    await expect(findItineraryWithActivityUseCase.execute(1))
-      .rejects
-      .toThrow('Repository error');
+    await expect(findItineraryWithActivityUseCase.execute(1)).rejects.toThrow('Repository error');
   });
 });

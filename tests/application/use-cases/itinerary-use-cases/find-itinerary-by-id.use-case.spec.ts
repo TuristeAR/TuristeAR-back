@@ -6,7 +6,7 @@ jest.mock('../../../../src/infrastructure/repositories/itinerary.repository');
 
 describe('FindItineraryByIdUseCase', () => {
   let findItineraryByIdUseCase: FindItineraryByIdUseCase;
-  let mockItineraryRepository: jest.Mocked<ItineraryRepositoryInterface>; 
+  let mockItineraryRepository: jest.Mocked<ItineraryRepositoryInterface>;
 
   beforeEach(() => {
     mockItineraryRepository = {
@@ -15,10 +15,11 @@ describe('FindItineraryByIdUseCase', () => {
       findMany: jest.fn(),
       save: jest.fn(),
       deleteOne: jest.fn(),
+      update: jest.fn(),
     };
 
     findItineraryByIdUseCase = new FindItineraryByIdUseCase();
-    (findItineraryByIdUseCase as any).itineraryRepository = mockItineraryRepository; 
+    (findItineraryByIdUseCase as any).itineraryRepository = mockItineraryRepository;
   });
 
   it('should return an itinerary by id', async () => {
@@ -59,8 +60,6 @@ describe('FindItineraryByIdUseCase', () => {
   it('should throw an error if there is an issue with the repository', async () => {
     mockItineraryRepository.findOne.mockRejectedValue(new Error('Repository error'));
 
-    await expect(findItineraryByIdUseCase.execute(1))
-      .rejects
-      .toThrow('Repository error');
+    await expect(findItineraryByIdUseCase.execute(1)).rejects.toThrow('Repository error');
   });
 });
