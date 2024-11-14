@@ -15,6 +15,7 @@ describe('FindItineraryByIdForDeleteUseCase', () => {
       findMany: jest.fn(),
       save: jest.fn(),
       deleteOne: jest.fn(),
+      update: jest.fn(),
     };
 
     findItineraryByIdForDeleteUseCase = new FindItineraryByIdForDeleteUseCase();
@@ -30,7 +31,7 @@ describe('FindItineraryByIdForDeleteUseCase', () => {
       name: 'Viaje a Buenos Aires',
       fromDate: new Date(),
       toDate: new Date(),
-      user: {} as any, 
+      user: {} as any,
       participants: [],
       forum: null,
       createdAt: new Date(),
@@ -59,8 +60,6 @@ describe('FindItineraryByIdForDeleteUseCase', () => {
   it('should throw an error if there is an issue with the repository', async () => {
     mockItineraryRepository.findOne.mockRejectedValue(new Error('Repository error'));
 
-    await expect(findItineraryByIdForDeleteUseCase.execute(1))
-      .rejects
-      .toThrow('Repository error');
+    await expect(findItineraryByIdForDeleteUseCase.execute(1)).rejects.toThrow('Repository error');
   });
 });

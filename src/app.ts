@@ -72,7 +72,6 @@ import { DeletePublicationUseCase } from './application/use-cases/publication-us
 import { FindCommentsByPublicationIdUserCase } from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
 import { DeleteCommentsUseCase } from './application/use-cases/comment-use-cases/delete-comments.use-case';
 import { EventTempService } from './domain/services/event_temp.service';
-import { UserService } from './domain/services/user.service';
 import { FindItineraryByIdForDeleteUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-id-for-delete.use-case';
 import { DeleteActivitiesUseCase } from './application/use-cases/activity-use-cases/delete-activities.use-case';
 import { DeleteEventsUseCase } from './application/use-cases/event-use-cases/delete-events.use-case';
@@ -81,7 +80,6 @@ import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/dele
 import { DeleteItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
 import { DeletePublicationsByActivitiesUseCase } from './application/use-cases/publication-use-cases/delete-publications-by-activities.use-case';
 import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
-import { UpdatePublicationUseCase } from './application/use-cases/publication-use-cases/update-publication.use-case';
 import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary.use-case';
 import { FindNotificationsByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
 import { FindNotificationsDetailByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
@@ -89,6 +87,7 @@ import { UpdateNotificationUseCase } from './application/use-cases/notification-
 import { ParticipationRequestService } from './domain/services/participationRequest.service';
 import { DeleteNotificationByIdUseCase } from './application/use-cases/notification-use-cases/delete-notification-by-id.use-case';
 import { UpdateForumUseCase } from './application/use-cases/forum-use-cases/update-forum.use-case';
+import { UpdateItineraryNameUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary-name.use-case';
 
 dotenv.config();
 
@@ -168,7 +167,6 @@ const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
-const userService = new UserService();
 const eventTempService = new EventTempService();
 const participationRequestService = new ParticipationRequestService();
 
@@ -229,6 +227,7 @@ const deleteNotificationByIdUseCase = new DeleteNotificationByIdUseCase();
 const updateActivityUseCase = new UpdateActivityUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
 const updateForumUseCase = new UpdateForumUseCase();
+const updateItineraryNameUseCase = new UpdateItineraryNameUseCase();
 
 app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
   const { latitude, longitude, province } = req.body;
@@ -568,6 +567,20 @@ app.get('/fetch-reviews', async (_req, res) => {
   }
 });
 
+app.put('/itinerary/:itineraryId/name', authMiddleware, async (req, res) => {
+  try {
+    const itineraryId = req.params.itineraryId;
+
+    const { name } = req.body;
+
+    return await updateItineraryNameUseCase.execute(Number(itineraryId), name);
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error updating itinerary name' });
+  }
+});
+
 app.post('/itinerary/add-user', authMiddleware, (req, res) => {
   const { itineraryId, participantId, participationRequestId } = req.body;
 
@@ -575,10 +588,8 @@ app.post('/itinerary/add-user', authMiddleware, (req, res) => {
     .addUserToItinerary(itineraryId, participantId, participationRequestId)
     .then(async (updatedItinerary) => {
       io.emit('usersAddItinerary', { updatedItinerary });
-      participationRequestService.acceptParticipationRequest(
-        Number(participationRequestId),
-      );
-      return res.status(200).json({ status: 'success', data: {updatedItinerary} });
+      await participationRequestService.acceptParticipationRequest(Number(participationRequestId));
+      return res.status(200).json({ status: 'success', data: { updatedItinerary } });
     })
     .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to itinerary' });
@@ -1016,13 +1027,13 @@ app.put('/editForum', authMiddleware, async (req: Request, res: Response) => {
 
     const forum = await findForumByIdUseCase.execute(Number(forumId));
 
-    if(forum && forum.messages.length < 1) {
+    if (forum && forum.messages.length < 1) {
       forum.category = await findCategoryByIdUseCase.execute(Number(categoryId));
       forum.description = description;
       forum.name = name;
       await updateForumUseCase.execute(forum);
-    }else{
-      return res.status(404).json({ message: 'Can\'t delete the forum' });
+    } else {
+      return res.status(404).json({ message: "Can't delete the forum" });
     }
 
     return res.json({ message: 'Data modified successfully', forum });
@@ -1388,7 +1399,6 @@ app.put('/markNotificationsAsRead', authMiddleware, async (req, res) => {
 
 app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const user = req.user as User;
     const { activityId, images } = req.body;
 
     console.log(images);
@@ -1474,9 +1484,9 @@ app.post('/participation-request/accept', async (req: Request, res: Response) =>
 
 app.post('/participation-request/reject', async (req: Request, res: Response) => {
   const { requestId, notificationId } = req.body;
-  
+
   try {
-    deleteNotificationByIdUseCase.execute(notificationId)
+    deleteNotificationByIdUseCase.execute(notificationId);
     const rejectedRequest = await participationRequestService.rejectParticipationRequest(requestId);
 
     return res.status(200).json({
@@ -1519,7 +1529,7 @@ io.on('connection', (socket) => {
         images: message.images,
         user: message.user,
         createdAt: message.createdAt,
-        forumId: message.forum.id
+        forumId: message.forum.id,
       });
     } catch (error) {
       socket.emit('error', { message: 'Error creating message', error });

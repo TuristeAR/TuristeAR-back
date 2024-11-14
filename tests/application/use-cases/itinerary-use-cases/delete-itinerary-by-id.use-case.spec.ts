@@ -8,7 +8,7 @@ jest.mock('../../../../src/infrastructure/repositories/itinerary.repository');
 describe('DeleteItineraryByIdUseCase', () => {
   let deleteItineraryByIdUseCase: DeleteItineraryByIdUseCase;
   let mockItineraryRepository: jest.Mocked<ItineraryRepositoryInterface>; // Mock del repositorio
-  
+
   beforeEach(() => {
     mockItineraryRepository = {
       create: jest.fn(),
@@ -16,6 +16,7 @@ describe('DeleteItineraryByIdUseCase', () => {
       findMany: jest.fn(),
       save: jest.fn(),
       deleteOne: jest.fn(),
+      update: jest.fn(),
     };
 
     deleteItineraryByIdUseCase = new DeleteItineraryByIdUseCase();
@@ -37,7 +38,7 @@ describe('DeleteItineraryByIdUseCase', () => {
       createdAt: new Date(),
     };
 
-    const deleteResult: DeleteResult = { affected: 1, raw: {} }; 
+    const deleteResult: DeleteResult = { affected: 1, raw: {} };
 
     mockItineraryRepository.deleteOne.mockResolvedValue(deleteResult);
 
@@ -65,8 +66,8 @@ describe('DeleteItineraryByIdUseCase', () => {
 
     mockItineraryRepository.deleteOne.mockRejectedValue(new Error('Failed to delete itinerary'));
 
-    await expect(deleteItineraryByIdUseCase.execute(mockItinerary))
-      .rejects
-      .toThrow('Failed to delete itinerary');
+    await expect(deleteItineraryByIdUseCase.execute(mockItinerary)).rejects.toThrow(
+      'Failed to delete itinerary',
+    );
   });
 });
