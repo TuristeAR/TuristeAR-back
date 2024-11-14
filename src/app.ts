@@ -37,7 +37,7 @@ import { FindProvinceByIdUseCase } from './application/use-cases/province-use-ca
 import { FindAllPublicationUseCase } from './application/use-cases/publication-use-cases/find-all-publication.use-case';
 import { FindPublicationByUserUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user.use-case';
 import { FindPublicationByUserLikesUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user-likes.use-case';
-import { FindPublicationByUserSavesUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user-saves.use-case';
+import { FindPublicationByUserSavedUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user-saved.use-case';
 import { FindPublicationByCategoryUseCase } from './application/use-cases/publication-use-cases/find-publication-by-category.use-case';
 import { FindPublicationByIdUseCase } from './application/use-cases/publication-use-cases/find-publication-by-id.use-case';
 import { FindProvinceByNameUseCase } from './application/use-cases/province-use-cases/find-province-by-name.use-case';
@@ -88,6 +88,9 @@ import { ParticipationRequestService } from './domain/services/participationRequ
 import { DeleteNotificationByIdUseCase } from './application/use-cases/notification-use-cases/delete-notification-by-id.use-case';
 import { UpdateForumUseCase } from './application/use-cases/forum-use-cases/update-forum.use-case';
 import { UpdateItineraryNameUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary-name.use-case';
+import {
+  FindPublicationsByActivitiesIdsUseCase
+} from './application/use-cases/publication-use-cases/find-publications-by-activities-ids.use-case';
 
 dotenv.config();
 
@@ -198,10 +201,11 @@ const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
 const findPlaceByProvinceUseCase = new FindPlaceByProvinceUseCase();
 const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
 const findProvinceByNameUseCase = new FindProvinceByNameUseCase();
+const findPublicationsByActivitiesIdsUseCase = new FindPublicationsByActivitiesIdsUseCase();
 const findPublicationByCategoryUseCase = new FindPublicationByCategoryUseCase();
 const findPublicationByIdUseCase = new FindPublicationByIdUseCase();
 const findPublicationByUserLikesUseCase = new FindPublicationByUserLikesUseCase();
-const findPublicationByUserSavesUseCase = new FindPublicationByUserSavesUseCase();
+const findPublicationByUserSavesUseCase = new FindPublicationByUserSavedUseCase();
 const findPublicationByUserUseCase = new FindPublicationByUserUseCase();
 const findReviewByGoogleIdUseCase = new FindReviewByGoogleIdUseCase();
 const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
@@ -1605,7 +1609,27 @@ io.on('connection', (socket) => {
         return;
       }
 
-      await deletePublicationsByActivitiesUseCase.execute(itinerary.activities);
+      const activityIds = itinerary.activities.map(activity => activity.id);
+
+      const publications = await findPublicationsByActivitiesIdsUseCase.execute(activityIds);
+
+      for (const publication of publications) {
+        if (publication.comments.length > 0) {
+          await deleteCommentsUseCase.execute(publication.comments);
+        }
+
+        if(publication.notifications.length > 0) {
+          for (const notification of publication.notifications) {
+            await deleteNotificationByIdUseCase.execute(notification.id);
+          }
+        }
+      }
+
+      const publicationIds = publications.map(publication => publication.id);
+
+      if(publicationIds.length > 0) {
+        await deletePublicationsByActivitiesUseCase.execute(publicationIds);
+      }
 
       if (itinerary.activities.length > 0) {
         await deleteActivitiesUseCase.execute(itinerary.activities);
