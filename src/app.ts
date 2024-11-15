@@ -592,10 +592,10 @@ app.post('/itinerary/add-user', authMiddleware, (req, res) => {
     .addUserToItinerary(itineraryId, participantId, participationRequestId)
     .then(async (updatedItinerary) => {
       io.emit('usersAddItinerary', { updatedItinerary });
-      await participationRequestService.acceptParticipationRequest(Number(participationRequestId));
       return res.status(200).json({ status: 'success', data: { updatedItinerary } });
     })
-    .catch(() => {
+    .catch((err) => {
+      console.log(err)
       return res.status(500).json({ status: 'error', message: 'Error adding user to itinerary' });
     });
 });
