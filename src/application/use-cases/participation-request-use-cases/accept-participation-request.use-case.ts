@@ -8,10 +8,7 @@ export class AcceptParticipationRequestUseCase {
     }
 
   async execute(requestId: number) {
-    console.log("repo",requestId)
     const request = await this.participationRequestRepository.findOne({ where: { id: requestId } });
-
-    console.log(request);
 
     if (!request || request.status !== 'pending') {
       throw new Error('Request not found or already handled');
