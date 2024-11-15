@@ -88,6 +88,8 @@ import { ParticipationRequestService } from './domain/services/participationRequ
 import { DeleteNotificationByIdUseCase } from './application/use-cases/notification-use-cases/delete-notification-by-id.use-case';
 import { UpdateForumUseCase } from './application/use-cases/forum-use-cases/update-forum.use-case';
 import { UpdateItineraryNameUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary-name.use-case';
+import { FindAllTypeUseCase } from './application/use-cases/type-use-cases/find-all-type.use-case';
+import { FindAllPriceLevelUseCase } from './application/use-cases/price-level-use-cases/find-all-price-level.use-case';
 
 dotenv.config();
 
@@ -228,6 +230,8 @@ const updateActivityUseCase = new UpdateActivityUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
 const updateForumUseCase = new UpdateForumUseCase();
 const updateItineraryNameUseCase = new UpdateItineraryNameUseCase();
+const findAllTypeUseCase = new FindAllTypeUseCase();
+const findAllPriceLevelUseCase = new FindAllPriceLevelUseCase();
 
 app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
   const { latitude, longitude, province } = req.body;
@@ -417,6 +421,30 @@ app.get('/review/:googleId', async (req: Request, res: Response) => {
     return res
       .status(status.INTERNAL_SERVER_ERROR)
       .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching reviews' });
+  }
+});
+
+app.get('/type', async (_req, res) => {
+  try {
+    const types = await findAllTypeUseCase.execute();
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: types });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching types' });
+  }
+});
+
+app.get('/price-level', async (_req, res) => {
+  try {
+    const priceLevel = await findAllPriceLevelUseCase.execute();
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: priceLevel });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching price level' });
   }
 });
 
