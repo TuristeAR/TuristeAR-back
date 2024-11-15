@@ -465,16 +465,15 @@ export class ItineraryService {
 
     await participationRequestService.acceptParticipationRequest(participationRequestId);
 
-    itinerary.participants.map(async (participant) => {
-      const createNotificationUseCase = new CreateNotificationUseCase();
-      const notification = new Notification();
-      notification.itinerary = updatedItinerary;
-      notification.user = participant;
-      notification.description = `${participationRequest.participant.name} se agregó a tu viaje!`;
-      notification.isRead = false;
 
-      await createNotificationUseCase.execute(notification);
-    });
+    const createNotificationUseCase = new CreateNotificationUseCase();
+    const notification = new Notification();
+    notification.itinerary = updatedItinerary;
+    notification.user = participationRequest.participant;
+    notification.description = `${participationRequest.participant.name} se agregó a tu viaje!`;
+    notification.isRead = false;
+
+    await createNotificationUseCase.execute(notification);
 
     return updatedItinerary;
   }
