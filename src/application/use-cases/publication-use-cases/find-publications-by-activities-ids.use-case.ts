@@ -1,19 +1,23 @@
 import { PublicationRepository } from '../../../infrastructure/repositories/publication.repository';
 import { PublicationRepositoryInterface } from '../../../domain/repositories/publication.repository.interface';
 import { Publication } from '../../../domain/entities/publication';
+import { In } from 'typeorm';
 
-export class FindPublicationByUserSavesUseCase {
+export class FindPublicationsByActivitiesIdsUseCase {
   private publicationRepository: PublicationRepositoryInterface;
 
   constructor() {
     this.publicationRepository = new PublicationRepository();
   }
 
-  execute(userId: number): Promise<Publication[]> {
+  execute(activityIds: number[]): Promise<Publication[]> {
     return this.publicationRepository.findMany({
-      where: { saved: { id: userId } },
-      relations: ['user', 'category', 'likes', 'reposts', 'saved', 'comments', 'activities.place'],
-      order: { id: 'DESC' },
+      where: {
+        activities: {
+          id: In(activityIds),
+        },
+      },
+      relations: ["activities", 'comments','notifications'],
     });
   }
 }
