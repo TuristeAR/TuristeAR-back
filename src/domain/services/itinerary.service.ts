@@ -20,6 +20,12 @@ import { CreateNotificationUseCase } from '../../application/use-cases/notificat
 import { Notification } from '../entities/notification';
 import { ParticipationRequest } from '../entities/participationRequest';
 import { ParticipationRequestService } from './participationRequest.service';
+import {
+  FindNotificationsByParticipationRequestUseCase
+} from '../../application/use-cases/notification-use-cases/find-notifications-by-participation-request.use-case';
+import {
+  UpdateNotificationUseCase
+} from '../../application/use-cases/notification-use-cases/update-notification.use-case';
 
 export class ItineraryService {
   private placeService: PlaceService;
@@ -465,15 +471,16 @@ export class ItineraryService {
 
     await participationRequestService.acceptParticipationRequest(participationRequestId);
 
+    const findNotificationsByParticipationRequestUseCase = new FindNotificationsByParticipationRequestUseCase();
 
-    const createNotificationUseCase = new CreateNotificationUseCase();
-    const notification = new Notification();
-    notification.itinerary = updatedItinerary;
-    notification.user = participationRequest.participant;
-    notification.description = `${participationRequest.participant.name} se agregó a tu viaje!`;
-    notification.isRead = false;
+    const notifications = await findNotificationsByParticipationRequestUseCase.execute(participationRequestId);
 
-    await createNotificationUseCase.execute(notification);
+    for (const notification of notifications) {
+      if (notification.participationRequest?.status === 'pending'){
+        const updateNotificationUseCase = new UpdateNotificationUseCase();
+        await updateNotificationUseCase.execute(notification);
+      }
+    }
 
     return updatedItinerary;
   }
