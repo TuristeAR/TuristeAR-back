@@ -635,7 +635,7 @@ app.delete('/itinerary/remove-user', authMiddleware, async (req, res) => {
   itineraryService
     .removeUserFromItinerary(itineraryId, participantId)
     .then(() => {
-      io.emit('userRemoved', { participantId });
+      io.emit('userRemoved', { itineraryId, participantId });
       return res
         .status(200)
         .json({ status: 'success', message: `User with ID ${participantId} removed` });
