@@ -93,6 +93,9 @@ import { FindAllPriceLevelUseCase } from './application/use-cases/price-level-us
 import {
   FindPublicationsByActivitiesIdsUseCase
 } from './application/use-cases/publication-use-cases/find-publications-by-activities-ids.use-case';
+import {
+  FindNotificationByPublicationIdAndTypeUseCase
+} from './application/use-cases/notification-use-cases/find-notification-by-publication-id-and-type.use-case';
 
 
 dotenv.config();
@@ -217,6 +220,7 @@ const findUserByNameUseCase = new FindUserByNameUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
 const findNotificationsByUserIdUseCase = new FindNotificationsByUserUseCase();
+const findNotificationByPublicationIdAndTypeUseCase = new FindNotificationByPublicationIdAndTypeUseCase();
 const findNotificationsDetailByUserIdUseCase = new FindNotificationsDetailByUserUseCase();
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
 const saveExpenseUseCase = new SaveExpenseUseCase();
@@ -1617,6 +1621,12 @@ io.on('connection', (socket) => {
       if (publication.comments.length > 0) {
         const comments = await findCommentsByPublicationIdUserCase.execute(Number(publicationId));
         await deleteCommentsUseCase.execute(comments);
+      }
+
+      if (publication.notifications.length > 0) {
+        for (const notification of publication.notifications) {
+          await deleteNotificationByIdUseCase.execute(notification.id);
+        }
       }
 
       await deletePublicationUseCase.execute(publication);
