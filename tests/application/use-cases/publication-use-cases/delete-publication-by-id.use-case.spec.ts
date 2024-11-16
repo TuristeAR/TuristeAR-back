@@ -19,7 +19,7 @@ const mockPublication : Publication = {
   id: 1,
   createdAt: new Date(),
   description: 'Foro del Estadio Monumental',
-  category: new Category(),
+  categories: [],
   likes: [],
   reposts: [],
   saved: [],

@@ -21,7 +21,7 @@ const mockPublication : Publication = {
   id: 1,
   createdAt: new Date(),
   description: 'Foro del Estadio Monumental',
-  category: new Category(),
+  categories: [],
   likes: [],
   reposts: [],
   saved: [],
@@ -55,7 +55,7 @@ describe('FindPublicationsByUserLikesUseCase', () => {
 
     expect(mockPublicationRepository.findMany).toHaveBeenCalledWith({
       where: { likes: { id: 1 } },
-      relations: ['user', 'category', 'likes', 'reposts', 'saved', 'comments', 'activities.place'],
+      relations: ['user', 'categories', 'likes', 'reposts', 'saved', 'comments', 'activities.place'],
       order: { id: 'DESC' },
     });
 
