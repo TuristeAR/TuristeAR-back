@@ -43,11 +43,11 @@ describe('GET /auth/google/callback', () => {
     });
 
     const response = await request(app).get('/auth/google/callback');
-    expect(response.headers.location).toBe(`${process.env.FRONTEND_URL}/login`);
+    expect(response.headers.location).toBe(`${process.env.FRONTEND_URL}/iniciar-sesion`);
   });
 
   it('redirects to frontend on successful authentication', async () => {
     const response = await request(app).get('/auth/google/callback');
-    expect(response.headers.location).toBe(`${process.env.FRONTEND_URL}/formQuestions`);
+    expect(response.headers.location).toBe(`${process.env.FRONTEND_URL}/crear-itinerario`);
   });
 });
