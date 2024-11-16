@@ -1,6 +1,5 @@
 import { User } from '../../../../src/domain/entities/user';
 import { Publication } from '../../../../src/domain/entities/publication';
-import { Category } from '../../../../src/domain/entities/category';
 import { PublicationRepositoryInterface } from '../../../../src/domain/repositories/publication.repository.interface';
 import { DeleteResult } from 'typeorm';
 import { Activity } from '../../../../src/domain/entities/activity';
@@ -28,7 +27,7 @@ const mockPublication : Publication = {
   id: 1,
   createdAt: new Date(),
   description: 'Foro del Estadio Monumental',
-  category: new Category(),
+  categories: [],
   likes: [],
   reposts: [],
   saved: [],

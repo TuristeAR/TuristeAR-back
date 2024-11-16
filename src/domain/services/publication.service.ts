@@ -19,6 +19,7 @@ import {
 import {
   DeleteNotificationByIdUseCase
 } from '../../application/use-cases/notification-use-cases/delete-notification-by-id.use-case';
+import { Category } from '../entities/category';
 
 export class PublicationService {
   async createPublication(publicationDTO: CreatePublicationDTO, user: User): Promise<Publication> {
@@ -48,15 +49,17 @@ export class PublicationService {
         }
       }
 
-      const category = await findCategoryByIdUseCase.execute(
-        Number(activityEntities[0].place.province.category?.id),
-      );
 
-      if (!category) {
-        throw new Error('Categoría no encontrada');
+      const idCategories = [...new Set(
+        activityEntities
+          .map(activity => activity.place.province.category?.id)
+          .filter(id => id !== undefined)
+      )];
+
+      for (const id of idCategories) {
+        newPublication.categories.push(<Category> await findCategoryByIdUseCase.execute(Number(id)))
       }
 
-      newPublication.category = category;
       newPublication.activities = activityEntities;
       newPublication.user = user;
 

@@ -18,7 +18,7 @@ const mockPublication : Publication = {
   id: 1,
   createdAt: new Date(),
   description: 'Foro del Estadio Monumental',
-  category: new Category(),
+  categories: [],
   likes: [],
   reposts: [],
   saved: [],
@@ -51,8 +51,8 @@ describe('FindPublicationsByCategoryUseCase', () => {
     const result = await findPublicationByCategoryUseCase.execute(1);
 
     expect(mockPublicationRepository.findMany).toHaveBeenCalledWith({
-      where: { category: { id: 1 } },
-      relations: ['user', 'category', 'likes', 'reposts', 'saved', 'comments', 'activities.place'],
+      where: { categories: { id: 1 } },
+      relations: ['user', 'categories', 'likes', 'reposts', 'saved', 'comments', 'activities.place'],
       order: { id: 'DESC' },    });
 
     expect(result).toEqual([mockPublication]);
