@@ -265,15 +265,15 @@ app.post('/itinerary/add-event', (req, res) => {
 app.get('/auth/google/callback', (req, res, next) => {
   passport.authenticate('google', (err: any, user: User) => {
     if (err || !user) {
-      return res.redirect(`${process.env.FRONTEND_URL}/login`);
+      return res.redirect(`${process.env.FRONTEND_URL}/iniciar-sesion`);
     }
 
     req.logIn(user, (loginErr) => {
       if (loginErr) {
-        return res.redirect(`${process.env.FRONTEND_URL}/login`);
+        return res.redirect(`${process.env.FRONTEND_URL}/iniciar-sesion`);
       }
 
-      res.redirect(`${process.env.FRONTEND_URL}/formQuestions`);
+      res.redirect(`${process.env.FRONTEND_URL}/crear-itinerario`);
     });
   })(req, res, next);
 });
