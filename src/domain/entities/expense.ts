@@ -1,8 +1,9 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
 import { Itinerary } from './itinerary';
 import { User } from './user';
-import { NullLiteral } from 'typescript';
+import { UserExpense } from './user_expense';
+import { DistributionType } from '../enum/distribution-type.enum';
 
 @Entity()
 export class Expense extends AbstractEntity {
@@ -15,8 +16,11 @@ export class Expense extends AbstractEntity {
   @Column()
   totalAmount: number;
 
-  @Column()
-  distributionType: string;
+  @Column({
+    type: 'enum',
+    enum: DistributionType,
+  })
+  distributionType: DistributionType;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'payerId' })
@@ -42,4 +46,7 @@ export class Expense extends AbstractEntity {
 
   @Column('simple-json',{ nullable: true })
   imageUrls: string[] | null; 
+  
+  @OneToMany(() => UserExpense, (userExpense) => userExpense.expense)
+  userExpenses: UserExpense[];
 }

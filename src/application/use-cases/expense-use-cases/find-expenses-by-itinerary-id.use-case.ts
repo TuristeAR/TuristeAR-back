@@ -12,7 +12,7 @@ export class FindExpensesByItineraryIdUseCases {
   async execute(id: number): Promise<Expense[]> {
       return await this.expenseRepository.findMany({
       where: { itinerary: { id } },
-      relations: { payer: true, participatingUsers: true },
+      relations: [ 'payer', 'participatingUsers', 'userExpenses','userExpenses.user' ],
     });
   }
 }

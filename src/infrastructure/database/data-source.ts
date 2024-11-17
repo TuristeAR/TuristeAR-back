@@ -17,6 +17,7 @@ import { Comment } from '../../domain/entities/comment';
 import { Notification } from '../../domain/entities/notification';
 import { EventTemp } from '../../domain/entities/event_temp';
 import { ParticipationRequest } from '../../domain/entities/participationRequest';
+import { UserExpense } from '../../domain/entities/user_expense';
 import { Type } from '../../domain/entities/type';
 import { PriceLevel } from '../../domain/entities/price_level';
 
@@ -45,8 +46,9 @@ export const AppDataSource = new DataSource({
     Message,
     Comment,
     Expense,
-    Notification,
+    Notification, 
     ParticipationRequest,
+    UserExpense,
     Type,
     PriceLevel,
   ],
