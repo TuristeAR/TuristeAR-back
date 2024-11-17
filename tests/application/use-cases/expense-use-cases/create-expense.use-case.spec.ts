@@ -3,6 +3,7 @@ import { ExpenseRepositoryInterface } from '../../../../src/domain/repositories/
 import { CreateExpenseUseCase } from '../../../../src/application/use-cases/expense-use-cases/create-expense.use-case';
 import { User } from '../../../../src/domain/entities/user';
 import { Itinerary } from '../../../../src/domain/entities/itinerary';
+import { DistributionType } from '../../../../src/domain/enum/distribution-type.enum';
 
 describe('CreateExpenseUseCase', () => {
   let createExpenseUseCase: CreateExpenseUseCase;
@@ -35,14 +36,15 @@ describe('CreateExpenseUseCase', () => {
       description: 'Dinner',
       date: new Date(),
       totalAmount: 100,
-      distributionType: 'equal',
+      distributionType: DistributionType.EQUAL,
       payer: payer,
       itinerary: itinerary,
       individualAmounts: { user1: 50, user2: 50 },
       individualPercentages: { user1: 50, user2: 50 },
       participatingUsers: [payer],
       createdAt: new Date(),
-      imageUrls:[]
+      imageUrls: [],
+      userExpenses: []
     };
 
     // Configurar el mock para que retorne el gasto creado
@@ -64,14 +66,15 @@ describe('CreateExpenseUseCase', () => {
       description: 'Dinner',
       date: new Date(),
       totalAmount: 100,
-      distributionType: 'equal',
+      distributionType: DistributionType.EQUAL,
       payer: { id: 1 } as User,
       itinerary: { id: 1 } as Itinerary,
       individualAmounts: { user1: 50, user2: 50 },
       individualPercentages: { user1: 50, user2: 50 },
       participatingUsers: [{ id: 1 } as User],
       createdAt: new Date(),
-      imageUrls:[]
+      imageUrls: [],
+      userExpenses: []
     };
 
     // Configurar el mock para que retorne `null`
