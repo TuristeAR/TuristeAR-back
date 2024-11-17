@@ -16,6 +16,7 @@ describe('FindItineraryByIdUseCase', () => {
       save: jest.fn(),
       deleteOne: jest.fn(),
       update: jest.fn(),
+      findItineraryByUserWithParticipants: jest.fn(),
     };
 
     findItineraryByIdUseCase = new FindItineraryByIdUseCase();

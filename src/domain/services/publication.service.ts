@@ -31,6 +31,7 @@ export class PublicationService {
     newPublication.likes = [];
     newPublication.reposts = [];
     newPublication.saved = [];
+    newPublication.categories = [];
 
     try {
       const findCategoryByIdUseCase = new FindCategoryByIdUseCase();
@@ -49,7 +50,6 @@ export class PublicationService {
         }
       }
 
-
       const idCategories = [...new Set(
         activityEntities
           .map(activity => activity.place.province.category?.id)
@@ -67,6 +67,7 @@ export class PublicationService {
 
       return createPublicationUseCase.execute(newPublication);
     } catch (error) {
+      console.log(error)
       throw new Error(error as string);
     }
   }

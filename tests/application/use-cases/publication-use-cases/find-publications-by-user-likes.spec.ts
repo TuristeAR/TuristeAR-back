@@ -42,6 +42,8 @@ describe('FindPublicationsByUserLikesUseCase', () => {
       save: jest.fn(),
       deleteOne: jest.fn(),
       deleteMany: jest.fn(),
+      findPublicationsBySaved: jest.fn(),
+      findPublicationsByLikes: jest.fn(),
     };
 
     findPublicationByUserLikesUseCase = new FindPublicationByUserLikesUseCase();
@@ -49,21 +51,17 @@ describe('FindPublicationsByUserLikesUseCase', () => {
   });
 
   it('should return an publications by user likes', async () => {
-    mockPublicationRepository.findMany.mockResolvedValue([mockPublication]);
+    mockPublicationRepository.findPublicationsByLikes.mockResolvedValue([mockPublication]);
 
     const result = await findPublicationByUserLikesUseCase.execute(1);
 
-    expect(mockPublicationRepository.findMany).toHaveBeenCalledWith({
-      where: { likes: { id: 1 } },
-      relations: ['user', 'categories', 'likes', 'reposts', 'saved', 'comments', 'activities.place'],
-      order: { id: 'DESC' },
-    });
+    expect(mockPublicationRepository.findPublicationsByLikes).toHaveBeenCalledWith(1);
 
     expect(result).toEqual([mockPublication]);
   })
 
   it('should return [] if no publications is found', async () => {
-    mockPublicationRepository.findMany.mockResolvedValue([]);
+    mockPublicationRepository.findPublicationsByLikes.mockResolvedValue([]);
 
     const result = await findPublicationByUserLikesUseCase.execute(10);
 
@@ -71,7 +69,7 @@ describe('FindPublicationsByUserLikesUseCase', () => {
   })
 
   it('should throw an error if there is an issue with the repository', async () => {
-    mockPublicationRepository.findMany.mockRejectedValue(new Error('Repository error'));
+    mockPublicationRepository.findPublicationsByLikes.mockRejectedValue(new Error('Repository error'));
 
     await expect(findPublicationByUserLikesUseCase.execute(1))
       .rejects

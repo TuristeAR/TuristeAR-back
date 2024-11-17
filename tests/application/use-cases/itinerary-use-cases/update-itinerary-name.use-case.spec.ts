@@ -13,6 +13,7 @@ describe('UpdateItineraryNameUseCase', () => {
       save: jest.fn(),
       deleteOne: jest.fn(),
       update: jest.fn(),
+      findItineraryByUserWithParticipants: jest.fn(),
     } as jest.Mocked<ItineraryRepositoryInterface>;
     updateItineraryNameUseCase = new UpdateItineraryNameUseCase();
     (updateItineraryNameUseCase as any).itineraryRepository = itineraryRepositoryMock;

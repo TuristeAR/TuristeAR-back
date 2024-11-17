@@ -17,11 +17,12 @@ describe('FindItineraryByUserWithParticipantsUseCase', () => {
       save: jest.fn(),
       deleteOne: jest.fn(),
       update: jest.fn(),
+      findItineraryByUserWithParticipants: jest.fn(),
     };
 
     findItineraryByUserWithParticipantsUseCase = new FindItineraryByUserWithParticipantsUseCase();
     (findItineraryByUserWithParticipantsUseCase as any).itineraryRepository =
-      mockItineraryRepository; // Asignamos el mock al caso de uso
+      mockItineraryRepository;
   });
 
   it('should return itineraries for a user with participants', async () => {
@@ -30,17 +31,16 @@ describe('FindItineraryByUserWithParticipantsUseCase', () => {
       email: 'user@example.com',
       name: 'Lucas Rodriguez',
       profilePicture: 'profile.jpg',
-      coverPicture: 'cover.jpg', // Añadido
-      location: 'Buenos Aires', // Añadido
-      birthdate: new Date(1990, 1, 1), // Añadido
-      googleId: 'google-id-123', // Añadido
+      coverPicture: 'cover.jpg',
+      location: 'Buenos Aires',
+      birthdate: new Date(1990, 1, 1),
+      googleId: 'google-id-123',
       description: 'Traveler',
       createdAt: new Date(),
       ownedItineraries: [],
       joinedItineraries: [],
     };
 
-    // Creamos un itinerario simulado
     const mockItineraries: Itinerary[] = [
       {
         id: 1,
@@ -70,21 +70,17 @@ describe('FindItineraryByUserWithParticipantsUseCase', () => {
       },
     ];
 
-    mockItineraryRepository.findMany.mockResolvedValue(mockItineraries);
+    mockItineraryRepository.findItineraryByUserWithParticipants.mockResolvedValue(mockItineraries);
 
     const result = await findItineraryByUserWithParticipantsUseCase.execute(1);
 
-    expect(mockItineraryRepository.findMany).toHaveBeenCalledWith({
-      where: [{ participants: { id: 1 } }, { user: { id: 1 } }],
-      relations: ['participants', 'user', 'activities.place.province.category'],
-      order: { id: 'DESC' },
-    });
+    expect(mockItineraryRepository.findItineraryByUserWithParticipants).toHaveBeenCalledWith(1);
 
     expect(result).toEqual(mockItineraries);
   });
 
   it('should return an empty array if no itineraries are found', async () => {
-    mockItineraryRepository.findMany.mockResolvedValue([]);
+    mockItineraryRepository.findItineraryByUserWithParticipants.mockResolvedValue([]);
 
     const result = await findItineraryByUserWithParticipantsUseCase.execute(999);
 
@@ -92,7 +88,7 @@ describe('FindItineraryByUserWithParticipantsUseCase', () => {
   });
 
   it('should throw an error if there is an issue with the repository', async () => {
-    mockItineraryRepository.findMany.mockRejectedValue(new Error('Repository error'));
+    mockItineraryRepository.findItineraryByUserWithParticipants.mockRejectedValue(new Error('Repository error'));
 
     await expect(findItineraryByUserWithParticipantsUseCase.execute(1)).rejects.toThrow(
       'Repository error',
