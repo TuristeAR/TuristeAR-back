@@ -89,6 +89,10 @@ import { UpdateNotificationUseCase } from './application/use-cases/notification-
 import { ParticipationRequestService } from './domain/services/participationRequest.service';
 import { DeleteNotificationByIdUseCase } from './application/use-cases/notification-use-cases/delete-notification-by-id.use-case';
 import { UpdateForumUseCase } from './application/use-cases/forum-use-cases/update-forum.use-case';
+import { UserExpense } from './domain/entities/user_expense';
+import { UserExpenseService } from './domain/services/user-expense.service';
+import { DistributionType } from './domain/enum/distribution-type.enum';
+import { ExpenseService } from './domain/services/expense.service';
 
 dotenv.config();
 
@@ -229,6 +233,8 @@ const deleteNotificationByIdUseCase = new DeleteNotificationByIdUseCase();
 const updateActivityUseCase = new UpdateActivityUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
 const updateForumUseCase = new UpdateForumUseCase();
+const userExpenseService = new UserExpenseService();
+const expenseService = new ExpenseService();
 
 app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
   const { latitude, longitude, province } = req.body;
@@ -575,10 +581,8 @@ app.post('/itinerary/add-user', authMiddleware, (req, res) => {
     .addUserToItinerary(itineraryId, participantId, participationRequestId)
     .then(async (updatedItinerary) => {
       io.emit('usersAddItinerary', { updatedItinerary });
-      participationRequestService.acceptParticipationRequest(
-        Number(participationRequestId),
-      );
-      return res.status(200).json({ status: 'success', data: {updatedItinerary} });
+      participationRequestService.acceptParticipationRequest(Number(participationRequestId));
+      return res.status(200).json({ status: 'success', data: { updatedItinerary } });
     })
     .catch(() => {
       return res.status(500).json({ status: 'error', message: 'Error adding user to itinerary' });
@@ -996,13 +1000,13 @@ app.put('/editForum', authMiddleware, async (req: Request, res: Response) => {
 
     const forum = await findForumByIdUseCase.execute(Number(forumId));
 
-    if(forum && forum.messages.length < 1) {
+    if (forum && forum.messages.length < 1) {
       forum.category = await findCategoryByIdUseCase.execute(Number(categoryId));
       forum.description = description;
       forum.name = name;
       await updateForumUseCase.execute(forum);
-    }else{
-      return res.status(404).json({ message: 'Can\'t delete the forum' });
+    } else {
+      return res.status(404).json({ message: "Can't delete the forum" });
     }
 
     return res.json({ message: 'Data modified successfully', forum });
@@ -1174,28 +1178,15 @@ app.post('/expenses', async (req, res) => {
       imageUrls,
     } = req.body;
 
-    if (!description) {
-      return res.status(400).json({ message: 'Description field is missing' });
-    }
-
-    if (!date) {
-      return res.status(400).json({ message: 'Date field is missing' });
-    }
-
-    if (!payerId) {
-      return res.status(400).json({ message: 'Payer field is missing' });
-    }
-
-    if (totalAmount == null) {
-      return res.status(400).json({ message: 'TotalAmount field is missing' });
-    }
-
-    if (!distributionType) {
-      return res.status(400).json({ message: 'DistributionType field is missing' });
-    }
-
-    if (!itineraryId) {
-      return res.status(400).json({ message: 'ItineraryId field is missing' });
+    if (
+      !description ||
+      !date ||
+      !payerId ||
+      totalAmount == null ||
+      !distributionType ||
+      !itineraryId
+    ) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
 
     const payer = await findUserByIdUseCase.execute(payerId);
@@ -1211,6 +1202,41 @@ app.post('/expenses', async (req, res) => {
 
     const validUsers = users.filter((user) => user);
 
+    const calculateUserAmount = (user: any): number => {
+      if (distributionType === DistributionType.MONTO) {
+        return individualAmounts[user.id] || 0;
+      } else if (distributionType === DistributionType.EQUIVALENTE) {
+        const baseAmount = totalAmount / participatingUsers.length;
+        const roundedAmount = Math.floor(baseAmount * 100) / 100;
+
+        const totalDistributed = roundedAmount * (participatingUsers.length - 1);
+        const remainingAmount = totalAmount - totalDistributed;
+
+        const amountOwed =
+          user.id === participatingUsers[participatingUsers.length - 1].id
+            ? remainingAmount.toFixed(2)
+            : roundedAmount.toFixed(2);
+
+        return Number(amountOwed);
+      } else if (distributionType === DistributionType.PORCENTAJE) {
+        return Number(((totalAmount * (individualPercentages[user.id] || 0)) / 100).toFixed(2));
+      }
+      return 0;
+    };
+
+    const userExpensesPromises = validUsers.map((user) => {
+      const userAmount = calculateUserAmount(user);
+
+      const userExpense = new UserExpense();
+      userExpense.user = user;
+      userExpense.amount = userAmount;
+      userExpense.isPaid = userExpense.isPaid = user.id === payer.id;
+
+      return userExpenseService.createUserExpense(userExpense);
+    });
+
+    const userExpenses = await Promise.all(userExpensesPromises);
+
     const expense = new Expense();
     expense.description = description;
     expense.date = new Date(date);
@@ -1222,10 +1248,11 @@ app.post('/expenses', async (req, res) => {
     expense.participatingUsers = validUsers;
     expense.individualPercentages = individualPercentages || {};
     expense.imageUrls = imageUrls;
+    expense.userExpenses = userExpenses;
 
-    const response = await createExpenseUseCase.execute(expense);
+    const savedExpense = await createExpenseUseCase.execute(expense);
 
-    res.status(200).json(response);
+    res.status(200).json(savedExpense);
   } catch (error) {
     console.error('Error creating expense:', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -1249,14 +1276,17 @@ app.put('/expenses/:idExpense', async (req, res) => {
       imageUrls,
     } = req.body;
 
-    if (!description) return res.status(400).json({ message: 'Description field is missing' });
-    if (!date) return res.status(400).json({ message: 'Date field is missing' });
-    if (!payerId) return res.status(400).json({ message: 'Payer field is missing' });
-    if (totalAmount == null)
-      return res.status(400).json({ message: 'TotalAmount field is missing' });
-    if (!distributionType)
-      return res.status(400).json({ message: 'DistributionType field is missing' });
-    if (!itineraryId) return res.status(400).json({ message: 'ItineraryId field is missing' });
+    if (
+      !idExpense ||
+      !description ||
+      !date ||
+      !payerId ||
+      totalAmount == null ||
+      !distributionType ||
+      !itineraryId
+    ) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
 
     const payer = await findUserByIdUseCase.execute(payerId);
     const itinerary = await findItineraryByIdUseCase.execute(itineraryId);
@@ -1275,7 +1305,71 @@ app.put('/expenses/:idExpense', async (req, res) => {
     );
     const validUsers = users.filter((user) => user);
 
-    // Update existing expense properties
+    const calculateUserAmount = (user: User): number => {
+      if (distributionType === DistributionType.MONTO) {
+        return individualAmounts[user.id] || 0;
+      } else if (distributionType === DistributionType.EQUIVALENTE) {
+        const baseAmount = totalAmount / participatingUsers.length;
+        const roundedAmount = Math.floor(baseAmount * 100) / 100;
+
+        const totalDistributed = roundedAmount * (participatingUsers.length - 1);
+        const remainingAmount = totalAmount - totalDistributed;
+
+        const amountOwed =
+          user.id === participatingUsers[participatingUsers.length - 1].id
+            ? remainingAmount.toFixed(2)
+            : roundedAmount.toFixed(2);
+
+        return Number(amountOwed);
+      } else if (distributionType === DistributionType.PORCENTAJE) {
+        return Number(((totalAmount * (individualPercentages[user.id] || 0)) / 100).toFixed(2));
+      }
+      return 0;
+    };
+    // Create user expenses if not already present or modify existing ones
+    const userExpensesPromises = validUsers.map((user: User) => {
+      const userAmount = calculateUserAmount(user);
+      existingExpense.userExpenses = existingExpense.userExpenses || [];
+      // Check if a user expense already exists for this user
+      const existingUserExpense = existingExpense.userExpenses.find(
+        (userExpense: UserExpense) => userExpense.user.id === user.id,
+      );
+
+      let userExpense: UserExpense;
+      if (existingUserExpense) {
+        // Update the existing user expense
+        console.log("Entro existingUserExpense", existingUserExpense)
+        userExpense = existingUserExpense;
+        userExpense.amount = userAmount;
+        userExpense.isPaid = user.id === payer.id;
+        userExpense.expense = existingExpense
+        userExpenseService.updateUserExpense(userExpense); 
+      } else {
+        // Create a new user expense
+        userExpense = new UserExpense();
+        userExpense.user = user;
+        userExpense.amount = userAmount;
+        userExpense.isPaid = user.id === payer.id;
+        userExpense.expense = existingExpense;
+        userExpenseService.createUserExpense(userExpense);
+      }
+
+      return userExpense;
+    });
+
+   // Remove expenses for users no longer participating
+   const userExpensesToRemove = existingExpense.userExpenses.filter((userExpense: UserExpense) =>
+    !validUsers.some((user) => user.id === userExpense.user.id)
+  );
+  
+  // Remove user expenses that are no longer in the list of participating users
+  await Promise.all(userExpensesToRemove.map((userExpense: UserExpense) => 
+    userExpenseService.deleteUserExpense(userExpense.id) // Assuming there's a delete method for user expenses
+  ));
+
+    const userExpenses = await Promise.all(userExpensesPromises);
+
+    // Update the expense fields
     existingExpense.description = description;
     existingExpense.date = new Date(date);
     existingExpense.totalAmount = totalAmount;
@@ -1283,16 +1377,16 @@ app.put('/expenses/:idExpense', async (req, res) => {
     existingExpense.payer = payer;
     existingExpense.itinerary = itinerary;
     existingExpense.individualAmounts = individualAmounts || {};
-    existingExpense.individualPercentages = individualPercentages || {};
-
-    // Update the many-to-many relationship
     existingExpense.participatingUsers = validUsers;
+    existingExpense.individualPercentages = individualPercentages || {};
     existingExpense.imageUrls = imageUrls;
+    existingExpense.userExpenses = userExpenses;
 
     // Save the update
     const response = await saveExpenseUseCase.execute(existingExpense);
 
-    res.status(200).json(response);
+    res.status(200).json({
+      status: 'success'});
   } catch (error) {
     console.error('Error editing expense:', error);
     res.status(500).json({ message: 'Internal Server Error', error });
@@ -1306,6 +1400,41 @@ app.get('/expenses/:itineraryId', async (req, res) => {
     const expenses = await findExpensesByItineraryIdUseCase.execute(Number(itineraryId));
 
     res.status(200).json(expenses);
+  } catch (error) {
+    console.error('Error obtaining expenses:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.get('/expenses/debt/user/itinerary/:itineraryId', authMiddleware, async (req, res) => {
+  const { itineraryId } = req.params;
+  const user = req.user as User;
+  try {
+    const debt = await expenseService.debtByUserId(user.id, Number(itineraryId));
+
+    res.status(200).json(debt);
+  } catch (error) {
+    console.error('Error obtaining expenses:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+app.get('/expenses/debt/payer/itinerary/:itineraryId', authMiddleware, async (req, res) => {
+  const { itineraryId } = req.params;
+  const user = req.user as User;
+  try {
+    const debt = await expenseService.getDebts(user.id, Number(itineraryId));
+
+    res.status(200).json(debt);
+  } catch (error) {
+    console.error('Error obtaining expenses:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+app.patch('/expenses/settle', authMiddleware, async (req, res) => {
+  const { userId, itineraryId } = req.body;
+  try {
+    const debt = await expenseService.settle(Number(userId), Number(itineraryId));
+    res.status(200).json(debt);
   } catch (error) {
     console.error('Error obtaining expenses:', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -1454,9 +1583,9 @@ app.post('/participation-request/accept', async (req: Request, res: Response) =>
 
 app.post('/participation-request/reject', async (req: Request, res: Response) => {
   const { requestId, notificationId } = req.body;
-  
+
   try {
-    deleteNotificationByIdUseCase.execute(notificationId)
+    deleteNotificationByIdUseCase.execute(notificationId);
     const rejectedRequest = await participationRequestService.rejectParticipationRequest(requestId);
 
     return res.status(200).json({
@@ -1499,7 +1628,7 @@ io.on('connection', (socket) => {
         images: message.images,
         user: message.user,
         createdAt: message.createdAt,
-        forumId: message.forum.id
+        forumId: message.forum.id,
       });
     } catch (error) {
       socket.emit('error', { message: 'Error creating message', error });

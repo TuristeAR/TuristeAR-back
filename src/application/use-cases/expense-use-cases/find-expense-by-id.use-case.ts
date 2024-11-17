@@ -12,7 +12,7 @@ export class FindExpenseByIdUseCase {
     async execute(id: number): Promise<Expense|null> {
         const expenses = await this.expenseRepository.findOne({
             where: { id: id },
-            relations: { payer: true, participatingUsers: true }
+            relations: [ 'payer', 'participatingUsers', 'userExpenses', 'userExpenses.user' ]
         });
         return expenses;
     }
