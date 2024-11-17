@@ -1274,9 +1274,9 @@ app.post('/expenses', async (req, res) => {
     const validUsers = users.filter((user) => user);
 
     const calculateUserAmount = (user: any): number => {
-      if (distributionType === DistributionType.MONTO) {
+      if (distributionType === DistributionType.CUSTOM) {
         return individualAmounts[user.id] || 0;
-      } else if (distributionType === DistributionType.EQUIVALENTE) {
+      } else if (distributionType === DistributionType.EQUAL) {
         const baseAmount = totalAmount / participatingUsers.length;
         const roundedAmount = Math.floor(baseAmount * 100) / 100;
 
@@ -1289,7 +1289,7 @@ app.post('/expenses', async (req, res) => {
             : roundedAmount.toFixed(2);
 
         return Number(amountOwed);
-      } else if (distributionType === DistributionType.PORCENTAJE) {
+      } else if (distributionType === DistributionType.PERCENTAGE) {
         return Number(((totalAmount * (individualPercentages[user.id] || 0)) / 100).toFixed(2));
       }
       return 0;
@@ -1377,9 +1377,9 @@ app.put('/expenses/:idExpense', async (req, res) => {
     const validUsers = users.filter((user) => user);
 
     const calculateUserAmount = (user: User): number => {
-      if (distributionType === DistributionType.MONTO) {
+      if (distributionType === DistributionType.CUSTOM) {
         return individualAmounts[user.id] || 0;
-      } else if (distributionType === DistributionType.EQUIVALENTE) {
+      } else if (distributionType === DistributionType.EQUAL) {
         const baseAmount = totalAmount / participatingUsers.length;
         const roundedAmount = Math.floor(baseAmount * 100) / 100;
 
@@ -1392,7 +1392,7 @@ app.put('/expenses/:idExpense', async (req, res) => {
             : roundedAmount.toFixed(2);
 
         return Number(amountOwed);
-      } else if (distributionType === DistributionType.PORCENTAJE) {
+      } else if (distributionType === DistributionType.PERCENTAGE) {
         return Number(((totalAmount * (individualPercentages[user.id] || 0)) / 100).toFixed(2));
       }
       return 0;
