@@ -13,7 +13,7 @@ export class FindAllForumUseCase {
     return this.forumRepository.findMany({
       relations: ['category', 'user', 'messages'],
       where: { isPublic: true },
-      order: { id: 'DESC' },
+      order: { messages: {createdAt: 'DESC' }, },
     });
   }
 }
