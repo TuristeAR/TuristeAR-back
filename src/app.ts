@@ -96,7 +96,7 @@ import {
 import {
   FindNotificationByPublicationIdAndTypeUseCase
 } from './application/use-cases/notification-use-cases/find-notification-by-publication-id-and-type.use-case';
-
+import multer from 'multer';
 
 dotenv.config();
 
@@ -131,6 +131,11 @@ io.on('connection', (socket) => {
 app.use(bodyParser.json());
 
 app.use(cors({ credentials: true, origin: getCorsOrigins() }));
+// Define la configuración de `multer`
+const upload = multer({
+  limits: { fileSize: 200 * 1024 * 1024 }, // Límite de 200 MB; ajústalo según sea necesario
+  storage: multer.memoryStorage(), // Puedes usar `diskStorage` para guardar archivos en disco
+});
 
 app.options('*', (req: Request, res: Response) => {
   res.set('Access-Control-Allow-Origin', req.headers.origin);
@@ -1538,6 +1543,39 @@ app.post('/participation-request/reject', async (req: Request, res: Response) =>
     return res.status(400).json({
       message: error instanceof Error ? error.message : 'Error rejecting participation request',
     });
+  }
+});
+
+app.post('/uploadImage', upload.single('image'), async (req: Request, res: Response) => {
+  if (!req.file) {
+    return res.status(400).send('No se subió ningún archivo');
+  }
+
+  const formData = new FormData();
+  formData.append('image', req.file.buffer.toString('base64'));
+
+  const url = `${process.env.IMGUR_API_URL}/3/image`;
+  const options = {
+    method: 'POST',
+    headers: {
+      Authorization: `Client-ID ${process.env.IMGUR_CLIENT_ID}`,
+    },
+    body: formData,
+  };
+
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error de respuesta:', errorData);
+      throw new Error(errorData.data.error || 'Error al cargar la imagen');
+    }
+    const result = await response.json();
+    console.log('Imagen subida:', result);
+    res.status(200).json({ link: result.data.link });
+  } catch (error) {
+    console.error('Error en la carga de la imagen:', error);
+    res.status(500).send('Error en la carga de la imagen');
   }
 });
 
