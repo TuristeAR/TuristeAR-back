@@ -10,10 +10,6 @@ export class FindPublicationByUserLikesUseCase {
   }
 
   execute(userId: number): Promise<Publication[]> {
-    return this.publicationRepository.findMany({
-      where: { likes: { id: userId } },
-      relations: ['user', 'category', 'likes', 'reposts', 'saved', 'comments', 'activities.place'],
-      order: { id: 'DESC' },
-    });
+    return this.publicationRepository.findPublicationsByLikes(userId);
   }
 }

@@ -11,9 +11,12 @@ export class Publication extends AbstractEntity {
   @Column()
   description: string;
 
-  @ManyToOne(() => Category)
-  @JoinColumn({ name: 'categoryId' })
-  category: Category | null;
+  @ManyToMany(() => Category)
+  @JoinTable({
+    joinColumn: { name: 'publicationId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'categoryId', referencedColumnName: 'id' },
+  })
+  categories: Category[];
 
   @ManyToMany(() => User)
   @JoinTable({

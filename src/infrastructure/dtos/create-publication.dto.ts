@@ -25,8 +25,10 @@ export class CreatePublicationDTO {
   @IsNumber()
   comments?: number[];
 
+  @IsOptional()
+  @IsArray()
   @IsNumber()
-  categoryId : number;
+  categories : number[];
 
   @IsNumber()
   userId: number;

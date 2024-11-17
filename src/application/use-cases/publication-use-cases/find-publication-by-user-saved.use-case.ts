@@ -2,7 +2,7 @@ import { PublicationRepository } from '../../../infrastructure/repositories/publ
 import { PublicationRepositoryInterface } from '../../../domain/repositories/publication.repository.interface';
 import { Publication } from '../../../domain/entities/publication';
 
-export class FindPublicationByUserSavesUseCase {
+export class FindPublicationByUserSavedUseCase {
   private publicationRepository: PublicationRepositoryInterface;
 
   constructor() {
@@ -10,10 +10,6 @@ export class FindPublicationByUserSavesUseCase {
   }
 
   execute(userId: number): Promise<Publication[]> {
-    return this.publicationRepository.findMany({
-      where: { saved: { id: userId } },
-      relations: ['user', 'category', 'likes', 'reposts', 'saved', 'comments', 'activities.place'],
-      order: { id: 'DESC' },
-    });
+    return this.publicationRepository.findPublicationsBySaved(userId);
   }
 }

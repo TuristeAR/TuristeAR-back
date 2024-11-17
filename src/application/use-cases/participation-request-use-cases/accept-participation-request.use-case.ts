@@ -8,7 +8,6 @@ export class AcceptParticipationRequestUseCase {
     }
 
   async execute(requestId: number) {
-    console.log("repo",requestId)
     const request = await this.participationRequestRepository.findOne({ where: { id: requestId } });
 
     if (!request || request.status !== 'pending') {

@@ -37,7 +37,7 @@ import { FindProvinceByIdUseCase } from './application/use-cases/province-use-ca
 import { FindAllPublicationUseCase } from './application/use-cases/publication-use-cases/find-all-publication.use-case';
 import { FindPublicationByUserUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user.use-case';
 import { FindPublicationByUserLikesUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user-likes.use-case';
-import { FindPublicationByUserSavesUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user-saves.use-case';
+import { FindPublicationByUserSavedUseCase } from './application/use-cases/publication-use-cases/find-publication-by-user-saved.use-case';
 import { FindPublicationByCategoryUseCase } from './application/use-cases/publication-use-cases/find-publication-by-category.use-case';
 import { FindPublicationByIdUseCase } from './application/use-cases/publication-use-cases/find-publication-by-id.use-case';
 import { FindProvinceByNameUseCase } from './application/use-cases/province-use-cases/find-province-by-name.use-case';
@@ -72,7 +72,6 @@ import { DeletePublicationUseCase } from './application/use-cases/publication-us
 import { FindCommentsByPublicationIdUserCase } from './application/use-cases/comment-use-cases/find-comments-by-publication-id.user-case';
 import { DeleteCommentsUseCase } from './application/use-cases/comment-use-cases/delete-comments.use-case';
 import { EventTempService } from './domain/services/event_temp.service';
-import { UserService } from './domain/services/user.service';
 import { FindItineraryByIdForDeleteUseCase } from './application/use-cases/itinerary-use-cases/find-itinerary-by-id-for-delete.use-case';
 import { DeleteActivitiesUseCase } from './application/use-cases/activity-use-cases/delete-activities.use-case';
 import { DeleteEventsUseCase } from './application/use-cases/event-use-cases/delete-events.use-case';
@@ -81,7 +80,6 @@ import { DeleteForumUseCase } from './application/use-cases/forum-use-cases/dele
 import { DeleteItineraryByIdUseCase } from './application/use-cases/itinerary-use-cases/delete-itinerary-by-id.use-case';
 import { DeletePublicationsByActivitiesUseCase } from './application/use-cases/publication-use-cases/delete-publications-by-activities.use-case';
 import { DeleteMessageUseCase } from './application/use-cases/message-use-cases/delete-messages.use-case';
-import { UpdatePublicationUseCase } from './application/use-cases/publication-use-cases/update-publication.use-case';
 import { UpdateItineraryUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary.use-case';
 import { FindNotificationsByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
 import { FindNotificationsDetailByUserUseCase } from './application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
@@ -93,6 +91,16 @@ import { UserExpense } from './domain/entities/user_expense';
 import { UserExpenseService } from './domain/services/user-expense.service';
 import { DistributionType } from './domain/enum/distribution-type.enum';
 import { ExpenseService } from './domain/services/expense.service';
+import { UpdateItineraryNameUseCase } from './application/use-cases/itinerary-use-cases/update-itinerary-name.use-case';
+import { FindAllTypeUseCase } from './application/use-cases/type-use-cases/find-all-type.use-case';
+import { FindAllPriceLevelUseCase } from './application/use-cases/price-level-use-cases/find-all-price-level.use-case';
+import {
+  FindPublicationsByActivitiesIdsUseCase
+} from './application/use-cases/publication-use-cases/find-publications-by-activities-ids.use-case';
+import {
+  FindNotificationByPublicationIdAndTypeUseCase
+} from './application/use-cases/notification-use-cases/find-notification-by-publication-id-and-type.use-case';
+
 
 dotenv.config();
 
@@ -172,7 +180,6 @@ const placeService = new PlaceService();
 const publicationService = new PublicationService();
 const reviewService = new ReviewService();
 const itineraryService = new ItineraryService();
-const userService = new UserService();
 const eventTempService = new EventTempService();
 const participationRequestService = new ParticipationRequestService();
 
@@ -204,10 +211,11 @@ const findPlaceByGoogleIdUseCase = new FindPlaceByGoogleIdUseCase();
 const findPlaceByProvinceUseCase = new FindPlaceByProvinceUseCase();
 const findProvinceByIdUseCase = new FindProvinceByIdUseCase();
 const findProvinceByNameUseCase = new FindProvinceByNameUseCase();
+const findPublicationsByActivitiesIdsUseCase = new FindPublicationsByActivitiesIdsUseCase();
 const findPublicationByCategoryUseCase = new FindPublicationByCategoryUseCase();
 const findPublicationByIdUseCase = new FindPublicationByIdUseCase();
 const findPublicationByUserLikesUseCase = new FindPublicationByUserLikesUseCase();
-const findPublicationByUserSavesUseCase = new FindPublicationByUserSavesUseCase();
+const findPublicationByUserSavesUseCase = new FindPublicationByUserSavedUseCase();
 const findPublicationByUserUseCase = new FindPublicationByUserUseCase();
 const findReviewByGoogleIdUseCase = new FindReviewByGoogleIdUseCase();
 const findReviewByPlaceIdUseCase = new FindReviewByPlaceIdUseCase();
@@ -216,6 +224,7 @@ const findUserByNameUseCase = new FindUserByNameUseCase();
 const createExpenseUseCase = new CreateExpenseUseCase();
 const findExpensesByItineraryIdUseCase = new FindExpensesByItineraryIdUseCases();
 const findNotificationsByUserIdUseCase = new FindNotificationsByUserUseCase();
+const findNotificationByPublicationIdAndTypeUseCase = new FindNotificationByPublicationIdAndTypeUseCase();
 const findNotificationsDetailByUserIdUseCase = new FindNotificationsDetailByUserUseCase();
 const deleteExpensesByIdUseCases = new DeleteExpensesByIdUseCases();
 const saveExpenseUseCase = new SaveExpenseUseCase();
@@ -235,6 +244,9 @@ const updateUserUseCase = new UpdateUserUseCase();
 const updateForumUseCase = new UpdateForumUseCase();
 const userExpenseService = new UserExpenseService();
 const expenseService = new ExpenseService();
+const updateItineraryNameUseCase = new UpdateItineraryNameUseCase();
+const findAllTypeUseCase = new FindAllTypeUseCase();
+const findAllPriceLevelUseCase = new FindAllPriceLevelUseCase();
 
 app.post('/auth/google', ubicationMiddleware, (req, res, next) => {
   const { latitude, longitude, province } = req.body;
@@ -268,15 +280,15 @@ app.post('/itinerary/add-event', (req, res) => {
 app.get('/auth/google/callback', (req, res, next) => {
   passport.authenticate('google', (err: any, user: User) => {
     if (err || !user) {
-      return res.redirect(`${process.env.FRONTEND_URL}/login`);
+      return res.redirect(`${process.env.FRONTEND_URL}/iniciar-sesion`);
     }
 
     req.logIn(user, (loginErr) => {
       if (loginErr) {
-        return res.redirect(`${process.env.FRONTEND_URL}/login`);
+        return res.redirect(`${process.env.FRONTEND_URL}/iniciar-sesion`);
       }
 
-      res.redirect(`${process.env.FRONTEND_URL}/formQuestions`);
+      res.redirect(`${process.env.FRONTEND_URL}/crear-itinerario`);
     });
   })(req, res, next);
 });
@@ -427,6 +439,30 @@ app.get('/review/:googleId', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/type', async (_req, res) => {
+  try {
+    const types = await findAllTypeUseCase.execute();
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: types });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching types' });
+  }
+});
+
+app.get('/price-level', async (_req, res) => {
+  try {
+    const priceLevel = await findAllPriceLevelUseCase.execute();
+
+    return res.status(status.OK).json({ statusCode: status.OK, data: priceLevel });
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error fetching price level' });
+  }
+});
+
 app.post('/formQuestion', authMiddleware, async (req: Request, res: Response) => {
   try {
     const createItineraryDto: CreateItineraryDto = req.body;
@@ -574,6 +610,20 @@ app.get('/fetch-reviews', async (_req, res) => {
   }
 });
 
+app.put('/itinerary/:itineraryId/name', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const itineraryId = req.params.itineraryId;
+
+    const { name } = req.body;
+
+    return updateItineraryNameUseCase.execute(Number(itineraryId), name);
+  } catch (error) {
+    return res
+      .status(status.INTERNAL_SERVER_ERROR)
+      .json({ statusCode: status.INTERNAL_SERVER_ERROR, message: 'Error updating itinerary name' });
+  }
+});
+
 app.post('/itinerary/add-user', authMiddleware, (req, res) => {
   const { itineraryId, participantId, participationRequestId } = req.body;
 
@@ -581,10 +631,10 @@ app.post('/itinerary/add-user', authMiddleware, (req, res) => {
     .addUserToItinerary(itineraryId, participantId, participationRequestId)
     .then(async (updatedItinerary) => {
       io.emit('usersAddItinerary', { updatedItinerary });
-      participationRequestService.acceptParticipationRequest(Number(participationRequestId));
       return res.status(200).json({ status: 'success', data: { updatedItinerary } });
     })
-    .catch(() => {
+    .catch((err) => {
+      console.log(err)
       return res.status(500).json({ status: 'error', message: 'Error adding user to itinerary' });
     });
 });
@@ -595,7 +645,7 @@ app.delete('/itinerary/remove-user', authMiddleware, async (req, res) => {
   itineraryService
     .removeUserFromItinerary(itineraryId, participantId)
     .then(() => {
-      io.emit('userRemoved', { participantId });
+      io.emit('userRemoved', { itineraryId, participantId });
       return res
         .status(200)
         .json({ status: 'success', message: `User with ID ${participantId} removed` });
@@ -660,6 +710,26 @@ app.post('/itinerary/add-activity', (req, res) => {
       return res
         .status(500)
         .json({ status: 'error', message: 'Error adding activity to itinerary' });
+    });
+});
+
+app.post('/itinerary/add-event', (req, res) => {
+  const { itineraryId, eventId } = req.body;
+  itineraryService
+    .addEventToItinerary(itineraryId, eventId)
+    .then((addedEvent) => {
+      if (addedEvent && Object.keys(addedEvent).length > 0) {
+        return res.status(200).json({
+          status: 'success',
+          message: 'Event added to itinerary',
+          event: addedEvent,
+        });
+      } else {
+        return res.status(400).json({ status: 'error', message: 'Event not found or invalid' });
+      }
+    })
+    .catch(() => {
+      return res.status(500).json({ status: 'error', message: 'Error adding event to itinerary' });
     });
 });
 
@@ -837,6 +907,7 @@ app.get('/publications/likes/:userID', async (req: Request, res: Response) => {
 
     return res.json(publications);
   } catch (error) {
+    console.log(error)
     return res.status(500).json({ message: 'Error fetching publications', error });
   }
 });
@@ -1497,7 +1568,6 @@ app.put('/markNotificationsAsRead', authMiddleware, async (req, res) => {
 
 app.put('/addImagesToActivity', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const user = req.user as User;
     const { activityId, images } = req.body;
 
     console.log(images);
@@ -1685,6 +1755,12 @@ io.on('connection', (socket) => {
         await deleteCommentsUseCase.execute(comments);
       }
 
+      if (publication.notifications.length > 0) {
+        for (const notification of publication.notifications) {
+          await deleteNotificationByIdUseCase.execute(notification.id);
+        }
+      }
+
       await deletePublicationUseCase.execute(publication);
 
       io.emit('receiveDelete', {});
@@ -1704,7 +1780,27 @@ io.on('connection', (socket) => {
         return;
       }
 
-      await deletePublicationsByActivitiesUseCase.execute(itinerary.activities);
+      const activityIds = itinerary.activities.map(activity => activity.id);
+
+      const publications = await findPublicationsByActivitiesIdsUseCase.execute(activityIds);
+
+      for (const publication of publications) {
+        if (publication.comments.length > 0) {
+          await deleteCommentsUseCase.execute(publication.comments);
+        }
+
+        if(publication.notifications.length > 0) {
+          for (const notification of publication.notifications) {
+            await deleteNotificationByIdUseCase.execute(notification.id);
+          }
+        }
+      }
+
+      const publicationIds = publications.map(publication => publication.id);
+
+      if(publicationIds.length > 0) {
+        await deletePublicationsByActivitiesUseCase.execute(publicationIds);
+      }
 
       if (itinerary.activities.length > 0) {
         await deleteActivitiesUseCase.execute(itinerary.activities);
