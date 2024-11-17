@@ -8,4 +8,5 @@ export interface ItineraryRepositoryInterface {
   save(user: Itinerary): Promise<Itinerary>;
   update(id: number, data: DeepPartial<Itinerary>): Promise<UpdateResult>;
   deleteOne(id: number): Promise<DeleteResult>;
+  findItineraryByUserWithParticipants(id: number): Promise<Itinerary[]>;
 }

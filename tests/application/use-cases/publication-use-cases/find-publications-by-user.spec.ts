@@ -39,6 +39,8 @@ describe('FindPublicationsByUserUseCase', () => {
       save: jest.fn(),
       deleteOne: jest.fn(),
       deleteMany: jest.fn(),
+      findPublicationsBySaved: jest.fn(),
+      findPublicationsByLikes: jest.fn(),
     };
 
     findPublicationByUserUseCase = new FindPublicationByUserUseCase();

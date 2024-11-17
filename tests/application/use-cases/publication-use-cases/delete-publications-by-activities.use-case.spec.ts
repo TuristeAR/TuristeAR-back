@@ -48,6 +48,8 @@ describe('DeletePublicationsByActivitiesUseCase', () => {
       save: jest.fn(),
       deleteOne: jest.fn(),
       deleteMany: jest.fn(),
+      findPublicationsBySaved: jest.fn(),
+      findPublicationsByLikes: jest.fn(),
     };
 
     deletePublicationsByActivitiesUseCase = new DeletePublicationsByActivitiesUseCase();

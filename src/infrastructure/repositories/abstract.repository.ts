@@ -8,6 +8,9 @@ import {
   DeleteResult,
 } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+import {
+  FindItineraryByUserWithParticipantsUseCase
+} from '../../application/use-cases/itinerary-use-cases/find-itinerary-by-user-with-participants.use-case';
 
 export abstract class AbstractRepository<T extends ObjectLiteral> {
   protected constructor(protected readonly repository: Repository<T>) {}
@@ -56,4 +59,53 @@ export abstract class AbstractRepository<T extends ObjectLiteral> {
       .limit(50)
       .getMany();
   }
+
+  findPublicationsByLikes(userId: number): Promise<T[]> {
+    return this.repository.createQueryBuilder('publication')
+      .innerJoin('publication.likes', 'like')
+      .leftJoinAndSelect('publication.user', 'userDetails')
+      .leftJoinAndSelect('publication.likes', 'likes')
+      .leftJoinAndSelect('publication.categories', 'categories')
+      .leftJoinAndSelect('publication.reposts', 'reposts')
+      .leftJoinAndSelect('publication.saved', 'saved')
+      .leftJoinAndSelect('publication.comments', 'comments')
+      .leftJoinAndSelect('publication.activities', 'activities')
+      .leftJoinAndSelect('activities.place', 'place')
+      .where('like.id = :userId', { userId })
+      .orderBy('publication.id', 'DESC')
+      .getMany();
+  }
+
+  findPublicationsBySaved(userId: number): Promise<T[]> {
+    return this.repository.createQueryBuilder('publication')
+      .innerJoin('publication.saved', 'save')
+      .leftJoinAndSelect('publication.user', 'userDetails')
+      .leftJoinAndSelect('publication.likes', 'likes')
+      .leftJoinAndSelect('publication.categories', 'categories')
+      .leftJoinAndSelect('publication.reposts', 'reposts')
+      .leftJoinAndSelect('publication.saved', 'saved')
+      .leftJoinAndSelect('publication.comments', 'comments')
+      .leftJoinAndSelect('publication.activities', 'activities')
+      .leftJoinAndSelect('activities.place', 'place')
+      .where('save.id = :userId', { userId })
+      .orderBy('publication.id', 'DESC')
+      .getMany();
+  }
+
+  findItineraryByUserWithParticipants(id : number): Promise<T[]> {
+    return this.repository.createQueryBuilder('itinerary')
+      .innerJoin('itinerary.participants', 'participant')
+      .innerJoin('itinerary.user', 'user')
+      .leftJoinAndSelect('itinerary.user', 'userDetail')
+      .leftJoinAndSelect('itinerary.participants', 'participants')
+      .leftJoinAndSelect('itinerary.activities', 'activities')
+      .leftJoinAndSelect('activities.place', 'place')
+      .leftJoinAndSelect('place.province', 'province')
+      .leftJoinAndSelect('province.category', 'category')
+      .where('participant.id = :id', { id })
+      .orWhere('user.id = :id',{id})
+      .getMany()
+  }
+
+
 }

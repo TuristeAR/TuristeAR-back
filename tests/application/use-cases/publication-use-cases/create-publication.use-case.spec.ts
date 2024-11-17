@@ -36,6 +36,8 @@ describe('CreatePublicationUseCase', () => {
       save: jest.fn(),
       deleteOne: jest.fn(),
       deleteMany: jest.fn(),
+      findPublicationsBySaved: jest.fn(),
+      findPublicationsByLikes: jest.fn(),
     };
 
     createPublicationUseCase = new CreatePublicationUseCase();

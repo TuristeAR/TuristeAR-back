@@ -8,5 +8,6 @@ export interface PublicationRepositoryInterface {
   save(publication: Publication): Promise<Publication>;
   deleteOne(id: number): Promise<DeleteResult>;
   deleteMany(publicationsIds: number[]): Promise<DeleteResult>;
-
+  findPublicationsByLikes(id: number): Promise<Publication[]>;
+  findPublicationsBySaved(id: number): Promise<Publication[]>;
 }

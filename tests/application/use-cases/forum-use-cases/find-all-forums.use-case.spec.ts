@@ -2,7 +2,6 @@ import { ForumRepositoryInterface } from '../../../../src/domain/repositories/fo
 import { User } from '../../../../src/domain/entities/user';
 import { Forum } from '../../../../src/domain/entities/forum';
 import { Category } from '../../../../src/domain/entities/category';
-import { FindForumByIdUseCase } from '../../../../src/application/use-cases/forum-use-cases/find-forum-by-id.use-case';
 import { Message } from '../../../../src/domain/entities/message';
 import { FindAllForumUseCase } from '../../../../src/application/use-cases/forum-use-cases/find-all-forum.use-case';
 jest.mock('../../../../src/infrastructure/repositories/forum.repository');
@@ -68,7 +67,7 @@ describe('FindAllForumsUseCase', () => {
     expect(mockForumRepository.findMany).toHaveBeenCalledWith({
       relations: ['category', 'user', 'messages'],
       where: { isPublic: true },
-      order: {id : 'DESC'}
+      order: { messages: {createdAt: 'DESC' }, },
     });
 
     expect(result).toEqual(mockForums);
