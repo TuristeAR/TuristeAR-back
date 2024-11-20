@@ -13,7 +13,7 @@ export class Expense extends AbstractEntity {
   @Column()
   date: Date;
 
-  @Column()
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
   totalAmount: number;
 
   @Column({
