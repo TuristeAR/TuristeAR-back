@@ -6,7 +6,7 @@ import { AbstractEntity } from './abstract.entity';
 @Entity()
 export class UserExpense extends AbstractEntity {
 
-  @Column({ type: 'decimal', scale: 2 })
+  @Column({ type: 'decimal', precision: 65, scale: 2 })
   amount: number;
 
   @Column({ default: false })
