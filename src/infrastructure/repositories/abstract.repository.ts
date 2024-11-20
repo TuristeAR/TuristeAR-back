@@ -104,6 +104,7 @@ export abstract class AbstractRepository<T extends ObjectLiteral> {
       .leftJoinAndSelect('province.category', 'category')
       .where('participant.id = :id', { id })
       .orWhere('user.id = :id',{id})
+      .addOrderBy('itinerary.id', 'DESC')
       .getMany()
   }
 
