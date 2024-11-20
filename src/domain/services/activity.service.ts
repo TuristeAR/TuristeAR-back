@@ -30,7 +30,7 @@ export class ActivityService {
 
     const activityStart = new Date(date);
 
-    activityStart.setHours(openHour + 5, openMinute, 0, 0);
+    activityStart.setHours(openHour + (isSecondActivity ? 10 : 5), openMinute, 0, 0);
 
     const activityEnd = new Date(activityStart);
 
