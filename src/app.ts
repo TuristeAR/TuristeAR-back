@@ -1286,17 +1286,19 @@ app.post('/expenses', async (req, res) => {
         return individualAmounts[user.id] || 0;
       } else if (distributionType === DistributionType.EQUAL) {
         const baseAmount = totalAmount / participatingUsers.length;
-        const roundedAmount = Math.floor(baseAmount * 100) / 100;
 
+        const roundedAmount = parseFloat(baseAmount.toFixed(2));
+    
         const totalDistributed = roundedAmount * (participatingUsers.length - 1);
+    
         const remainingAmount = totalAmount - totalDistributed;
-
+    
         const amountOwed =
           user.id === participatingUsers[participatingUsers.length - 1].id
-            ? remainingAmount.toFixed(2)
-            : roundedAmount.toFixed(2);
+            ? parseFloat(remainingAmount.toFixed(2)) 
+            : roundedAmount;
 
-        return Number(amountOwed);
+        return amountOwed;
       } else if (distributionType === DistributionType.PERCENTAGE) {
         return Number(((totalAmount * (individualPercentages[user.id] || 0)) / 100).toFixed(2));
       }
@@ -1389,17 +1391,19 @@ app.put('/expenses/:idExpense', async (req, res) => {
         return individualAmounts[user.id] || 0;
       } else if (distributionType === DistributionType.EQUAL) {
         const baseAmount = totalAmount / participatingUsers.length;
-        const roundedAmount = Math.floor(baseAmount * 100) / 100;
 
+        const roundedAmount = parseFloat(baseAmount.toFixed(2));
+    
         const totalDistributed = roundedAmount * (participatingUsers.length - 1);
+    
         const remainingAmount = totalAmount - totalDistributed;
-
+    
         const amountOwed =
           user.id === participatingUsers[participatingUsers.length - 1].id
-            ? remainingAmount.toFixed(2)
-            : roundedAmount.toFixed(2);
+            ? parseFloat(remainingAmount.toFixed(2)) 
+            : roundedAmount;
 
-        return Number(amountOwed);
+        return amountOwed;
       } else if (distributionType === DistributionType.PERCENTAGE) {
         return Number(((totalAmount * (individualPercentages[user.id] || 0)) / 100).toFixed(2));
       }
