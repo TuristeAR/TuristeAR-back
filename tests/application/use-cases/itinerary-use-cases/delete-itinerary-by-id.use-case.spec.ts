@@ -36,6 +36,8 @@ describe('DeleteItineraryByIdUseCase', () => {
       user: {} as any,
       participants: [],
       forum: null,
+      notifications: [],
+      participationRequests: [],
       createdAt: new Date(),
     };
 
@@ -61,6 +63,8 @@ describe('DeleteItineraryByIdUseCase', () => {
       toDate: new Date(),
       user: {} as any,
       participants: [],
+      notifications: [],
+      participationRequests: [],
       forum: null,
       createdAt: new Date(),
     };

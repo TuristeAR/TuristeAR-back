@@ -35,6 +35,8 @@ describe('FindItineraryByIdForDeleteUseCase', () => {
       user: {} as any,
       participants: [],
       forum: null,
+      notifications: [],
+      participationRequests: [],
       createdAt: new Date(),
     };
 
@@ -44,7 +46,7 @@ describe('FindItineraryByIdForDeleteUseCase', () => {
 
     expect(mockItineraryRepository.findOne).toHaveBeenCalledWith({
       where: { id: 1 },
-      relations: ['activities', 'user', 'forum.messages', 'events', 'expenses'],
+      relations: ['activities', 'user', 'forum.messages', 'events', 'expenses', 'notifications', 'participationRequests.notifications'],
     });
 
     expect(result).toEqual(mockItinerary);

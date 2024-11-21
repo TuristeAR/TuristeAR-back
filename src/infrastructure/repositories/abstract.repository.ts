@@ -94,18 +94,18 @@ export abstract class AbstractRepository<T extends ObjectLiteral> {
 
   findItineraryByUserWithParticipants(id : number): Promise<T[]> {
     return this.repository.createQueryBuilder('itinerary')
-      .innerJoin('itinerary.participants', 'participant')
       .innerJoin('itinerary.user', 'user')
+      .leftJoin('itinerary.participants', 'participant')
       .leftJoinAndSelect('itinerary.user', 'userDetail')
       .leftJoinAndSelect('itinerary.participants', 'participants')
       .leftJoinAndSelect('itinerary.activities', 'activities')
       .leftJoinAndSelect('activities.place', 'place')
       .leftJoinAndSelect('place.province', 'province')
       .leftJoinAndSelect('province.category', 'category')
-      .where('participant.id = :id', { id })
-      .orWhere('user.id = :id',{id})
+      .where('user.id = :id',{id})
+      .orWhere('participant.id = :id', {id})
       .addOrderBy('itinerary.id', 'DESC')
-      .getMany()
+      .getMany();
   }
 
 

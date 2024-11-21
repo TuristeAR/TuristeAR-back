@@ -32,6 +32,8 @@ describe('FindItineraryByIdUseCase', () => {
       name: 'Viaje a Buenos Aires',
       fromDate: new Date(),
       toDate: new Date(),
+      notifications: [],
+      participationRequests: [],
       user: {} as any,
       participants: [],
       forum: null,

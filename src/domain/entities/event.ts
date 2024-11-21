@@ -35,5 +35,5 @@ export class Event extends AbstractEntity {
 
   @ManyToOne(() => Itinerary, (itinerary) => itinerary.events)
   @JoinColumn({ name: 'itineraryId' })
-  itinerary: Itinerary;
+  itinerary: Itinerary | null;
 }

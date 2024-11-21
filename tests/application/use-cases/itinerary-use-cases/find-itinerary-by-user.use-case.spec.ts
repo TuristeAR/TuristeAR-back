@@ -53,6 +53,8 @@ describe('FindItineraryByUserUseCase', () => {
         user: mockUser, // Simulamos el usuario
         participants: [],
         forum: null,
+        notifications: [],
+        participationRequests: [],
         createdAt: new Date(),
       },
       {
@@ -66,6 +68,8 @@ describe('FindItineraryByUserUseCase', () => {
         user: mockUser,
         participants: [],
         forum: null,
+        notifications: [],
+        participationRequests: [],
         createdAt: new Date(),
       },
     ];

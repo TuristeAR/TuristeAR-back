@@ -80,6 +80,8 @@ describe('FindItineraryWithActivityUseCase', () => {
       user: {} as any,
       participants: [],
       forum: null,
+      notifications: [],
+      participationRequests: [],
       createdAt: new Date(),
     };
 
