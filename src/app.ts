@@ -1553,6 +1553,7 @@ app.get('/notifications/byUser', authMiddleware, async (req, res) => {
     const notifications = await findNotificationsByUserIdUseCase.execute(Number(user.id));
     res.status(200).json(notifications);
   } catch (error) {
+    console.log('Error obtaining notifications:', error);
     console.error('Error obtaining notifications:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
@@ -1677,7 +1678,7 @@ app.post('/participation-request/reject', async (req: Request, res: Response) =>
   const { requestId, notificationId } = req.body;
 
   try {
-    deleteNotificationByIdUseCase.execute(notificationId);
+    await deleteNotificationByIdUseCase.execute(notificationId);
     const rejectedRequest = await participationRequestService.rejectParticipationRequest(requestId);
 
     return res.status(200).json({
