@@ -16,16 +16,8 @@ import { Forum } from '../entities/forum';
 import { CreateForumUseCase } from '../../application/use-cases/forum-use-cases/create-forum.use-case';
 import { FindEventByIdUseCase } from '../../application/use-cases/event-use-cases/find-event-by-id.use-case';
 import { FindItineraryWithEventUseCase } from '../../application/use-cases/itinerary-use-cases/find-itinerary-with-event.use-case';
-import { CreateNotificationUseCase } from '../../application/use-cases/notification-use-cases/create-notification.use-case';
-import { Notification } from '../entities/notification';
 import { ParticipationRequest } from '../entities/participationRequest';
 import { ParticipationRequestService } from './participationRequest.service';
-import {
-  FindNotificationsByParticipationRequestUseCase
-} from '../../application/use-cases/notification-use-cases/find-notifications-by-participation-request.use-case';
-import {
-  UpdateNotificationUseCase
-} from '../../application/use-cases/notification-use-cases/update-notification.use-case';
 
 export class ItineraryService {
   private placeService: PlaceService;
@@ -470,17 +462,6 @@ export class ItineraryService {
     }
 
     await participationRequestService.acceptParticipationRequest(participationRequestId);
-
-    const findNotificationsByParticipationRequestUseCase = new FindNotificationsByParticipationRequestUseCase();
-
-    const notifications = await findNotificationsByParticipationRequestUseCase.execute(participationRequestId);
-
-    for (const notification of notifications) {
-      if (notification.participationRequest?.status === 'pending'){
-        const updateNotificationUseCase = new UpdateNotificationUseCase();
-        await updateNotificationUseCase.execute(notification);
-      }
-    }
 
     return updatedItinerary;
   }
