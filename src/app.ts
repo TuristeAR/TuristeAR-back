@@ -107,6 +107,9 @@ import {
   RejectParticipationRequestUseCase
 } from './application/use-cases/participation-request-use-cases/reject-participation-request.use-case';
 import { UpdateEventUseCase } from './application/use-cases/event-use-cases/update-event.use-case';
+import {
+  DeleteUserExpenseByExpenseIdUseCase
+} from './application/use-cases/user-expense-use-cases/delete-user-expense-by-expense-id.use-case';
 
 dotenv.config();
 
@@ -244,6 +247,7 @@ const findExpenseByIdUseCase = new FindExpenseByIdUseCase();
 const deleteActivitiesUseCase = new DeleteActivitiesUseCase();
 const deleteCommentsUseCase = new DeleteCommentsUseCase();
 const deleteEventsUseCase = new DeleteEventsUseCase();
+const deleteUserExpenseByExpenseIdUseCase = new DeleteUserExpenseByExpenseIdUseCase();
 const deleteExpensesByItineraryIdUseCase = new DeleteExpensesByItineraryIdUseCase();
 const deleteForumUseCase = new DeleteForumUseCase();
 const deleteItineraryByIdUseCase = new DeleteItineraryByIdUseCase();
@@ -1894,6 +1898,9 @@ io.on('connection', (socket) => {
       }
 
       if (itinerary.expenses.length > 0) {
+        for (const expense of itinerary.expenses) {
+          await deleteUserExpenseByExpenseIdUseCase.execute(expense.id);
+        }
         await deleteExpensesByItineraryIdUseCase.execute(itinerary.expenses);
       }
 
