@@ -7,6 +7,7 @@ import { NotificationRepositoryInterface } from '../../../../src/domain/reposito
 import {
   FindNotificationsDetailByUserUseCase
 } from '../../../../src/application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
+import { Comment } from '../../../../src/domain/entities/comment';
 jest.mock('../../../../src/infrastructure/repositories/forum.repository');
 
 
@@ -25,6 +26,7 @@ const mockNotification : Notification = {
   publication: publication,
   itinerary: new Itinerary(),
   participationRequest: new ParticipationRequest(),
+  comment: new Comment()
 }
 
 describe('FindNotificationDetailByUserUseCase', () => {
@@ -52,9 +54,9 @@ describe('FindNotificationDetailByUserUseCase', () => {
     expect(mockNotificationRepository.findMany).toHaveBeenCalledWith({
       where: { user : {id: user.id } },
       relations: ['user', 'publication.likes','publication.reposts',
-        'publication.comments','publication.saved', 'itinerary.user',
+        'publication.comments.user','publication.saved', 'itinerary.user',
         'participationRequest', 'participationRequest.sender',
-        'participationRequest.sender', 'participationRequest.itinerary'],
+        'participationRequest.sender', 'participationRequest.itinerary', 'comment'],
       order: { id: 'DESC' },
     });
 

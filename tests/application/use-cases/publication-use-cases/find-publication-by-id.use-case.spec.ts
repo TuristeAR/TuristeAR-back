@@ -57,7 +57,7 @@ describe('FindPublicationsByIdUseCase', () => {
 
     expect(mockPublicationRepository.findOne).toHaveBeenCalledWith({
       where: { id: 1 },
-      relations: ['user', 'categories', 'likes', 'reposts', 'saved', 'comments.user', 'activities.place','notifications'],
+      relations: ['user', 'categories', 'likes', 'reposts', 'saved', 'comments.user', 'activities.place','notifications.comment'],
     });
 
     expect(result).toEqual(mockPublication);

@@ -11,6 +11,7 @@ import { Like } from 'typeorm';
 import {
   FindNotificationsByUserUseCase
 } from '../../../../src/application/use-cases/notification-use-cases/find-notifications-by-user.use-case';
+import { Comment } from '../../../../src/domain/entities/comment';
 jest.mock('../../../../src/infrastructure/repositories/forum.repository');
 
 
@@ -29,6 +30,7 @@ const mockNotification : Notification = {
   publication: publication,
   itinerary: new Itinerary(),
   participationRequest: new ParticipationRequest(),
+  comment: new Comment()
 }
 
 describe('FindNotificationByUserUseCase', () => {

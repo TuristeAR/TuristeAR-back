@@ -8,6 +8,7 @@ import {
 } from '../../../../src/application/use-cases/notification-use-cases/find-notification-by-publication-id-and-type.use-case';
 import { NotificationRepositoryInterface } from '../../../../src/domain/repositories/notification.repository.interface';
 import { Like } from 'typeorm';
+import { Comment } from '../../../../src/domain/entities/comment';
 jest.mock('../../../../src/infrastructure/repositories/forum.repository');
 
 
@@ -26,6 +27,7 @@ const mockNotification : Notification = {
   publication: publication,
   itinerary: new Itinerary(),
   participationRequest: new ParticipationRequest(),
+  comment: new Comment()
 }
 
 describe('FindNotificationByPublicationIdAndTypeUseCase', () => {

@@ -1769,7 +1769,7 @@ io.on('connection', (socket) => {
       const notification = new Notification();
 
       notification.participationRequest = null;
-      notification.description =  user + ' comentó tu publicación!'
+      notification.description =  user?.name + ' comentó tu publicación!'
       notification.user = publication.user;
       notification.isRead = false;
       notification.itinerary = null;

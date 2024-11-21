@@ -13,9 +13,9 @@ export class FindNotificationsDetailByUserUseCase {
     return this.notificationRepository.findMany({
       where: { user : {id : userId}},
       relations: ['user', 'publication.likes','publication.reposts',
-        'publication.comments','publication.saved', 'itinerary.user', 
+        'publication.comments.user','publication.saved', 'itinerary.user',
         'participationRequest', 'participationRequest.sender', 
-        'participationRequest.sender', 'participationRequest.itinerary'],
+        'participationRequest.sender', 'participationRequest.itinerary', 'comment'],
       order: { id: 'DESC' },
     });
   }
