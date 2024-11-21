@@ -12,6 +12,7 @@ describe('DeleteEventsUseCase', () => {
       findOne: jest.fn(),
       findMany: jest.fn(),
       deleteMany: jest.fn(),
+      save: jest.fn(),
     } as jest.Mocked<EventRepositoryInterface>;
     deleteEventsUseCase = new DeleteEventsUseCase();
     (deleteEventsUseCase as any).eventRepository = mockEventRepository;

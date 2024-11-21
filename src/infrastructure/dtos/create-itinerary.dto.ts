@@ -31,6 +31,14 @@ export class CreateItineraryDto {
   @IsNumber({}, { each: true })
   expenses: number[];
 
+  @IsArray()
+  @IsNumber({}, { each: true })
+  notifications: number[];
+
+  @IsArray()
+  @IsNumber({}, { each: true })
+  participationRequests: number[];
+
   @IsDate()
   fromDate: Date;
 

@@ -12,7 +12,7 @@ export class FindItineraryByIdForDeleteUseCase {
   execute(id: number): Promise<Itinerary | null> {
     return this.itineraryRepository.findOne({
       where: { id : id },
-      relations: ['activities', 'user', 'forum.messages', 'events', 'expenses']
+      relations: ['activities', 'user', 'forum.messages', 'events', 'expenses', 'notifications', 'participationRequests.notifications'],
     });
   }
 }

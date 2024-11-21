@@ -6,4 +6,6 @@ export interface EventRepositoryInterface {
   findMany(options: FindOneOptions<Event>): Promise<Event[]>;
 
   deleteMany(ids: number[]): Promise<DeleteResult>;
+
+  save(event: Event): Promise<Event>;
 }

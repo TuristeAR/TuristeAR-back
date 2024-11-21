@@ -54,6 +54,8 @@ describe('FindItineraryByUserWithParticipantsUseCase', () => {
         participants: [mockUser],
         forum: null,
         createdAt: new Date(),
+        notifications: [],
+        participationRequests: [],
       },
       {
         id: 2,
@@ -66,6 +68,8 @@ describe('FindItineraryByUserWithParticipantsUseCase', () => {
         user: {} as any,
         participants: [mockUser],
         forum: null,
+        notifications: [],
+        participationRequests: [],
         createdAt: new Date(),
       },
     ];

@@ -11,6 +11,7 @@ describe('FindEventByIdUseCase', () => {
       findOne: jest.fn(),
       findMany: jest.fn(),
       deleteMany: jest.fn(),
+      save: jest.fn(),
     } as jest.Mocked<EventRepositoryInterface>;
     findEventByIdUseCase = new FindEventByIdUseCase();
     (findEventByIdUseCase as any).eventRepository = mockEventRepository;

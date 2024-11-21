@@ -43,6 +43,8 @@ describe('CreateItineraryUseCase', () => {
       toDate: new Date('2024-11-10'),
       user,
       participants: [user],
+      notifications: [],
+      participationRequests: [],
       forum,
       createdAt: new Date(),
     };
@@ -69,6 +71,8 @@ describe('CreateItineraryUseCase', () => {
       toDate: new Date(),
       user: {} as User,
       participants: [],
+      notifications: [],
+      participationRequests: [],
       forum: null,
       createdAt: new Date(),
     };

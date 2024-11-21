@@ -1,8 +1,9 @@
 // entities/participation-request.entity.ts
-import { Entity, ManyToOne, JoinColumn, Column } from 'typeorm';
+import { Entity, ManyToOne, JoinColumn, Column, OneToMany } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
 import { Itinerary } from './itinerary';
 import { User } from './user';
+import { Notification } from './notification';
 
 @Entity()
 export class ParticipationRequest extends AbstractEntity {
@@ -13,6 +14,9 @@ export class ParticipationRequest extends AbstractEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'participantId' })
   participant: User;
+
+  @OneToMany(() => Notification, (notification) => notification.participationRequest)
+  notifications: Notification[];
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'senderId' })

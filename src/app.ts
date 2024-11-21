@@ -103,6 +103,10 @@ import {
 import multer from 'multer';
 import { Notification } from './domain/entities/notification';
 import { CreateNotificationUseCase } from './application/use-cases/notification-use-cases/create-notification.use-case';
+import {
+  RejectParticipationRequestUseCase
+} from './application/use-cases/participation-request-use-cases/reject-participation-request.use-case';
+import { UpdateEventUseCase } from './application/use-cases/event-use-cases/update-event.use-case';
 
 dotenv.config();
 
@@ -247,9 +251,11 @@ const deleteMessagesUseCase = new DeleteMessageUseCase();
 const deletePublicationUseCase = new DeletePublicationUseCase();
 const deletePublicationsByActivitiesUseCase = new DeletePublicationsByActivitiesUseCase();
 const deleteNotificationByIdUseCase = new DeleteNotificationByIdUseCase();
+const deleteParticipationRequestUseCase = new RejectParticipationRequestUseCase();
 const updateActivityUseCase = new UpdateActivityUseCase();
 const updateUserUseCase = new UpdateUserUseCase();
 const updateForumUseCase = new UpdateForumUseCase();
+const updateEventUseCase = new UpdateEventUseCase();
 const userExpenseService = new UserExpenseService();
 const expenseService = new ExpenseService();
 const updateItineraryNameUseCase = new UpdateItineraryNameUseCase();
@@ -1861,16 +1867,30 @@ io.on('connection', (socket) => {
         await deletePublicationsByActivitiesUseCase.execute(publicationIds);
       }
 
+      if (itinerary.notifications.length > 0) {
+        for (const notification of itinerary.notifications) {
+          await deleteNotificationByIdUseCase.execute(notification.id);
+        }
+      }
+
+      if (itinerary.participationRequests.length > 0){
+        for (const participationRequest of itinerary.participationRequests) {
+          for (const notification of participationRequest.notifications) {
+            await deleteNotificationByIdUseCase.execute(notification.id);
+          }
+          await deleteParticipationRequestUseCase.execute(participationRequest.id);
+        }
+      }
+
       if (itinerary.activities.length > 0) {
         await deleteActivitiesUseCase.execute(itinerary.activities);
       }
 
       if (itinerary.events.length > 0) {
-        await deleteEventsUseCase.execute(itinerary.events);
-      }
-
-      if (itinerary.events.length > 0) {
-        await deleteEventsUseCase.execute(itinerary.events);
+        for (const event of itinerary.events) {
+         event.itinerary = null;
+         await updateEventUseCase.execute(event);
+        }
       }
 
       if (itinerary.expenses.length > 0) {
