@@ -101,6 +101,8 @@ import {
   FindNotificationByPublicationIdAndTypeUseCase
 } from './application/use-cases/notification-use-cases/find-notification-by-publication-id-and-type.use-case';
 import multer from 'multer';
+import { Notification } from './domain/entities/notification';
+import { CreateNotificationUseCase } from './application/use-cases/notification-use-cases/create-notification.use-case';
 
 dotenv.config();
 
@@ -135,10 +137,10 @@ io.on('connection', (socket) => {
 app.use(bodyParser.json());
 
 app.use(cors({ credentials: true, origin: getCorsOrigins() }));
-// Define la configuración de `multer`
+
 const upload = multer({
-  limits: { fileSize: 200 * 1024 * 1024 }, // Límite de 200 MB; ajústalo según sea necesario
-  storage: multer.memoryStorage(), // Puedes usar `diskStorage` para guardar archivos en disco
+  limits: { fileSize: 200 * 1024 * 1024 },
+  storage: multer.memoryStorage(),
 });
 
 app.options('*', (req: Request, res: Response) => {
@@ -193,6 +195,7 @@ const createMessageUseCase = new CreateMessageUseCase();
 const createProvinceUseCase = new CreateProvinceUseCase();
 const createWeatherUseCase = new CreateWeatherUseCase();
 const createForumUserCase = new CreateForumUseCase();
+const createNotificationUseCase = new CreateNotificationUseCase();
 const findActivityByIdUseCase = new FindActivityByIdUseCase();
 const findAllCategoryUseCase = new FindAllCategoryUseCase();
 const findAllForumUseCase = new FindAllForumUseCase();
@@ -1760,11 +1763,24 @@ io.on('connection', (socket) => {
 
       const comment = new Comment();
 
+      const user = await findUserByIdUseCase.execute(userId);
+      comment.user = user;
       comment.publication = publication;
-      comment.user = await findUserByIdUseCase.execute(userId);
       comment.description = content;
 
-      await createCommentUseCase.execute(comment);
+      const savedComment = await createCommentUseCase.execute(comment);
+
+      const notification = new Notification();
+
+      notification.participationRequest = null;
+      notification.description =  user?.name + ' comentó tu publicación!'
+      notification.user = publication.user;
+      notification.isRead = false;
+      notification.itinerary = null;
+      notification.publication = publication;
+      notification.comment = savedComment;
+
+      await createNotificationUseCase.execute(notification);
 
       io.emit('receiveComment', {
         description: comment.description,
@@ -1772,6 +1788,7 @@ io.on('connection', (socket) => {
         createdAt: comment.createdAt,
       });
     } catch (error) {
+      console.log(error)
       socket.emit('error', { message: 'Error creating comment', error });
     }
   });

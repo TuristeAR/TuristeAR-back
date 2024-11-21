@@ -7,6 +7,7 @@ import {
   CreateNotificationUseCase
 } from '../../../../src/application/use-cases/notification-use-cases/create-notification.use-case';
 import { NotificationRepositoryInterface } from '../../../../src/domain/repositories/notification.repository.interface';
+import { Comment } from '../../../../src/domain/entities/comment';
 jest.mock('../../../../src/infrastructure/repositories/notification.repository');
 
 
@@ -22,6 +23,7 @@ const mockNotification : Notification = {
   publication: new Publication(),
   itinerary: new Itinerary(),
   participationRequest: new ParticipationRequest(),
+  comment: new Comment()
 }
 
 describe('CreateNotificationUseCase', () => {

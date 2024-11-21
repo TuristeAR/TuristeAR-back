@@ -5,11 +5,9 @@ import { Publication } from '../../../../src/domain/entities/publication';
 import { Notification } from '../../../../src/domain/entities/notification';
 import { NotificationRepositoryInterface } from '../../../../src/domain/repositories/notification.repository.interface';
 import {
-  FindNotificationsDetailByUserUseCase
-} from '../../../../src/application/use-cases/notification-use-cases/find-notifications-detail-by-user.use-case';
-import {
   UpdateNotificationUseCase
 } from '../../../../src/application/use-cases/notification-use-cases/update-notification.use-case';
+import { Comment } from '../../../../src/domain/entities/comment';
 jest.mock('../../../../src/infrastructure/repositories/forum.repository');
 
 
@@ -28,6 +26,7 @@ const mockNotification : Notification = {
   publication: publication,
   itinerary: new Itinerary(),
   participationRequest: new ParticipationRequest(),
+  comment: new Comment()
 }
 
 describe('FindNotificationDetailByUserUseCase', () => {

@@ -17,6 +17,14 @@ export class CreateNorificationDto {
 
     @IsOptional()
     @IsNumber()
+    comment?: number;
+
+    @IsOptional()
+    @IsNumber()
+    participationRequest?: number;
+
+    @IsOptional()
+    @IsNumber()
     itinerary?: number;
 
 }

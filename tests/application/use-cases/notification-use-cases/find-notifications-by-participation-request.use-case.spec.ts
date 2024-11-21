@@ -14,6 +14,7 @@ import {
 import {
   FindNotificationsByParticipationRequestUseCase
 } from '../../../../src/application/use-cases/notification-use-cases/find-notifications-by-participation-request.use-case';
+import { Comment } from '../../../../src/domain/entities/comment';
 jest.mock('../../../../src/infrastructure/repositories/forum.repository');
 
 
@@ -32,6 +33,7 @@ const mockNotification : Notification = {
   publication: publication,
   itinerary: new Itinerary(),
   participationRequest: new ParticipationRequest(),
+  comment: new Comment()
 }
 
 describe('FindNotificationByParticipationRequestUseCase', () => {

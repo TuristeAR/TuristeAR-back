@@ -13,6 +13,7 @@ import {
 import {
   DeleteNotificationByIdUseCase
 } from '../../../../src/application/use-cases/notification-use-cases/delete-notification-by-id.use-case';
+import { Comment } from '../../../../src/domain/entities/comment';
 jest.mock('../../../../src/infrastructure/repositories/forum.repository');
 
 
@@ -28,6 +29,7 @@ const mockNotification : Notification = {
   publication: new Publication(),
   itinerary: new Itinerary(),
   participationRequest: new ParticipationRequest(),
+  comment: new Comment()
 }
 
 
