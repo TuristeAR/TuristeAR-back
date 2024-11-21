@@ -105,6 +105,7 @@ export class PublicationService {
     const deleteNotificationByIdUseCase = new DeleteNotificationByIdUseCase();
     const updateNotificationUseCase = new UpdateNotificationUseCase();
     const existingNotification = await findNotificationByPublicationIdUseCase.execute(publication.id, notificationType);
+    const newNotification = new Notification();
 
     const getNotificationDescription = () => {
       const topNames = list.slice(0, 3).map((item) => item.name);
@@ -120,7 +121,7 @@ export class PublicationService {
 
     if (userAlreadyInteracted) {
       list.splice(list.findIndex((item) => item.id === user.id), 1);
-
+      await this.updatePublication(publication);
       if (existingNotification) {
         const updatedDescription = getNotificationDescription();
         if (updatedDescription) {
@@ -132,25 +133,22 @@ export class PublicationService {
       }
     } else {
       list.push(user);
-
+      const updatedPublication= await this.updatePublication(publication);
       if (!existingNotification) {
-        const notification = new Notification();
-        notification.user = publication.user;
-        notification.publication = publication;
-        notification.isRead = false;
-        notification.itinerary = null;
-        notification.description = getNotificationDescription();
-
+        newNotification.user = updatedPublication.user;
+        newNotification.publication = updatedPublication;
+        newNotification.isRead = false;
+        newNotification.itinerary = null;
+        newNotification.description = getNotificationDescription();
         const createNotificationUseCase = new CreateNotificationUseCase();
-        await createNotificationUseCase.execute(notification);
+        await createNotificationUseCase.execute(newNotification);
       } else {
         existingNotification.isRead = false;
         existingNotification.description = getNotificationDescription();
         await updateNotificationUseCase.execute(existingNotification);
       }
     }
-
-    return this.updatePublication(publication);
+    return publication;
   }
 
   private updatePublication(publication: Publication) {
